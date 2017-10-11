@@ -1,0 +1,24 @@
+{
+  "name": "crawler",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/crawler.js",
+    "debug": "node --inspect src/crawler.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.16.2",
+    "bluebird": "^3.5.1",
+    "bunyan": "^1.8.12",
+    "global": "^4.3.2",
+    "htmlparser2": "^3.9.2",
+    "robots": "^0.10.1",
+    "tldjs": "^2.2.0"
+  },
+  "devDependencies": {
+    "cross-env": "^5.0.5"
+  }
+}
