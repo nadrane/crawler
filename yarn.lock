@@ -13,6 +13,10 @@ balanced-match@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.0.tgz#89b4d199ab2bee49de164ea02b89ce462d71b767"
 
+bloomfilter@^0.0.16:
+  version "0.0.16"
+  resolved "https://registry.yarnpkg.com/bloomfilter/-/bloomfilter-0.0.16.tgz#42602390c7466bdd39048494782d3e1a6a0f2af3"
+
 bluebird@^3.5.1:
   version "3.5.1"
   resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.5.1.tgz#d9551f9de98f1fcda1e683d17ee91a0602ee2eb9"

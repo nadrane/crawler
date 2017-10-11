@@ -9,6 +9,8 @@ const { parse } = require("tldjs");
 const axios = require("axios");
 const logger = require("./logger");
 const makeParser = require("./parser");
+const { BloomFilter } = require('bloomfilter');
+
 
 const domainWhitelist = new Set(["reddit"]);
 
@@ -34,7 +36,12 @@ class Crawler {
     this.total_GETs = 0;
     this.finalizeCrawl = this.finalizeCrawl.bind(this);
     this.addToFrontier = this.addToFrontier.bind(this);
-    this.parsedUrls = new Set();
+     // Allocating 9.6 bits per url and assuming a false positive rate of 1%
+     // meaning
+     // If we return false, then the URL has definitely not been scraped
+     // If we return true, then the URL is 99% likely to have been scraped
+     // This means we will accidentally skip 1% of urls.
+    this.parsedUrls = new BloomFilter(9.6 * 25000000, 7)
     this.currentlyScrapingUrls = new Set();
     this.frontier = [];
     this.frontierPointer = 0;
@@ -90,7 +97,7 @@ class Crawler {
   }
 
   urlHasBeenScraped(url) {
-    return this.parsedUrls.has(url);
+    return this.parsedUrls.test(url);
   }
 
   currentlyScrapingUrl(url) {
