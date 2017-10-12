@@ -14,7 +14,6 @@
     "bloomfilter": "^0.0.16",
     "bluebird": "^3.5.1",
     "bunyan": "^1.8.12",
-    "global": "^4.3.2",
     "htmlparser2": "^3.9.2",
     "robots": "^0.10.1",
     "tldjs": "^2.2.0"

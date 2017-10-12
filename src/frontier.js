@@ -32,7 +32,7 @@ class Frontier {
   constructor(seedUrl) {
     this.fileName = join(__dirname, '..', 'frontiers', `${seedUrl}.txt`)
     try {
-      writeFileSync(this.fileName, `${seedUrl}\n`);
+      writeFileSync(this.fileName, `http://${seedUrl}\n`);
     } catch (err) {
       console.log(err)
       logger.unexpectedError(`failed to initialize frontier for domain ${seedUrl}`, err);
@@ -41,23 +41,41 @@ class Frontier {
   }
 
   async isEmpty() {
-    const buffer = await readFileAsync(this.fileName)
-    const allUrls = buffer.toString()
-    return allUrls.length === 0
+    let buffer;
+    try {
+      buffer = await readFileAsync(this.fileName)
+    } catch(err) {
+      logger.unexpectedError(`failed to read frontier file - isEmpty ${this.fileName}`, err)
+    }
+    return buffer.toString().length === 0;
   }
 
   async getNextUrl() {
-    const buffer = await readFileAsync(this.fileName)
+    let buffer
+    try {
+      buffer = await readFileAsync(this.fileName)
+    } catch(err) {
+      console.log('err')
+      logger.unexpectedError(`failed to read from frontier file - getNextUrl ${this.fileName}`, err)
+    }
     const allUrls = buffer.toString().split('\n')
     const nextUrl = allUrls[0];
     // This probably does not need to be awaited because the politness check
     // would stop us from scraping the same domain twice in a short period of time.
-    await writeFileAsync(this.fileName, allUrls.slice(1).join('\n'))
+    try {
+      await writeFileAsync(this.fileName, allUrls.slice(1).join('\n'))
+    } catch(err) {
+      logger.unexpectedError(`failed to write to frontier file - getNextUrl ${this.fileName}`, err)
+    }
     return nextUrl
   }
 
   async append(newUrl) {
-    await appendFileAsync(this.fileName, `${newUrl}\n`);
+    try {
+      await appendFileAsync(this.fileName, `${newUrl}\n`);
+    } catch(err) {
+      logger.unexpectedError(`failed to append to to frontier file - append ${this.fileName}`, err)
+    }
   }
 }
 

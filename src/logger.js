@@ -1,4 +1,5 @@
 const bluebird = require("bluebird");
+const { parse } = require("tldjs");
 const { appendFile } = require("fs");
 const appendFileAsync = bluebird.promisify(appendFile);
 const Bunyan = require("bunyan");
@@ -26,28 +27,39 @@ class Logger {
     logger.error({ event: "unexpected error", err, message });
   }
 
+  parserError(err) {
+    logger.error({ event: "parser error", err });
+  }
+
   GETResponseError(url, err, errorCode) {
-    logger.info({ event: "response error", errorCode, err: err.message, url });
+    const domain = parse(domain)
+    logger.info({ event: "response error", errorCode, err: err.message, url, domain});
   }
 
   addingToFrontier(fromUrl, newUrl) {
-    logger.info({ event: "new link", fromUrl, newUrl})
+    const newDomain = parse(newUrl).domain;
+    const fromDomain = parse(fromUrl).domain;
+    logger.info({ event: "new link", fromUrl, fromDomain, newUrl, newDomain });
   }
 
-  GETRequestSent(url) {
-    logger.info({ event: "request sent", url})
+  GETRequestSent(url, totalRequestsMade) {
+    const domain = parse(url).domain;
+    logger.info({ event: "request sent", url, domain, totalRequestsMade });
   }
 
   GETResponseReceived(url, statusCode) {
-    logger.info({ event: "response success", statusCode, url})
+    const domain = parse(url).domain;
+    logger.info({ event: "response success", statusCode, url, domain });
   }
 
   connectionMade(url) {
-    logger.info({ event: "new connection", url })
+    const domain = parse(url).domain;
+    logger.info({ event: "new connection", url, domain });
   }
 
-  finalizingCrawl(url) {
-    logger.info({ event: "parsing finsihed", url})
+  finalizingCrawl(url, totalResponsesParsed) {
+    const domain = parse(url).domain;
+    logger.info({ event: "parsing finsihed", url, domain, totalResponsesParsed });
   }
 }
 module.exports = new Logger();
