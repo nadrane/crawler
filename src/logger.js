@@ -22,8 +22,12 @@ const logger = new Bunyan({
 });
 
 class Logger {
+  unexpectedError(message, err) {
+    logger.error({ event: "unexpected error", err, message });
+  }
+
   GETResponseError(url, err, errorCode) {
-    logger.error({ event: "response error", errorCode, err: err.message, url });
+    logger.info({ event: "response error", errorCode, err: err.message, url });
   }
 
   addingToFrontier(fromUrl, newUrl) {

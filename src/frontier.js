@@ -22,62 +22,43 @@ the frontier was indexed by domain. Simple enough, I can just create a separate 
 file for every domain.
 */
 
-const logger = require('./logger')
-
-async function addToFrontier(newHref) {
-  if (!newHref) {
-    logger.unexpectError("anchor with href??");
-    return;
-  }
-  const url = parse(newHref);
-  if (domainWhitelist.has(url.domain) && !alreadySeen.has(newHref)) {
-    try {
-      alreadySeen.add(newHref);
-      await fs.appendFileAsync("../frontier.txt", newHref + "\n");
-    } catch (err) {
-      logger.unexpectError(err);
-    }
-  }
-}
+const bluebird = require("bluebird");
+const { writeFileSync } = require("fs");
+const { appendFileAsync, readFileAsync, writeFileAsync } = bluebird.promisifyAll(require("fs"));
+const logger = require("./logger");
+const { join } = require('path')
 
 class Frontier {
-  constructor(urls) {
-    this.frontier = [];
-    this.frontier.push(...urls);
+  constructor(seedUrl) {
+    this.fileName = join(__dirname, '..', 'frontiers', `${seedUrl}.txt`)
+    try {
+      writeFileSync(this.fileName, `${seedUrl}\n`);
+    } catch (err) {
+      console.log(err)
+      logger.unexpectedError(`failed to initialize frontier for domain ${seedUrl}`, err);
+    }
     this.frontierPointer = 0;
   }
 
-    // return bluebird.map(domainWhitelist.entries(), domain => fs.appendFileAsync('../frontier.txt', url + '\n'))
-  reset() {
-    this.frontierPointer = 0;
+  async isEmpty() {
+    const buffer = await readFileAsync(this.fileName)
+    const allUrls = buffer.toString()
+    return allUrls.length === 0
   }
 
-  isAtEnd() {
-    return this.frontierPointer === this.frontier.length;
+  async getNextUrl() {
+    const buffer = await readFileAsync(this.fileName)
+    const allUrls = buffer.toString().split('\n')
+    const nextUrl = allUrls[0];
+    // This probably does not need to be awaited because the politness check
+    // would stop us from scraping the same domain twice in a short period of time.
+    await writeFileAsync(this.fileName, allUrls.slice(1).join('\n'))
+    return nextUrl
   }
 
-  isEmpty() {
-    this.frontier.length === 0;
-  }
-
-  getNextUrl() {
-    const url = this.peekNextUrl();
-    this.frontier.slice(this.frontierPointer, 1);
-    this.frontierPointer++;
-    return url;
-  }
-
-  skipToNextUrl() {
-    this.frontierPointer++;
-  }
-
-  peekNextUrl() {
-    return this.frontier[this.frontierPointer];
-  }
-
-  append(newUrl) {
-    this.frontier.push(newUrl);
+  async append(newUrl) {
+    await appendFileAsync(this.fileName, `${newUrl}\n`);
   }
 }
 
-module.exports =  Frontier;
+module.exports = Frontier;
