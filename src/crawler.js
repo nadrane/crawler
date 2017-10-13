@@ -18,7 +18,7 @@ class Crawler {
     this.connections = 0;
     this.totalRequestsMade = 0;
     this.totalResponsesParsed = 0;
-    this.maxConnections = 100;
+    this.maxConnections = 10;
     this.finalizeCrawl = this.finalizeCrawl.bind(this);
     // Allocating 9.6 bits per url and assuming a false positive rate of 1%
     // meaning

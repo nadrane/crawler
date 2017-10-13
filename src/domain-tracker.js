@@ -2,8 +2,9 @@ const Frontier = require("./frontier");
 
 class DomainTracker {
   constructor(domain) {
-    this.domainName = domain;
+    this.domain = domain;
     this.frontier = new Frontier(domain);
+    this.robotAllows = null;
     this.lastScraped = 0; // A really early time so it will definitely be scrapped.
   }
 

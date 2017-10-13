@@ -26,15 +26,17 @@ const bluebird = require("bluebird");
 const { writeFileSync } = require("fs");
 const { appendFileAsync, readFileAsync, writeFileAsync } = bluebird.promisifyAll(require("fs"));
 const logger = require("./logger");
-const { join } = require('path')
+const { join } = require("path");
+const RobotParser = require("./robots-parser");
 
 class Frontier {
-  constructor(seedUrl) {
-    this.fileName = join(__dirname, '..', 'frontiers', `${seedUrl}.txt`)
+  constructor(seedDomain) {
+    this.domain = seedDomain
+    this.fileName = join(__dirname, "..", "frontiers", `${seedDomain}.txt`);
     try {
-      writeFileSync(this.fileName, `http://${seedUrl}\n`);
+      writeFileSync(this.fileName, `http://${seedDomain}\n`);
     } catch (err) {
-      console.log(err)
+      console.log(err);
       logger.unexpectedError(`failed to initialize frontier for domain ${seedUrl}`, err);
     }
     this.frontierPointer = 0;
@@ -43,39 +45,55 @@ class Frontier {
   async isEmpty() {
     let buffer;
     try {
-      buffer = await readFileAsync(this.fileName)
-    } catch(err) {
-      logger.unexpectedError(`failed to read frontier file - isEmpty ${this.fileName}`, err)
+      buffer = await readFileAsync(this.fileName);
+    } catch (err) {
+      logger.unexpectedError(`failed to read frontier file - isEmpty ${this.fileName}`, err);
     }
     return buffer.toString().length === 0;
   }
 
   async getNextUrl() {
-    let buffer
+    let buffer;
     try {
-      buffer = await readFileAsync(this.fileName)
-    } catch(err) {
-      console.log('err')
-      logger.unexpectedError(`failed to read from frontier file - getNextUrl ${this.fileName}`, err)
+      buffer = await readFileAsync(this.fileName);
+    } catch (err) {
+      console.log("err");
+      logger.unexpectedError(
+        `failed to read from frontier file - getNextUrl ${this.fileName}`,
+        err
+      );
     }
-    const allUrls = buffer.toString().split('\n')
+    const allUrls = buffer.toString().split("\n");
     const nextUrl = allUrls[0];
     // This probably does not need to be awaited because the politness check
     // would stop us from scraping the same domain twice in a short period of time.
     try {
-      await writeFileAsync(this.fileName, allUrls.slice(1).join('\n'))
-    } catch(err) {
-      logger.unexpectedError(`failed to write to frontier file - getNextUrl ${this.fileName}`, err)
+      await writeFileAsync(this.fileName, allUrls.slice(1).join("\n"));
+    } catch (err) {
+      logger.unexpectedError(`failed to write to frontier file - getNextUrl ${this.fileName}`, err);
     }
-    return nextUrl
+    return nextUrl;
   }
 
   async append(newUrl) {
-    try {
-      await appendFileAsync(this.fileName, `${newUrl}\n`);
-    } catch(err) {
-      logger.unexpectedError(`failed to append to to frontier file - append ${this.fileName}`, err)
+    // Best to just never allow disallowed URLs to enter the frontier in the first place
+    if (await this._approvedByRobots(newUrl)) {
+      try {
+        await appendFileAsync(this.fileName, `${newUrl}\n`);
+      } catch (err) {
+        logger.unexpectedError(
+          `failed to append to to frontier file - append ${this.fileName}`,
+          err
+        );
+      }
     }
+  }
+
+  async _approvedByRobots(url) {
+    if (!this.robotParser) {
+      this.robotParser = new RobotParser(this.domain);
+    }
+    return await this.robotParser.canScrape(url);
   }
 }
 

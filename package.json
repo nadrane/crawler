@@ -19,6 +19,7 @@
     "tldjs": "^2.2.0"
   },
   "devDependencies": {
-    "cross-env": "^5.0.5"
+    "cross-env": "^5.0.5",
+    "eslint-config-google": "^0.9.1"
   }
 }

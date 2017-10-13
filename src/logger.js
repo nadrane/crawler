@@ -23,8 +23,8 @@ const logger = new Bunyan({
 });
 
 class Logger {
-  unexpectedError(message, err) {
-    logger.error({ event: "unexpected error", err, message });
+  unexpectedError(err, data) {
+    logger.error({ event: "unexpected error", err, data });
   }
 
   parserError(err) {
