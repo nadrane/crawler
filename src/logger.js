@@ -1,5 +1,6 @@
 const bluebird = require("bluebird");
 const { parse } = require("tldjs");
+const { URL } = require("url");
 const { appendFile } = require("fs");
 const appendFileAsync = bluebird.promisify(appendFile);
 const Bunyan = require("bunyan");
@@ -22,18 +23,44 @@ const logger = new Bunyan({
   ]
 });
 
+class RobotsError extends Error {
+
+}
+
+
+class CrawlerError extends Error {
+
+}
+
+class ParserError extends Error {
+
+  }
+
 class Logger {
   unexpectedError(err, data) {
     logger.error({ event: "unexpected error", err, data });
   }
 
-  parserError(err) {
-    logger.error({ event: "parser error", err });
+  parserError(err, url) {
+    logger.error({ event: "parser error", err, url });
+  }
+
+  noRobotsResponseReceived(module, err, url) {
+    logger.info({module, event: "no robots response received", url})
   }
 
   GETResponseError(url, err, errorCode) {
-    const domain = parse(domain)
-    logger.info({ event: "response error", errorCode, err: err.message, url, domain});
+    const domain = parse(url);
+    logger.info({ event: "response error", errorCode, err: err.message, url, domain });
+  }
+
+  connectionReset(url) {
+    const domain = parse(url);
+    logger.info({ event: "connection reset", url, domain });
+  }
+
+  domainExhausted(domain) {
+    logger.info({ event: "domain exhausted", domain});
   }
 
   addingToFrontier(fromUrl, newUrl) {
@@ -41,7 +68,10 @@ class Logger {
     const fromDomain = parse(fromUrl).domain;
     logger.info({ event: "new link", fromUrl, fromDomain, newUrl, newDomain });
   }
-
+  robotsRequestSent(url) {
+    const { hostname } = new URL(url);
+    logger.info({ event: "robots request sent", url, hostname });
+  }
   GETRequestSent(url, totalRequestsMade) {
     const domain = parse(url).domain;
     logger.info({ event: "request sent", url, domain, totalRequestsMade });
@@ -59,7 +89,7 @@ class Logger {
 
   finalizingCrawl(url, totalResponsesParsed) {
     const domain = parse(url).domain;
-    logger.info({ event: "parsing finsihed", url, domain, totalResponsesParsed });
+    logger.info({ event: "finalized crawl", url, domain, totalResponsesParsed });
   }
 }
 module.exports = new Logger();

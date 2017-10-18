@@ -1,6 +1,7 @@
 const { Writable } = require("stream");
 const htmlparser = require("htmlparser2");
 const { URL } = require("url");
+const logger = require("./logger");
 
 const validLinkProtocols = ["http:", "https:"];
 
@@ -35,7 +36,7 @@ class htmlTolinkStream extends Writable {
           this.emit("finished", url);
         },
         onerror: err => {
-          console.log("parser error", err);
+          logger.parserError(err, url)
         }
       },
       { decodeEntities: true }

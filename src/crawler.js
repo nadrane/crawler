@@ -12,32 +12,47 @@ const axios = require("axios");
 const DomainTracker = require("./domain-tracker");
 const logger = require("./logger");
 const makeParser = require("./parser");
+const approvedByRobots = require("./robots-parser");
+const { userAgent } = require("../env");
 
 class Crawler {
   constructor() {
     this.connections = 0;
     this.totalRequestsMade = 0;
     this.totalResponsesParsed = 0;
-    this.maxConnections = 10;
+    this.maxConnections = 2;
     this.finalizeCrawl = this.finalizeCrawl.bind(this);
     // Allocating 9.6 bits per url and assuming a false positive rate of 1%
     // meaning
     // If we return false, then the URL has definitely not been scraped
     // If we return true, then the URL is 99% likely to have been scraped
-    // This means we will accidentally skip 1% of urls.
+    // This means we will accidentally skip 1% of urls, an acceptable error
+    // for this application.
     this.parsedUrls = new BloomFilter(9.6 * 25000000, 7);
     this.currentlyScrapingUrls = new Set();
+
+    // IDEA heap/priority queue - would turn getDomainToScrape into O(logn) which might actually matter
+    // if there are 100,000 whitelisted domains
+    // IDEA generators or coroutines instead?
     this.domainTrackers = new Map();
     this.seedDomains();
   }
 
   seedDomains() {
-    truncateSync('./logs/error.txt');
-    truncateSync('./logs/info.txt');
+    truncateSync("./logs/error.txt");
+    truncateSync("./logs/info.txt");
     readFileSync("./seed-domains.txt")
       .toString()
       .split("\n")
       .map(domain => this.domainTrackers.set(domain, new DomainTracker(domain)));
+  }
+
+  maintainConnnections() {
+    while (this.connections < this.maxConnections) {
+      const domain = this.getDomainToScrape();
+      if (!domain) break; //We absolutely need to do this to avoid accidentally blocking the event loop
+      this.crawlNextInDomain(domain);
+    }
   }
 
   // Returns the first domain that can be politely scrapped
@@ -49,20 +64,33 @@ class Crawler {
     }
   }
 
-  maintainConnnections() {
-    while (this.connections < this.maxConnections) {
-      const domain = this.getDomainToScrape();
-      if (!domain) break; //We absolutely need to do this to avoid accidentally blocking the event loop
-      this.crawlNextInDomain(domain);
-    }
-  }
-
   async crawlNextInDomain(domain) {
-    this.domainTrackers.get(domain).updateTimeLastScraped();
-    this.connections++;
+    // Just because the frontier is exhausted does not mean there isn't an
+    // outstanding request scraping domains now. Don't remove domainTracker immediately.
+    // Maybe come up with some way to do this in the future.
+        //   this.domainTrackers.delete(domain);
+    //   logger.domainExhausted(domain);
+    //   return;
+    // }
+    const domainTracker = this.domainTrackers.get(domain)
+    if (domainTracker.frontier.isEmpty()) return
+
+    domainTracker.updateTimeLastScraped();
     // We want to do the async operation as late as possible to avoid opening excessive connections
     // and potentially opening multiple connections to a single domain.
-    const nextUrl = await this.domainTrackers.get(domain).frontier.getNextUrl();
+    const nextUrl = await domainTracker.frontier.getNextUrl();
+
+    // It might seem very inefficient to not do this check before inserting urls
+    // into the frontier. It is. However, one of the core requirements of this
+    // crawler is politeness, and if on a single page we find links to many
+    // different subdomains of a single site (not unlikely), we will then
+    // hammer that site because robotsTxt requests are not throttled. To avoid
+    // coding in throttling code for robotsTxt requests, we will just do
+    // the request here. At worst (when robotTxt caching doesn't come to the rescue),
+    // we will send two back-to-back requests to one domain.
+    if (!await approvedByRobots(nextUrl)) return;
+
+    this.connections++;
     this.currentlyScrapingUrls.add(nextUrl);
     this.crawlWithGetRequest(nextUrl);
   }
@@ -84,7 +112,7 @@ class Crawler {
     this.parsedUrls.add(massagedUrl);
   }
 
-  newLinkFound({ fromUrl, newUrl }) {
+  async newLinkFound({ fromUrl, newUrl }) {
     if (this.shouldNotScrapeUrl(newUrl)) return;
     logger.addingToFrontier(fromUrl, newUrl);
     this.domainTrackers.get(parse(newUrl).domain).frontier.append(newUrl);
@@ -112,17 +140,26 @@ class Crawler {
     axios({
       method: "get",
       url,
-      responseType: "stream"
+      responseType: "stream",
+      headers: {
+        userAgent
+      }
     })
       .then(res => {
         logger.GETResponseReceived(url, res.status);
         const parser = new makeParser(url);
         parser.once("finished", this.finalizeCrawl.bind(this));
         parser.on("new link", this.newLinkFound.bind(this));
-        parser.on("error", logger.parserError.bind(logger))
+        parser.on("error", logger.parserError.bind(logger));
         res.data.pipe(parser);
       })
       .catch(err => {
+        if (err.code === "ECONNRESET") {
+          const { domain } = parse(url);
+          const { frontier } = this.domainTrackers.get(domain);
+          logger.connectionReset(url)
+          frontier.append(url);
+        }
         logger.GETResponseError(url, err, err.code);
         this.finalizeCrawl(url);
       });
@@ -139,5 +176,5 @@ setInterval(crawler.maintainConnnections.bind(crawler), 5000);
 process.nextTick(crawler.maintainConnnections.bind(crawler));
 
 process.on("uncaughtException", function(err) {
-  console.error(err);
+  logger.unexpectedError(err);
 });

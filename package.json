@@ -16,6 +16,7 @@
     "bunyan": "^1.8.12",
     "htmlparser2": "^3.9.2",
     "robots": "^0.10.1",
+    "robots-parser": "^1.0.1",
     "tldjs": "^2.2.0"
   },
   "devDependencies": {

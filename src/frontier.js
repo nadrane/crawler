@@ -27,37 +27,32 @@ const { writeFileSync } = require("fs");
 const { appendFileAsync, readFileAsync, writeFileAsync } = bluebird.promisifyAll(require("fs"));
 const logger = require("./logger");
 const { join } = require("path");
-const RobotParser = require("./robots-parser");
 
 class Frontier {
   constructor(seedDomain) {
-    this.domain = seedDomain
+    this.domain = seedDomain;
+    this.urlsInFrontier = 1
     this.fileName = join(__dirname, "..", "frontiers", `${seedDomain}.txt`);
     try {
       writeFileSync(this.fileName, `http://${seedDomain}\n`);
     } catch (err) {
-      console.log(err);
       logger.unexpectedError(`failed to initialize frontier for domain ${seedUrl}`, err);
     }
     this.frontierPointer = 0;
   }
 
-  async isEmpty() {
-    let buffer;
-    try {
-      buffer = await readFileAsync(this.fileName);
-    } catch (err) {
-      logger.unexpectedError(`failed to read frontier file - isEmpty ${this.fileName}`, err);
-    }
-    return buffer.toString().length === 0;
+  isEmpty() {
+    return this.urlsInFrontier === 0;
   }
 
   async getNextUrl() {
     let buffer;
+    if (this.isEmpty()) return ""
+
     try {
       buffer = await readFileAsync(this.fileName);
+      this.urlsInFrontier--;
     } catch (err) {
-      console.log("err");
       logger.unexpectedError(
         `failed to read from frontier file - getNextUrl ${this.fileName}`,
         err
@@ -77,23 +72,12 @@ class Frontier {
 
   async append(newUrl) {
     // Best to just never allow disallowed URLs to enter the frontier in the first place
-    if (await this._approvedByRobots(newUrl)) {
-      try {
-        await appendFileAsync(this.fileName, `${newUrl}\n`);
-      } catch (err) {
-        logger.unexpectedError(
-          `failed to append to to frontier file - append ${this.fileName}`,
-          err
-        );
-      }
+    try {
+      await appendFileAsync(this.fileName, `${newUrl}\n`);
+      this.urlsInFrontier++;
+    } catch (err) {
+      logger.unexpectedError(`failed to append to to frontier file - append ${this.fileName}`, err);
     }
-  }
-
-  async _approvedByRobots(url) {
-    if (!this.robotParser) {
-      this.robotParser = new RobotParser(this.domain);
-    }
-    return await this.robotParser.canScrape(url);
   }
 }
 
