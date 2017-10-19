@@ -99,7 +99,7 @@ function approveAll() {
 }
 
 function approveNone() {
-  return true;
+  return false;
 }
 
 module.exports = isAllowed;

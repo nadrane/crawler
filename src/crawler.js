@@ -1,6 +1,5 @@
 const readline = require("readline");
 const { URL } = require("url");
-const { Transform } = require("stream");
 
 const bluebird = require("bluebird");
 const { readFileSync, truncateSync } = require("fs");
@@ -16,11 +15,12 @@ const approvedByRobots = require("./robots-parser");
 const { userAgent } = require("../env");
 
 class Crawler {
-  constructor() {
+  constructor(maxConnections=10) {
+    logger.initializationLog(maxConnections)
     this.connections = 0;
     this.totalRequestsMade = 0;
     this.totalResponsesParsed = 0;
-    this.maxConnections = 2;
+    this.maxConnections = maxConnections;
     this.finalizeCrawl = this.finalizeCrawl.bind(this);
     // Allocating 9.6 bits per url and assuming a false positive rate of 1%
     // meaning
@@ -38,9 +38,24 @@ class Crawler {
     this.seedDomains();
   }
 
+  start() {
+    // Much easier than to just invoke on a continual basis than
+    // after certain events like a crawl finishing.
+    this.interval = setInterval(this.maintainConnnections.bind(this), 5000);
+
+    // But kick off the crawler immediately this one time
+    process.nextTick(this.maintainConnnections.bind(this));
+  }
+
+  stop() {
+    // If crawler already stopped
+    if (!this.interval) return
+
+    clearInterval(this.interval)
+    this.interval = null;
+  }
+
   seedDomains() {
-    truncateSync("./logs/error.txt");
-    truncateSync("./logs/info.txt");
     readFileSync("./seed-domains.txt")
       .toString()
       .split("\n")
@@ -58,24 +73,23 @@ class Crawler {
   // Returns the first domain that can be politely scrapped
   getDomainToScrape() {
     for (let [domain, domainTracker] of this.domainTrackers) {
-      if (domainTracker.politeToScrape()) {
+      if (domainTracker.readyToScrape()) {
         return domain;
       }
     }
   }
 
   async crawlNextInDomain(domain) {
-    // Just because the frontier is exhausted does not mean there isn't an
-    // outstanding request scraping domains now. Don't remove domainTracker immediately.
-    // Maybe come up with some way to do this in the future.
-        //   this.domainTrackers.delete(domain);
-    //   logger.domainExhausted(domain);
-    //   return;
-    // }
     const domainTracker = this.domainTrackers.get(domain)
-    if (domainTracker.frontier.isEmpty()) return
 
     domainTracker.updateTimeLastScraped();
+
+    // It's interseting. We increment the connections before actually opening
+    // a network request. Imagine if our frontier was very small, we might
+    // invoke crawlNextInDomain over and over and over again, queueing
+    // thousands of calls into the event loop. We don't want to do that.
+    this.connections++;
+
     // We want to do the async operation as late as possible to avoid opening excessive connections
     // and potentially opening multiple connections to a single domain.
     const nextUrl = await domainTracker.frontier.getNextUrl();
@@ -88,9 +102,11 @@ class Crawler {
     // coding in throttling code for robotsTxt requests, we will just do
     // the request here. At worst (when robotTxt caching doesn't come to the rescue),
     // we will send two back-to-back requests to one domain.
-    if (!await approvedByRobots(nextUrl)) return;
+    if (!await approvedByRobots(nextUrl)) {
+      this.connections--;
+      return;
+    }
 
-    this.connections++;
     this.currentlyScrapingUrls.add(nextUrl);
     this.crawlWithGetRequest(nextUrl);
   }
@@ -165,16 +181,4 @@ class Crawler {
       });
   }
 }
-
-const crawler = new Crawler();
-
-// Much easier than to just invoke on a continual basis than
-// after certain events like a crawl finishing.
-setInterval(crawler.maintainConnnections.bind(crawler), 5000);
-
-// But kick off the crawler immediately this one time
-process.nextTick(crawler.maintainConnnections.bind(crawler));
-
-process.on("uncaughtException", function(err) {
-  logger.unexpectedError(err);
-});
+module.exports = Crawler

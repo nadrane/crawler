@@ -1,95 +1,101 @@
+const path = require("path");
+const { URL } = require("url");
+const fs = require("fs");
+
 const bluebird = require("bluebird");
 const { parse } = require("tldjs");
-const { URL } = require("url");
-const { appendFile } = require("fs");
-const appendFileAsync = bluebird.promisify(appendFile);
+const appendFileAsync = bluebird.promisify(fs.appendFile);
 const Bunyan = require("bunyan");
 
-const logger = new Bunyan({
-  name: "crawler",
-  streams: [
-    {
-      level: "info",
-      path: "./logs/info.txt"
-    },
-    {
-      level: "error",
-      path: "./logs/error.txt"
-    },
-    {
-      level: "error",
-      stream: process.stdout
-    }
-  ]
-});
+class RobotsError extends Error {}
 
-class RobotsError extends Error {
+class CrawlerError extends Error {}
 
-}
-
-
-class CrawlerError extends Error {
-
-}
-
-class ParserError extends Error {
-
-  }
+class ParserError extends Error {}
 
 class Logger {
+  rotateLog(logName) {
+    const logFilePath = path.join("./logs", logName + "c" + new Date(Date.now()).toLocaleString());
+
+    // create the log file
+    fs.openSync(logFilePath, "w");
+
+    this.logger = new Bunyan({
+      name: "crawler",
+      streams: [
+        {
+          level: "info",
+          path: logFilePath
+        },
+        {
+          level: "error",
+          path: logFilePath
+        },
+        {
+          level: "error",
+          stream: process.stdout
+        }
+      ]
+    });
+  }
+
+  initializationLog(maxConnections) {
+    this.logger.info({ event: "crawler initialization", maxConnections });
+  }
+
   unexpectedError(err, data) {
-    logger.error({ event: "unexpected error", err, data });
+    this.logger.error({ event: "unexpected error", err, data });
   }
 
   parserError(err, url) {
-    logger.error({ event: "parser error", err, url });
+    this.logger.error({ event: "parser error", err, url });
   }
 
   noRobotsResponseReceived(module, err, url) {
-    logger.info({module, event: "no robots response received", url})
+    this.logger.info({ module, event: "no robots response received", url });
   }
 
   GETResponseError(url, err, errorCode) {
     const domain = parse(url);
-    logger.info({ event: "response error", errorCode, err: err.message, url, domain });
+    this.logger.info({ event: "response error", errorCode, err: err.message, url, domain });
   }
 
   connectionReset(url) {
     const domain = parse(url);
-    logger.info({ event: "connection reset", url, domain });
+    this.logger.info({ event: "connection reset", url, domain });
   }
 
   domainExhausted(domain) {
-    logger.info({ event: "domain exhausted", domain});
+    this.logger.info({ event: "domain exhausted", domain });
   }
 
   addingToFrontier(fromUrl, newUrl) {
     const newDomain = parse(newUrl).domain;
     const fromDomain = parse(fromUrl).domain;
-    logger.info({ event: "new link", fromUrl, fromDomain, newUrl, newDomain });
+    this.logger.info({ event: "new link", fromUrl, fromDomain, newUrl, newDomain });
   }
   robotsRequestSent(url) {
     const { hostname } = new URL(url);
-    logger.info({ event: "robots request sent", url, hostname });
+    this.logger.info({ event: "robots request sent", url, hostname });
   }
   GETRequestSent(url, totalRequestsMade) {
     const domain = parse(url).domain;
-    logger.info({ event: "request sent", url, domain, totalRequestsMade });
+    this.logger.info({ event: "request sent", url, domain, totalRequestsMade });
   }
 
   GETResponseReceived(url, statusCode) {
     const domain = parse(url).domain;
-    logger.info({ event: "response success", statusCode, url, domain });
+    this.logger.info({ event: "response success", statusCode, url, domain });
   }
 
   connectionMade(url) {
     const domain = parse(url).domain;
-    logger.info({ event: "new connection", url, domain });
+    this.logger.info({ event: "new connection", url, domain });
   }
 
   finalizingCrawl(url, totalResponsesParsed) {
     const domain = parse(url).domain;
-    logger.info({ event: "finalized crawl", url, domain, totalResponsesParsed });
+    this.logger.info({ event: "finalized crawl", url, domain, totalResponsesParsed });
   }
 }
 module.exports = new Logger();

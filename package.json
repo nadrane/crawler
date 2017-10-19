@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node src/crawler.js",
-    "debug": "node --inspect src/crawler.js"
+    "start": "node src/index.js",
+    "debug": "node --inspect src/index.js"
   },
   "author": "",
   "license": "ISC",
