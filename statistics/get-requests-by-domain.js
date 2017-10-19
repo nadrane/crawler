@@ -1,16 +1,8 @@
-const fs = require("fs");
-
-fs.readFile("./logs/info.txt", function(err, data) {
-  console.log(
-    "data",
-    data
-      .toString()
-      .split("\n")
-      .slice(0, -1)
-      .map(line => JSON.parse(line))
+const readLog = require("./utils");
+const requestsByDomain = readLog()
       .filter(line => line.event === 'request sent')
       .reduce((domainCounts, log) => {
-        const domain = log.domain
+        const { domain } = log
         if (domain in domainCounts) {
           domainCounts[domain]++
         } else {
@@ -18,5 +10,5 @@ fs.readFile("./logs/info.txt", function(err, data) {
         }
         return domainCounts
       }, {})
-  );
-});
+
+console.log(requestsByDomain)

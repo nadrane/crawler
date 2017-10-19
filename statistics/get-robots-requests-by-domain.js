@@ -1,26 +1,17 @@
-const fs = require("fs");
-const {parse} = require('tldjs');
+const { parse } = require("tldjs");
 
-fs.readFile("./logs/info.txt", function(err, data) {
-  console.log(
-    "data",
-    data
-      .toString()
-      .split("\n")
-      .slice(0, -1)
-      .map(line => JSON.parse(line))
-      .filter(line => line.event === 'robots request sent')
-      .reduce((domainCounts, log) => {
-        const {domain} = parse(log.url)
-        return domainCounts.concat(domain)
-      },[])
-      .sort()
-      //   if (domain in domainCounts) {
-      //     domainCounts[domain]++
-      //   } else {
-      //     domainCounts[domain] = 1
-      //   }
-      //   return domainCounts
-      // }, {})
-  );
-});
+const readLog = require("./utils");
+const robotsRequests = readLog()
+  .filter(line => line.event === "robots request sent")
+  .map(line => line.hostname)
+  .reduce((domainCounts, hostname) => {
+    const { domain } = parse(hostname)
+    if (domain in domainCounts) {
+      domainCounts[domain]++;
+    } else {
+      domainCounts[domain] = 1;
+    }
+    return domainCounts;
+  }, {})
+
+  console.log(robotsRequests)
