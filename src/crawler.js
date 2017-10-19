@@ -170,13 +170,29 @@ class Crawler {
         res.data.pipe(parser);
       })
       .catch(err => {
-        if (err.code === "ECONNRESET") {
-          const { domain } = parse(url);
-          const { frontier } = this.domainTrackers.get(domain);
-          logger.connectionReset(url)
-          frontier.append(url);
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        if (err.response) {
+          const { headers, status } = err.response
+          logger.GETResponseError(url, err, status, headers);
+        // No response received
+        } else if (err.request) {
+          // try to url a second time if the connection reset
+          if (err.code === "ECONNRESET") {
+            const { domain } = parse(url);
+            const { frontier } = this.domainTrackers.get(domain);
+            logger.connectionReset(url)
+            frontier.append(url);
+          } else {
+            logger.noGETResponseRecieved(url, err)
+          }
+        } else {
+          logger.unexpectedError(err, {
+            module: "get request",
+            event: "bad request",
+            config: err.config
+          });
         }
-        logger.GETResponseError(url, err, err.code);
         this.finalizeCrawl(url);
       });
   }

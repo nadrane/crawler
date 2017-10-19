@@ -52,12 +52,18 @@ class Logger {
   }
 
   noRobotsResponseReceived(module, err, url) {
-    this.logger.info({ module, event: "no robots response received", url });
+    const domain = parse(url);
+    this.logger.info({ module, event: "no robots response received", url, domain });
   }
 
-  GETResponseError(url, err, errorCode) {
+  GETResponseError(url, err, status, headers) {
     const domain = parse(url);
-    this.logger.info({ event: "response error", errorCode, err: err.message, url, domain });
+    this.logger.info({ event: "response error", status, headers, err: err.message, url, domain });
+  }
+
+  noGETResponseRecieved(module, err, url) {
+    const domain = parse(url);
+    this.logger.info({ module, event: "no get response received", url, domain });
   }
 
   connectionReset(url) {

@@ -6,7 +6,10 @@ const { LOGGING_DIR } = require('../env')
 function readAndParseMostRecentLog() {
   const logFiles = fs.readdirSync(LOGGING_DIR)
 
-  const sortByRecency = logs => logs.sort((a, b) => new Date(a.slice(3)) > new Date(b.slice(3)))
+  const sortByRecency = logs => logs.sort((a, b) => {
+    const stripConnectionString = fileName => fileName.slice(fileName.indexOf('c') + 1)
+    return new Date(stripConnectionString(a)) > new Date(stripConnectionString(b))
+  })
 
   const mostRecentLog = sortByRecency(logFiles)[logFiles.length - 1]
   return requestLogs = fs.readFileSync(path.join(LOGGING_DIR, mostRecentLog))

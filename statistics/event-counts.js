@@ -1,6 +1,4 @@
 const readLog = require("./utils");
-const requestsByDomain = readLog()
-
 const eventCounts = readLog()
       .reduce((counts, log) => {
         const event = log.event

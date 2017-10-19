@@ -71,18 +71,20 @@ function handleHttpError(err) {
     } else {
       logger.unexpectedError(err.response, {
         module: "robots-parser",
-        event: "status not 2xx, 4xx or 5xx"
+        event: "status not 2xx, 4xx or 5xx",
+        url: err.config.url,
+        headers: err.headers
       });
-      return approveNone
+      return approveNone;
     }
     // The request was made but no response was received
   } else if (err.request) {
     logger.noRobotsResponseReceived(err.response, {
       module: "robots-parser",
       event: "no robots response received",
-      url: err.config.url,
+      url: err.config.url
     });
-    return approveNone
+    return approveNone;
     // Something happened in setting up the request that triggered an Error
   } else {
     logger.unexpectedError(err, {
@@ -90,7 +92,7 @@ function handleHttpError(err) {
       event: "bad request",
       config: err.config
     });
-    return approveNone
+    return approveNone;
   }
 }
 
