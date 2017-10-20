@@ -43,8 +43,8 @@ class Logger {
     this.logger.info({ event: "crawler initialization", maxConnections });
   }
 
-  unexpectedError(err, data) {
-    this.logger.error({ event: "unexpected error", err, data });
+  unexpectedError(err, event, data) {
+    this.logger.error(err, event, data);
   }
 
   parserError(err, url) {
@@ -61,9 +61,9 @@ class Logger {
     this.logger.info({ event: "response error", status, headers, err: err.message, url, domain });
   }
 
-  noGETResponseRecieved(module, err, url) {
+  noGETResponseRecieved(err, url) {
     const domain = parse(url);
-    this.logger.info({ module, event: "no get response received", url, domain });
+    this.logger.info({ err, event: "no get response received", url, domain });
   }
 
   connectionReset(url) {

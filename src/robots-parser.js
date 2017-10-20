@@ -68,28 +68,27 @@ function handleHttpError(err) {
       return approveNone;
     } else if (err.response.status >= 400) {
       return approveAll;
+    } else if (err.response.status >= 300) {
+      return approveAll;
+    // I don't think I can ever get here
     } else {
-      logger.unexpectedError(err.response, {
-        module: "robots-parser",
-        event: "status not 2xx, 4xx or 5xx",
-        url: err.config.url,
-        headers: err.headers
-      });
+      logger.unexpectedError(err.response, "status not 2xx, 3xx, 4xx or 5xx",
+        { module: "robots-parser",
+          url: err.config.url,
+          headers: err.headers })
       return approveNone;
     }
     // The request was made but no response was received
   } else if (err.request) {
     logger.noRobotsResponseReceived(err.response, {
       module: "robots-parser",
-      event: "no robots response received",
       url: err.config.url
     });
     return approveNone;
     // Something happened in setting up the request that triggered an Error
   } else {
-    logger.unexpectedError(err, {
+    logger.unexpectedError(err, "bad robots request", {
       module: "robots-parser",
-      event: "bad request",
       config: err.config
     });
     return approveNone;

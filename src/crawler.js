@@ -15,7 +15,7 @@ const approvedByRobots = require("./robots-parser");
 const { userAgent } = require("../env");
 
 class Crawler {
-  constructor(maxConnections=10) {
+  constructor(maxConnections=1) {
     logger.initializationLog(maxConnections)
     this.connections = 0;
     this.totalRequestsMade = 0;
@@ -123,7 +123,7 @@ class Crawler {
     // Strip off the protocl. No need to scrap both http and https of the same site
     const massagedUrl = url.split("://")[1];
     if (!["http", "https"].includes(url.split("://")[0])) {
-      logger.unexpectedError(`There should be no non http/s links ${url}`);
+      logger.unexpectedError("", "unexpected protocol", {url})
     }
     this.parsedUrls.add(massagedUrl);
   }
@@ -184,14 +184,13 @@ class Crawler {
             logger.connectionReset(url)
             frontier.append(url);
           } else {
-            logger.noGETResponseRecieved(url, err)
+            logger.noGETResponseRecieved(err, url)
           }
         } else {
-          logger.unexpectedError(err, {
-            module: "get request",
-            event: "bad request",
-            config: err.config
-          });
+          logger.unexpectedError(err,
+            "bad request",
+            {module: "get request",
+             config: err.config })
         }
         this.finalizeCrawl(url);
       });
