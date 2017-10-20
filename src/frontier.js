@@ -38,7 +38,6 @@ class Frontier {
     } catch (err) {
       logger.unexpectedError(`failed to initialize frontier for domain ${seedUrl}`, err);
     }
-    this.frontierPointer = 0;
   }
 
   isEmpty() {
