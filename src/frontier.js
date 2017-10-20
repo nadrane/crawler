@@ -22,6 +22,7 @@ the frontier was indexed by domain. Simple enough, I can just create a separate 
 file for every domain.
 */
 
+const assert = require('assert');
 const bluebird = require("bluebird");
 const { writeFileSync } = require("fs");
 const { appendFileAsync, readFileAsync, writeFileAsync } = bluebird.promisifyAll(require("fs"));
@@ -32,6 +33,8 @@ class Frontier {
   constructor(seedDomain) {
     this.domain = seedDomain;
     this.urlsInFrontier = 1
+    this.currentlyReading = false
+
     this.fileName = join(__dirname, "..", "frontiers", `${seedDomain}.txt`);
     try {
       writeFileSync(this.fileName, `http://${seedDomain}\n`);
@@ -40,17 +43,42 @@ class Frontier {
     }
   }
 
+  readyForReading() {
+    return !this.isEmpty() && !this.currentlyReading
+  }
+
   isEmpty() {
+    assert(this.urlsInFrontier >= 0);
     return this.urlsInFrontier === 0;
   }
 
   async getNextUrl() {
     let buffer;
-    if (this.isEmpty()) return ""
-
+    if (!this.readyForReading()) return ""
+    // This is effectively a lock and must occur before the read begins
+    // Why the heck do we need locks in a single threaded environment?
+    // The answer is because IO happens across multiple threads in Node.
+    // Let me describe a scenario
+    // 1. suppose getNextUrl is called, and then we wait on readFileAsync
+    // This operation happens in an external thread in node and  a callback will
+    // eventually be placed on the event loop. This invocation of getNextUrl
+    // will be called C1.
+    // 2. getNextUrl is called a second time and also waits on readFileAsync.
+    // This invocation will be called C2. In this scenario, C1 and C2 are
+    // now both reading from the same file.
+    // 3. C1 returns from readFileAsync, yielding the last remaining url, and then
+    // waits on writeFileAsync
+    // 4. C2 returns from readFileAsync with the same url as C1 and also waits
+    // on writeFileAsync
+    // 5. C1 returns from writeFileAsync, completeing the removal of our url from the frontier.
+    // 6. C2 returns from writeFileAsync, effectively leaving the file
+    // unchanged (empty) since the allUrls would have been the same in the stack frames of both
+    // C1 and C2.
+    // END: urlsInFrontier is now set to -1, and we returned and scraped the same URL twice.
+    this.currentlyReading = true;
     try {
-      buffer = await readFileAsync(this.fileName);
       this.urlsInFrontier--;
+      buffer = await readFileAsync(this.fileName);
     } catch (err) {
       logger.unexpectedError(
         `failed to read from frontier file - getNextUrl ${this.fileName}`,
@@ -66,6 +94,7 @@ class Frontier {
     } catch (err) {
       logger.unexpectedError(`failed to write to frontier file - getNextUrl ${this.fileName}`, err);
     }
+    this.currentlyReading = false;
     return nextUrl;
   }
 

@@ -87,13 +87,14 @@ class Crawler {
     // It's interseting. We increment the connections before actually opening
     // a network request. Imagine if our frontier was very small, we might
     // invoke crawlNextInDomain over and over and over again, queueing
-    // thousands of calls into the event loop. We don't want to do that.
+    // thousands of calls into the eve nt loop. We don't want to do that.
     this.connections++;
 
-    // We want to do the async operation as late as possible to avoid opening excessive connections
-    // and potentially opening multiple connections to a single domain.
     const nextUrl = await domainTracker.frontier.getNextUrl();
-
+    if (!nextUrl) {
+      this.connections--
+      return
+    }
     // It might seem very inefficient to not do this check before inserting urls
     // into the frontier. It is. However, one of the core requirements of this
     // crawler is politeness, and if on a single page we find links to many

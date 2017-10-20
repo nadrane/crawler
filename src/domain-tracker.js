@@ -8,7 +8,7 @@ class DomainTracker {
   }
 
   readyToScrape() {
-    return this.politeToScrape() && !this.frontier.isEmpty()
+    return this.politeToScrape() && this.frontier.readyForReading()
   }
 
   politeToScrape() {
