@@ -10,4 +10,5 @@ EXPOSE 80 443
 
 WORKDIR crawler
 
+RUN npm i
 RUN npm start
