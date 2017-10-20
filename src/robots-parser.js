@@ -54,7 +54,14 @@ async function getAndParseRobotsTxt(protocol, port, hostname) {
   } catch (err) {
     return handleHttpError(err);
   }
-  const parser = robotsParser(robotsTxtUrl, robotsResponse.data);
+  let parser
+
+  // sometimes the robots.txt url returns unparseable nonsense
+  try {
+    parser = robotsParser(robotsTxtUrl, robotsResponse.data);
+  } catch(err) {
+    return approveAll
+  }
 
   return url => parser.isAllowed(url, userAgent);
 }
