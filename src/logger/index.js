@@ -5,7 +5,7 @@ const fs = require("fs");
 const bluebird = require("bluebird");
 const { parse } = require("tldjs");
 const appendFileAsync = bluebird.promisify(fs.appendFile);
-const Bunyan = require("bunyan");
+const bunyanLogger = require('./buyan-config')
 
 class RobotsError extends Error {}
 
@@ -14,29 +14,8 @@ class CrawlerError extends Error {}
 class ParserError extends Error {}
 
 class Logger {
-  rotateLog(logName) {
-    const logFilePath = path.join("./logs", logName + "c" + new Date(Date.now()).toLocaleString());
-
-    // create the log file
-    fs.openSync(logFilePath, "w");
-
-    this.logger = new Bunyan({
-      name: "crawler",
-      streams: [
-        {
-          level: "info",
-          path: logFilePath
-        },
-        {
-          level: "error",
-          path: logFilePath
-        },
-        {
-          level: "error",
-          stream: process.stdout
-        }
-      ]
-    });
+  constructor() {
+    this.logger = bunyanLogger;
   }
 
   initializationLog(maxConnections) {

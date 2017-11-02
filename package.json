@@ -4,17 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "NODE_ENV=development node src/index.js",
     "debug": "node --inspect src/index.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.137.0",
     "axios": "^0.16.2",
     "bloomfilter": "^0.0.16",
     "bluebird": "^3.5.1",
     "bunyan": "^1.8.12",
     "htmlparser2": "^3.9.2",
+    "le_node": "^1.7.1",
     "minimist": "^1.2.0",
     "robots": "^0.10.1",
     "robots-parser": "^1.0.1",

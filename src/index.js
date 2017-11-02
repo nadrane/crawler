@@ -4,8 +4,6 @@ const logger = require('./logger');
 const { c, o } = argv;
 const Crawler = require("./crawler");
 
-
-logger.rotateLog(c)
 let currentCrawler = new Crawler(c)
 
 currentCrawler.start();

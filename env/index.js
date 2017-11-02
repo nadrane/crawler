@@ -10,11 +10,11 @@ if (process.env.NODE_ENV === "production") {
 Object.assign(env, require('./defaults'));
 
 env.isProd = function() {
-  return env.NODE_ENV === "production";
+  return process.env.NODE_ENV === "production";
 };
 
 env.isDev = function() {
-  return env.NODE_ENV === "development";
+  return process.env.NODE_ENV === "development";
 };
 
 module.exports = env
