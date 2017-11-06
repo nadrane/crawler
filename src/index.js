@@ -6,7 +6,7 @@ const Crawler = require("./crawler");
 
 let currentCrawler = new Crawler(c)
 
-currentCrawler.start();
+currentCrawler.seedDomainsAndStart();
 // newCrawlerIn60()
 
 // function newCrawlerIn60() {

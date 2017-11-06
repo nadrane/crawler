@@ -16,7 +16,18 @@ const credentialsPromise = new Promise(function(resolve, reject){
   })
 })
 
+const seedFilePromise = new Promise(function(resolve, reject){
+  s3.getObject({
+    Bucket: "crawler-nick",
+    Key: "seed-domains.txt"
+  }, function(err, data) {
+    if (err) reject(err)
+    else resolve(data)
+  })
+})
+
 module.exports = {
   //TODO change to prod token
-  LOGENTRIES_TOKEN_PROMISE: credentialsPromise
+  LOGENTRIES_TOKEN_PROMISE: credentialsPromise,
+  SEED_FILE_PROMISE: seedFilePromise
 }

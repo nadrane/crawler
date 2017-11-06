@@ -8,6 +8,7 @@ const { BloomFilter } = require("bloomfilter");
 const { parse } = require("tldjs");
 const axios = require("axios");
 
+const { SEED_FILE_PROMISE } = require("../env/");
 const DomainTracker = require("./domain-tracker");
 const logger = require("./logger");
 const makeParser = require("./parser");
@@ -15,12 +16,13 @@ const approvedByRobots = require("./robots-parser");
 const { userAgent } = require("../env");
 
 class Crawler {
-  constructor(maxConnections=1) {
-    logger.initializationLog(maxConnections)
+  constructor(maxConnections = 1) {
+    logger.initializationLog(maxConnections);
     this.connections = 0;
     this.totalRequestsMade = 0;
     this.totalResponsesParsed = 0;
     this.maxConnections = maxConnections;
+    this.seeded = false;
     this.finalizeCrawl = this.finalizeCrawl.bind(this);
     // Allocating 9.6 bits per url and assuming a false positive rate of 1%
     // meaning
@@ -35,31 +37,40 @@ class Crawler {
     // if there are 100,000 whitelisted domains
     // IDEA generators or coroutines instead?
     this.domainTrackers = new Map();
-    this.seedDomains();
+  }
+
+  seedDomainsAndStart() {
+    // Much easier than to just invoke on a continual basis than
+    // after certain events like a crawl finishing.
+    this.seedDomains()
+      .then(() => {
+        this.start();
+      });
   }
 
   start() {
     // Much easier than to just invoke on a continual basis than
     // after certain events like a crawl finishing.
     this.interval = setInterval(this.maintainConnnections.bind(this), 5000);
-
     // But kick off the crawler immediately this one time
     process.nextTick(this.maintainConnnections.bind(this));
   }
 
   stop() {
     // If crawler already stopped
-    if (!this.interval) return
+    if (!this.interval) return;
 
-    clearInterval(this.interval)
+    clearInterval(this.interval);
     this.interval = null;
   }
 
   seedDomains() {
-    readFileSync("./seed-domains.txt")
-      .toString()
-      .split("\n")
-      .map(domain => this.domainTrackers.set(domain, new DomainTracker(domain)));
+    return SEED_FILE_PROMISE
+      .then(file => file.toString().split("\n"))
+      .then(lines =>
+        lines.map(domain => this.domainTrackers.set(domain, new DomainTracker(domain)))
+      )
+      .then(() => (this.seeded = true));
   }
 
   maintainConnnections() {
@@ -80,7 +91,7 @@ class Crawler {
   }
 
   async crawlNextInDomain(domain) {
-    const domainTracker = this.domainTrackers.get(domain)
+    const domainTracker = this.domainTrackers.get(domain);
 
     domainTracker.updateTimeLastScraped();
 
@@ -92,8 +103,8 @@ class Crawler {
 
     const nextUrl = await domainTracker.frontier.getNextUrl();
     if (!nextUrl) {
-      this.connections--
-      return
+      this.connections--;
+      return;
     }
     // It might seem very inefficient to not do this check before inserting urls
     // into the frontier. It is. However, one of the core requirements of this
@@ -124,7 +135,7 @@ class Crawler {
     // Strip off the protocl. No need to scrap both http and https of the same site
     const massagedUrl = url.split("://")[1];
     if (!["http", "https"].includes(url.split("://")[0])) {
-      logger.unexpectedError("", "unexpected protocol", {url})
+      logger.unexpectedError("", "unexpected protocol", { url });
     }
     this.parsedUrls.add(massagedUrl);
   }
@@ -174,27 +185,27 @@ class Crawler {
         // The request was made and the server responded with a status code
         // that falls out of the range of 2xx
         if (err.response) {
-          const { headers, status } = err.response
+          const { headers, status } = err.response;
           logger.GETResponseError(url, err, status, headers);
-        // No response received
+          // No response received
         } else if (err.request) {
           // try to url a second time if the connection reset
           if (err.code === "ECONNRESET") {
             const { domain } = parse(url);
             const { frontier } = this.domainTrackers.get(domain);
-            logger.connectionReset(url)
+            logger.connectionReset(url);
             frontier.append(url);
           } else {
-            logger.noGETResponseRecieved(err, url)
+            logger.noGETResponseRecieved(err, url);
           }
         } else {
-          logger.unexpectedError(err,
-            "bad request",
-            {module: "get request",
-             config: err.config })
+          logger.unexpectedError(err, "bad request", {
+            module: "get request",
+            config: err.config
+          });
         }
         this.finalizeCrawl(url);
       });
   }
 }
-module.exports = Crawler
+module.exports = Crawler;
