@@ -3,8 +3,10 @@ const path = require("path");
 let env;
 if (process.env.NODE_ENV === "production") {
   env = require('./production');
-} else {
+} else if (process.env.NODE_ENV === "development"){
   env = require('./development');
+} else {
+  throw new Error('environment not defined')
 }
 
 Object.assign(env, require('./defaults'));
