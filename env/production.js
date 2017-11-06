@@ -22,7 +22,7 @@ const seedFilePromise = new Promise(function(resolve, reject){
     Key: "seed-domains.txt"
   }, function(err, data) {
     if (err) reject(err)
-    else resolve(data)
+    else resolve(data.Body)
   })
 })
 
