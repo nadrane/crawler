@@ -8,4 +8,4 @@ EXPOSE 80 443
 
 RUN npm i
 
-CMD ["npm", "start"]
+CMD ["npm", "run", "prod"]
