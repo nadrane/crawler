@@ -42,7 +42,7 @@ def terminate_all_instances():
 def install_docker_and_start_dameon():
   run("sudo yum update -y")
   run("sudo yum install -y docker")
-  run("sudo service docker start")[0]
+  run("sudo service docker start")
 
 def start_crawler():
   run("sudo docker run -p 80:80 -p 443:443 -v ~/app:/app drane128/crawler2")
