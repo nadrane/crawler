@@ -30,7 +30,10 @@ def create_instances(n):
                               InstanceType='t2.micro',
                               SubnetId="subnet-237cc168",
                               Monitoring={'Enabled': True},
-                              KeyName="crawler")
+                              KeyName="crawler",
+                              IamInstanceProfile={
+                                "Name": "ec2-s3-read"
+                              })
 
 def terminate_all_instances():
   instances = ec2.describe_instances()
@@ -40,11 +43,6 @@ def install_docker_and_start_dameon():
   run("sudo yum update -y")
   run("sudo yum install -y docker")
   run("sudo service docker start")[0]
-
-def send_secrets():
-  run('mkdir -p ~/app')
-  put("logentries-credentials.json", "~/app/logentries-credentials.json")
-  put("aws-credentials.json", "~/app/aws-credentials.json")
 
 def start_crawler():
   run("sudo docker run -p 80:80 -p 443:443 -v ~/app:/app drane128/crawler2")
@@ -83,21 +81,6 @@ class Instance:
       instances.remove(self)
     self.failed_connection_attempts = 0
 
-  def send_secrets(self):
-    while(not self.secrets_received and self.failed_connection_attempts < 4):
-      try:
-        tasks.execute(send_secrets, host=self.ec2_instance.public_ip_address)
-        print(self.ec2_instance.public_ip_address, ' secrets received')
-        self.secrets_received = True
-      except:
-        self.failed_connection_attempts += 1
-        time.sleep(10)
-    if (not self.secrets_received):
-      print(self.ec2_instance.public_ip_address, ' secrets failed to send')
-      self.ec2_instance.terminate()
-      instances.remove(self)
-    self.failed_connection_attempts = 0
-
   def start_crawler(self):
     while(not self.is_crawl_running and self.failed_connection_attempts < 4):
       try:
@@ -117,13 +100,12 @@ class Instance:
 
 
 if __name__ == "__main__":
-  # instance = Instance(create_instances(1)[0])
+  instance = Instance(create_instances(1)[0])
   # instances.append(instance)
   # instance.wait_until_running()
   # instance.initialize_docker()
-  # instance.send_secrets()
   # tasks.execute(send_secrets, host="54.85.96.78")
-  tasks.execute(start_crawler, host="54.85.96.78")
+  # tasks.execute(start_crawler, host="54.85.96.78")
 
 
 

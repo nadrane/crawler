@@ -1,22 +1,11 @@
 const Bunyan = require("bunyan");
-const LogEntries = require('le_node');
+const LogEntries = require("le_node");
 
-const credentials = require('../../logentries-credentials')
-const {isDev, isProd} = require('../../env')
-
-let token;
-if (isDev()) {
-  token = credentials.DEV_TOKEN
-} else if (isProd()) {
-  token = credentials.PROD_TOKEN
-} else {
-  throw new Error("logentries token not found")
-}
+const { isDev, isProd, LOGENTRIES_TOKEN_PROMISE } = require("../../env");
 
 const bunyanLogger = new Bunyan({
   name: "crawler",
   streams: [
-    LogEntries.bunyanStream({ token }),
     {
       level: "error",
       stream: process.stdout
@@ -24,4 +13,13 @@ const bunyanLogger = new Bunyan({
   ]
 });
 
-module.exports = bunyanLogger
+LOGENTRIES_TOKEN_PROMISE
+  .then(token => {
+    bunyanLogger.addStream(LogEntries.bunyanStream({ token }));
+  })
+  .catch(err => {
+    throw new Error("logentries token not found");
+    process.exit();
+  });
+
+module.exports = bunyanLogger;
