@@ -37,7 +37,6 @@ class Frontier {
     this.currentlyReading = false
 
     this.fileName = join(FRONTIER_DIRECTORY, `${seedDomain}.txt`);
-    console.log('fn', this.fileName)
     try {
       writeFileSync(this.fileName, `http://${seedDomain}\n`);
     } catch (err) {

@@ -15,7 +15,7 @@ ec2 = boto3.resource('ec2', region_name="us-east-1")
 def create_instances(n):
   return ec2.create_instances(ImageId='ami-8c1be5f6',
                               MinCount=1, MaxCount=1,
-                              InstanceType='t2.micro',
+                              InstanceType='m3.medium',
                               SubnetId="subnet-237cc168",
                               Monitoring={'Enabled': True},
                               KeyName="crawler",
@@ -69,7 +69,7 @@ class Instance:
         setattr(self, task_name, True)
       except:
         self.failed_connection_attempts += 1
-        time.sleep(10)
+        time.sleep(15)
     if (not getTaskAttribute()):
       print(self.ec2_instance.public_ip_address, task_function, " failed")
     return getTaskAttribute()
