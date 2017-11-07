@@ -29,5 +29,6 @@ const seedFilePromise = new Promise(function(resolve, reject){
 module.exports = {
   //TODO change to prod token
   LOGENTRIES_TOKEN_PROMISE: credentialsPromise,
-  SEED_FILE_PROMISE: seedFilePromise
+  SEED_FILE_PROMISE: seedFilePromise,
+  FRONTIER_DIRECTORY: "/frontiers"  // volume mounted in Docker
 }

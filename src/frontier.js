@@ -28,6 +28,7 @@ const { writeFileSync } = require("fs");
 const { appendFileAsync, readFileAsync, writeFileAsync } = bluebird.promisifyAll(require("fs"));
 const logger = require("./logger");
 const { join } = require("path");
+const { FRONTIER_DIRECTORY } = require('../env/')
 
 class Frontier {
   constructor(seedDomain) {
@@ -35,11 +36,12 @@ class Frontier {
     this.urlsInFrontier = 1
     this.currentlyReading = false
 
-    this.fileName = join(__dirname, "..", "frontiers", `${seedDomain}.txt`);
+    this.fileName = join(FRONTIER_DIRECTORY, `${seedDomain}.txt`);
+    console.log('fn', this.fileName)
     try {
       writeFileSync(this.fileName, `http://${seedDomain}\n`);
     } catch (err) {
-      logger.unexpectedError(`failed to initialize frontier for domain ${seedUrl}`, err);
+      logger.unexpectedError(`failed to initialize frontier for domain ${seedDomain}`, err);
     }
   }
 

@@ -7,5 +7,6 @@ const readFileAsync = promisify(readFile)
 
 module.exports = {
   LOGENTRIES_TOKEN_PROMISE: Promise.resolve(require("../logentries-credentials").DEV_TOKEN),
-  SEED_FILE_PROMISE: readFileAsync('./seed-domains.txt')
+  SEED_FILE_PROMISE: readFileAsync('./seed-domains.txt'),
+  FRONTIER_DIRECTORY: "./frontiers"
 };
