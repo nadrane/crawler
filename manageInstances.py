@@ -33,7 +33,7 @@ def install_docker_and_start_dameon():
   run("sudo service docker start")
 
 def start_crawler():
-  run("sudo docker run -p 80:80 -p 443:433 -v /frontiers:/frontiers drane128/crawler2")
+  run("sudo docker run --ulimit nofile=10000:10000 -p 80:80 -p 443:433 -v /frontiers:/frontiers drane128/crawler2")
 
 def make_frontier_folder():
   run("sudo mkdir /frontiers")
