@@ -18,8 +18,8 @@ class Logger {
     this.logger = bunyanLogger;
   }
 
-  initializationLog(maxConnections) {
-    this.logger.info({ event: "crawler initialization", maxConnections });
+  initializationLog(maxConnectionsOpen, maxOpenFiles) {
+    this.logger.info({ event: "crawler initialization", maxConnectionsOpen, maxOpenFiles });
   }
 
   unexpectedError(err, event, data) {

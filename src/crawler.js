@@ -16,9 +16,8 @@ const approvedByRobots = require("./robots-parser");
 const { userAgent } = require("../env");
 
 class Crawler {
-  constructor(maxConnections = 500) {
-    logger.initializationLog(maxConnectionsOpen=500, maxFilesOpen=1000);
-
+  constructor(maxConnectionsOpen=3000, maxFilesOpen=5000) {
+    logger.initializationLog(maxConnectionsOpen, maxFilesOpen);
     this.connectionsOpen = 0
     this.maxFilesOpen = maxFilesOpen
     this.maxConnectionsOpen = maxConnectionsOpen;
@@ -89,7 +88,7 @@ class Crawler {
   }
 
   maintainConnnections() {
-    while (this.connections < this.maxConnections) {
+    while (this.connections < this.maxConnectionsOpen) {
       if (this.countOpenFiles() > this.maxFilesOpen) return
       const domain = this.getDomainToScrape();
       if (!domain) break; // We absolutely need to do this to avoid accidentally blocking the event loop
