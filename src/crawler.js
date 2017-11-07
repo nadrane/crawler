@@ -17,12 +17,17 @@ const { userAgent } = require("../env");
 
 class Crawler {
   constructor(maxConnections = 500) {
-    logger.initializationLog(maxConnections);
-    this.connections = 0;
+    logger.initializationLog(maxConnectionsOpen=500, maxFilesOpen=1000);
+
+    this.connectionsOpen = 0
+    this.maxFilesOpen = maxFilesOpen
+    this.maxConnectionsOpen = maxConnectionsOpen;
+
     this.totalRequestsMade = 0;
     this.totalResponsesParsed = 0;
-    this.maxConnections = maxConnections;
+
     this.seeded = false;
+    this.running = false;
     this.finalizeCrawl = this.finalizeCrawl.bind(this);
     // Allocating 9.6 bits per url and assuming a false positive rate of 1%
     // meaning
@@ -49,6 +54,8 @@ class Crawler {
   }
 
   start() {
+    if (this.running) return
+    this.running = true
     // Much easier than to just invoke on a continual basis than
     // after certain events like a crawl finishing.
     this.interval = setInterval(this.maintainConnnections.bind(this), 5000);
@@ -58,7 +65,7 @@ class Crawler {
 
   stop() {
     // If crawler already stopped
-    if (!this.interval) return;
+    if (!this.running) return
 
     clearInterval(this.interval);
     this.interval = null;
@@ -73,10 +80,19 @@ class Crawler {
       .then(() => (this.seeded = true));
   }
 
+  countOpenFiles() {
+    filesOpen = 0
+    for (frontier of this.domainTrackers.frontier) {
+      filesOpen = frontier.currentlyReading ? 1 : 0
+    }
+    return filesOpen
+  }
+
   maintainConnnections() {
     while (this.connections < this.maxConnections) {
+      if (this.countOpenFiles() > this.maxFilesOpen) return
       const domain = this.getDomainToScrape();
-      if (!domain) break; //We absolutely need to do this to avoid accidentally blocking the event loop
+      if (!domain) break; // We absolutely need to do this to avoid accidentally blocking the event loop
       this.crawlNextInDomain(domain);
     }
   }
@@ -95,18 +111,9 @@ class Crawler {
 
     domainTracker.updateTimeLastScraped();
 
-    // It's interseting. We increment the connections before actually opening
-    // a network request. Imagine if our frontier was very small, we might
-    // invoke crawlNextInDomain over and over and over again, queueing
-    // thousands of calls into the eve nt loop. We don't want to do that.
-    this.connections++;
-
     const nextUrl = await domainTracker.frontier.getNextUrl();
-    if (!nextUrl) {
-      this.connections--;
-      return;
-    }
-    // It might seem very inefficient to not do this check before inserting urls
+    if (!nextUrl) return
+    // It might seem inefficient to not do this check before inserting urls
     // into the frontier. It is. However, one of the core requirements of this
     // crawler is politeness, and if on a single page we find links to many
     // different subdomains of a single site (not unlikely), we will then
@@ -114,10 +121,7 @@ class Crawler {
     // coding in throttling code for robotsTxt requests, we will just do
     // the request here. At worst (when robotTxt caching doesn't come to the rescue),
     // we will send two back-to-back requests to one domain.
-    if (!await approvedByRobots(nextUrl)) {
-      this.connections--;
-      return;
-    }
+    if (!await approvedByRobots(nextUrl)) return
 
     this.currentlyScrapingUrls.add(nextUrl);
     this.crawlWithGetRequest(nextUrl);
@@ -162,8 +166,14 @@ class Crawler {
     return this.parsedUrls.test(url);
   }
 
+  parserError() {
+    this.connectionsOpen--;
+    logger.parserError()
+  }
+
   crawlWithGetRequest(url) {
     this.totalRequestsMade++;
+    this.connectionsOpen++;
     logger.GETRequestSent(url, this.totalRequestsMade);
     axios({
       method: "get",
@@ -178,7 +188,7 @@ class Crawler {
         const parser = new makeParser(url);
         parser.once("finished", this.finalizeCrawl.bind(this));
         parser.on("new link", this.newLinkFound.bind(this));
-        parser.on("error", logger.parserError.bind(logger));
+        parser.on("error", this.parserError.bind(this, url));
         res.data.pipe(parser);
       })
       .catch(err => {
