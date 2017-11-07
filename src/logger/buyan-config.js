@@ -1,7 +1,7 @@
 const Bunyan = require("bunyan");
 const LogEntries = require("le_node");
 
-const { isDev, isProd, LOGENTRIES_TOKEN_PROMISE } = require("../../env");
+const { isDev, LOGENTRIES_TOKEN_PROMISE } = require("../../env");
 
 const bunyanLogger = new Bunyan({
   name: "crawler",
@@ -21,5 +21,6 @@ LOGENTRIES_TOKEN_PROMISE
     throw new Error("logentries token not found");
     process.exit();
   });
+
 
 module.exports = bunyanLogger;

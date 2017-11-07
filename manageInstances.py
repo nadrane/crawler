@@ -86,5 +86,6 @@ if __name__ == "__main__":
   instance = Instance(create_instances(1)[0])
   instances.append(instance)
   if not instance.start():
+    print("failed to start instance")
     instances.remove(instance)
 

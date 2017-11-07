@@ -80,15 +80,15 @@ class Crawler {
   }
 
   countOpenFiles() {
-    filesOpen = 0
-    for (frontier of this.domainTrackers.frontier) {
-      filesOpen = frontier.currentlyReading ? 1 : 0
+    let filesOpen = 0
+    for (let domainTracker of this.domainTrackers.values()) {
+      filesOpen = domainTracker.frontier.currentlyReading ? 1 : 0
     }
     return filesOpen
   }
 
   maintainConnnections() {
-    while (this.connections < this.maxConnectionsOpen) {
+    while (this.connectionsOpen < this.maxConnectionsOpen) {
       if (this.countOpenFiles() > this.maxFilesOpen) return
       const domain = this.getDomainToScrape();
       if (!domain) break; // We absolutely need to do this to avoid accidentally blocking the event loop
