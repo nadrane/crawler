@@ -16,7 +16,7 @@ const approvedByRobots = require("./robots-parser");
 const { userAgent } = require("../env");
 
 class Crawler {
-  constructor(maxConnections = 1) {
+  constructor(maxConnections = 1000) {
     logger.initializationLog(maxConnections);
     this.connections = 0;
     this.totalRequestsMade = 0;
