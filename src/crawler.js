@@ -204,7 +204,7 @@ class Crawler {
             const { domain } = parse(url);
             const { frontier } = this.domainTrackers.get(domain);
             logger.connectionReset(url);
-            frontier.append(url);
+            // frontier.append(url);
           } else {
             logger.noGETResponseRecieved(err, url);
           }
