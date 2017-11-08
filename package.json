@@ -6,7 +6,9 @@
   "scripts": {
     "prod": "cross-env NODE_ENV=production node src/index.js",
     "dev": "cross-env NODE_ENV=development node src/index.js",
-    "debug": "node --inspect src/index.js"
+    "debug": "node --inspect src/index.js",
+    "test": "./node_modules/mocha/bin/mocha tests/**/*test.js --reporter spec",
+    "postinstall": "node -e \"var s='../src',d='node_modules/src',fs=require('fs');fs.exists(d,function(e){e||fs.symlinkSync(s,d,'dir')});\""
   },
   "author": "",
   "license": "ISC",
@@ -24,7 +26,10 @@
     "tldjs": "^2.2.0"
   },
   "devDependencies": {
+    "chai": "^4.1.2",
     "cross-env": "^5.0.5",
-    "eslint-config-google": "^0.9.1"
+    "eslint-config-google": "^0.9.1",
+    "mocha": "^4.0.1",
+    "sinon": "^4.1.2"
   }
 }

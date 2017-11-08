@@ -24,8 +24,8 @@ file for every domain.
 
 const assert = require('assert');
 const bluebird = require("bluebird");
-const { writeFileSync } = require("fs");
-const { appendFileAsync, readFileAsync, writeFileAsync } = bluebird.promisifyAll(require("fs"));
+const fs = require("fs");
+bluebird.promisifyAll(require("fs"));
 const logger = require("./logger");
 const { join } = require("path");
 const { FRONTIER_DIRECTORY } = require('../env/')
@@ -35,10 +35,12 @@ class Frontier {
     this.domain = seedDomain;
     this.urlsInFrontier = 1
     this.currentlyReading = false
+    this.queuedNewlinks = []
+    this.flushScheduled = false
 
     this.fileName = join(FRONTIER_DIRECTORY, `${seedDomain}.txt`);
     try {
-      writeFileSync(this.fileName, `http://${seedDomain}\n`);
+      fs.writeFileSync(this.fileName, `http://${seedDomain}\n`);
     } catch (err) {
       logger.unexpectedError(`failed to initialize frontier for domain ${seedDomain}`, err);
     }
@@ -79,7 +81,7 @@ class Frontier {
     this.currentlyReading = true;
     try {
       this.urlsInFrontier--;
-      buffer = await readFileAsync(this.fileName);
+      buffer = await fs.readFileAsync(this.fileName);
     } catch (err) {
       logger.unexpectedError(
         `failed to read from frontier file - getNextUrl ${this.fileName}`,
@@ -91,7 +93,7 @@ class Frontier {
     // This probably does not need to be awaited because the politness check
     // would stop us from scraping the same domain twice in a short period of time.
     try {
-      await writeFileAsync(this.fileName, allUrls.slice(1).join("\n"));
+      await fs.writeFileAsync(this.fileName, allUrls.slice(1).join("\n"));
     } catch (err) {
       logger.unexpectedError(`failed to write to frontier file - getNextUrl ${this.fileName}`, err);
     }
@@ -99,14 +101,44 @@ class Frontier {
     return nextUrl;
   }
 
-  async append(newUrl) {
-    // Best to just never allow disallowed URLs to enter the frontier in the first place
+  append(newUrl) {
+    this.queuedNewlinks.push(newUrl)
+    const oneMinute = 1 * 60 * 1000
+
+    // Often times we find many new links back to back on the same page
+    // Queue them all at once
+    if (!this.flushScheduled) {
+      setTimeout(this.flushNewLinkQueue.bind(this), oneMinute)
+      this.flushScheduled = true
+    }
+  }
+
+  async flushNewLinkQueue() {
+    assert(this.flushScheduled)
+    const linksToAppend = this.queuedNewlinks.join('\n')
+    assert(linksToAppend)
+
+    if (this.currentlyReading) {
+      const fiveSeconds = 5 * 1000
+      setTimeout(this.flushNewLinkQueue.bind(this), fiveSeconds)
+      return
+    }
+    this.flushScheduled = false
+
+    // Should never be true
+
+    // This flag is not to protect against a race condition but rather
+    // so that the crawler can keep tabs on the number of open files
+    // to avoid exceeding unix file open limits
+    this.currentlyReading = true;
     try {
-      await appendFileAsync(this.fileName, `${newUrl}\n`);
-      this.urlsInFrontier++;
+      await fs.appendFileAsync(this.fileName, `${linksToAppend}\n`);
+      this.urlsInFrontier += this.queuedNewlinks.length;
+      this.queuedNewlinks = []
     } catch (err) {
       logger.unexpectedError(`failed to append to to frontier file - append ${this.fileName}`, err);
     }
+    this.currentlyReading = false;
   }
 }
 
