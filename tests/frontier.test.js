@@ -118,6 +118,7 @@ describe("Frontier", () => {
       expect(fileWriter.calledOnce).to.be.true;
       expect(fileWriter.calledWithExactly(frontier.fileName, "www.microsoft.com\nwww.yahoo.com\n")).to
         .be.true;
+      expect(frontier.urlsInFrontier).to.equal(3)
       expect(frontier.flushScheduled).to.be.false;
       expect(frontier.queuedNewlinks).to.be.empty;
     });
