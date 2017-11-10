@@ -1,7 +1,7 @@
 const robotsParser = require("robots-parser");
-const logger = require("./logger");
+const logger = require("./logger")();
 const axios = require("axios");
-const { userAgent } = require("../env/");
+const { userAgent } = require("APP/env/");
 const { URL } = require("url");
 
 const cache = {};

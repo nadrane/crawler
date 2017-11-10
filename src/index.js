@@ -1,10 +1,11 @@
 var argv = require("minimist")(process.argv.slice(2));
-const logger = require('./logger');
 
-const { c, f } = argv;
+const { c, f, o } = argv;
+const logger = require('./logger')(o);
+
 const Crawler = require("./crawler");
 
-let currentCrawler = new Crawler(c, f)
+let currentCrawler = new Crawler(c, f, o)
 
 currentCrawler.seedDomainsAndStart();
 // newCrawlerIn60()

@@ -1,7 +1,7 @@
 const { Writable } = require("stream");
 const htmlparser = require("htmlparser2");
 const { URL } = require("url");
-const logger = require("./logger");
+const logger = require("./logger")();
 
 const validLinkProtocols = ["http:", "https:"];
 

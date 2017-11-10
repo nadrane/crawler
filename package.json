@@ -8,7 +8,7 @@
     "dev": "cross-env NODE_ENV=development node src/index.js",
     "debug": "node --inspect src/index.js",
     "test": "./node_modules/mocha/bin/mocha tests/**/*test.js --reporter spec",
-    "postinstall": "node -e \"var s='../src',d='node_modules/src',fs=require('fs');fs.exists(d,function(e){e||fs.symlinkSync(s,d,'dir')});\""
+    "postinstall": "node -e \"var s='../',d='node_modules/APP',fs=require('fs');fs.exists(d,function(e){e||fs.symlinkSync(s,d,'dir')});\""
   },
   "author": "",
   "license": "ISC",

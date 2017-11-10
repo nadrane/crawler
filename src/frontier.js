@@ -26,7 +26,7 @@ const assert = require('assert');
 const bluebird = require("bluebird");
 const fs = require("fs");
 bluebird.promisifyAll(require("fs"));
-const logger = require("./logger");
+const logger = require("./logger")();
 const { join } = require("path");
 const { FRONTIER_DIRECTORY } = require('../env/')
 

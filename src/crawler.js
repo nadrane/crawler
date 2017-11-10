@@ -10,14 +10,13 @@ const axios = require("axios");
 
 const { SEED_FILE_PROMISE } = require("../env/");
 const DomainTracker = require("./domain-tracker");
-const logger = require("./logger");
+const logger = require("./logger")();
 const makeParser = require("./parser");
 const approvedByRobots = require("./robots-parser");
-const { userAgent } = require("../env");
+const { userAgent } = require("APP/env");
 
 class Crawler {
   constructor(maxConnectionsOpen=3000, maxFilesOpen=5000) {
-    logger.initializationLog(maxConnectionsOpen, maxFilesOpen);
     this.connectionsOpen = 0
     this.maxFilesOpen = maxFilesOpen
     this.maxConnectionsOpen = maxConnectionsOpen;
