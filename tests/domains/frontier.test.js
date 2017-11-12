@@ -2,7 +2,7 @@ const fs = require("fs");
 const sinon = require("sinon");
 const mocha = require("mocha");
 const { expect } = require("chai");
-const Frontier = require("src/frontier");
+const Frontier = require("APP/src/domains/frontier");
 const sandbox = sinon.createSandbox();
 
 describe("Frontier", () => {
