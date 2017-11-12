@@ -5,16 +5,6 @@ const { expect } = require("chai");
 const domainFactory = require("APP/src/domains/domains");
 const sandbox = sinon.createSandbox();
 
-console.log('fake')
-// sinon.stub(fs, 'readFileAsync').callsFake(function () {
-//   return new Promise(function(resolve, reject){
-//     console.log('running fake')
-//     setTimeout(function(){
-//       resolve()
-//     },1000)
-//   })
-// })
-
 describe("Domains", () => {
   let domainsPromise;
   let domains;
