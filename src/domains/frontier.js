@@ -40,8 +40,13 @@ class Frontier {
     this.flushScheduled = false
 
     this.fileName = join(FRONTIER_DIRECTORY, `${seedDomain}.txt`);
+
+    if (!seedDomain.startsWith('http://')) {
+      seedDomain = `http://${seedDomain}`
+    }
+
     try {
-      fs.writeFileSync(this.fileName, `http://${seedDomain}\n`);
+      fs.writeFileSync(this.fileName, seedDomain + '\n');
     } catch (err) {
       logger.unexpectedError(`failed to initialize frontier for domain ${seedDomain}`, err);
     }
