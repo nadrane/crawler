@@ -41,12 +41,15 @@ class Frontier {
 
     this.fileName = join(FRONTIER_DIRECTORY, `${seedDomain}.txt`);
 
+    let domainWithProtocol
     if (!seedDomain.startsWith('http://')) {
-      seedDomain = `http://${seedDomain}`
+      domainWithProtocol = `http://${seedDomain}`
+    } else {
+      domainWithProtocol = seedDomain
     }
 
     try {
-      fs.writeFileSync(this.fileName, seedDomain + '\n');
+      fs.writeFileSync(this.fileName, domainWithProtocol + '\n');
     } catch (err) {
       logger.unexpectedError(`failed to initialize frontier for domain ${seedDomain}`, err);
     }
@@ -109,7 +112,7 @@ class Frontier {
 
   append(newUrl) {
     this.queuedNewlinks.push(newUrl)
-    const oneMinute = 1 * 60 * 1000
+    const oneMinute = 60 * 1000
 
     // Often times we find many new links back to back on the same page
     // Queue them all at once

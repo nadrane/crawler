@@ -9,7 +9,6 @@ describe("Domains", () => {
   let domainsPromise;
   let domains;
   beforeEach(() => {
-    console.log('stubbling')
     sandbox.stub(fs, "writeFileSync");
     sandbox.stub(fs, "writeFileAsync")
     sandbox.stub(fs, "readFileAsync").returns(Promise.resolve('www.google.com'));

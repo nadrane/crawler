@@ -15,7 +15,7 @@ describe("Domains", () => {
   });
 
   describe("getNextUrlToScrape", async () => {
-    it.only('returns a sequence of different urls from the seed file', async () =>{
+    it('returns a sequence of different urls from the seed file', async () =>{
       expect(await domains.getNextUrlToScrape()).to.equal('http://google.com')
       expect(await domains.getNextUrlToScrape()).to.equal('http://youtube.com')
       expect(await domains.getNextUrlToScrape()).to.equal('http://facebook.com')
