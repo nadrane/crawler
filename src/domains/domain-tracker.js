@@ -1,4 +1,5 @@
 const Frontier = require("./frontier");
+const { DOMAIN_REQUEST_TIME_INTERVAL } = require('APP/env')
 
 class DomainTracker {
   constructor(domain) {
@@ -16,7 +17,7 @@ class DomainTracker {
   }
 
   politeToScrape() {
-    return this.lastScraped + 120 * 1000 <= Date.now();
+    return this.lastScraped + DOMAIN_REQUEST_TIME_INTERVAL <= Date.now();
   }
 
   updateTimeLastScraped() {
