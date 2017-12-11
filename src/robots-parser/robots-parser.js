@@ -1,7 +1,7 @@
 const robotsParser = require("robots-parser");
-const logger = require("./logger")();
+const logger = require("../logger")();
 const axios = require("axios");
-const { userAgent } = require("APP/env/");
+const { USER_AGENT } = require("APP/env/");
 const { URL } = require("url");
 
 const cache = {};
@@ -63,7 +63,7 @@ async function getAndParseRobotsTxt(protocol, port, hostname) {
     return approveAll
   }
 
-  return url => parser.isAllowed(url, userAgent);
+  return url => parser.isAllowed(url, USER_AGENT);
 }
 
 // Do what Google does: https://developers.google.com/search/reference/robots_txt
