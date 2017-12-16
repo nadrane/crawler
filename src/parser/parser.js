@@ -8,7 +8,7 @@ const { URL } = require("url");
 class htmlTolinkStream extends Transform {
   constructor(url) {
     super();
-    this.url = url;
+    this.originalUrl = url;
     this.backPressure = false
 
     this.parser = new htmlparser.Parser(
@@ -16,8 +16,8 @@ class htmlTolinkStream extends Transform {
         onopentag: (name, attribs) => {
           const href = attribs.href
           if (this._tagContainsValidUrl(name, href)) {
-            const parsedUrl = new URL(href, this.url);
-            this.push(parsedUrl.toString()+'\n'  )
+            const parsedUrl = new URL(href, this.originalUrl);
+            this.push(parsedUrl.toString() + '\n')
           }
         },
         onend: () => {
@@ -36,7 +36,7 @@ class htmlTolinkStream extends Transform {
     const validLinkProtocols = ["http:", "https:"];
     if (name === "a") {
       try {
-        const parsedUrl = new URL(href, this.url);
+        const parsedUrl = new URL(href, this.originalUrl);
         // Ignore the psuedo javascript protocol and whatever else sites throw at me.
         return validLinkProtocols.includes(parsedUrl.protocol);
       } catch (err) {
