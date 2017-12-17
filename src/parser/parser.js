@@ -20,9 +20,6 @@ class htmlTolinkStream extends Transform {
             this.push(parsedUrl.toString() + '\n')
           }
         },
-        onend: () => {
-          this.emit("finished", url);
-        },
         onerror: err => {
           console.error('error', err)
           // logger.parserError(err, url);
@@ -54,8 +51,9 @@ class htmlTolinkStream extends Transform {
     next();
   }
 
-  _final() {
+  _final(done) {
     this.parser.parseComplete();
+    done() // execute the finish event
   }
 }
 
