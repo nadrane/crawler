@@ -1,31 +1,24 @@
 var argv = require("minimist")(process.argv.slice(2));
+const fs = require("fs");
+const path = require("path");
+const { c, o } = argv; // maximum file descriptors open | output file name
+const logger = require("./logger")("temp-log.txt");
 
-const { c, f, o } = argv;
-const logger = require('./logger')(o);
+const concurrency = 10;
+const robotsStream = require("./robots-parser/")(concurrency);
+const requestStream = require("./requester/")(concurrency);
 
-const Crawler = require("./crawler");
-
-let currentCrawler = new Crawler(c, f, o)
-
-currentCrawler.seedDomainsAndStart();
-// newCrawlerIn60()
-
-// function newCrawlerIn60() {
-//   setTimeout(function() {
-//     console.log(`trying ${max} connections`)
-//     currentCrawler.stop()
-//     max += 10
-//     if (max > 200) return
-//     logger.rotateLog(max)
-//     currentCrawler = new Crawler(max)
-//     newCrawlerIn60()
-//   }, 1000)
-// }
+require("./domains")(concurrency).then(domainReader => {
+  domainReader
+    .pipe(robotsStream)
+    .pipe(requestStream)
+    .pipe(process.stdout)
+});
 
 process.on("uncaughtException", function(err) {
   logger.unexpectedError(err, "uncaught exception");
 });
 
-process.on('unhandledRejection', (reason, p) => {
+process.on("unhandledRejection", (reason, p) => {
   logger.unexpectedError(reason, "unhandled promise rejection", p);
 });
