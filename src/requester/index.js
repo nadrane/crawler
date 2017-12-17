@@ -1,5 +1,5 @@
 const throughConcurrent = require("through2-concurrent");
-const through2 = require("through2");
+const through = require("through2");
 const requester = require('./requester')
 const parser = require('../parser/')
 
@@ -12,7 +12,10 @@ module.exports = function(concurrency) {
         // TODO we want to pipe the parser stream results into a through stream that pushes
         // to the outtermost stream made by throughConcurrent above.
         parserStream.on('finish', () => done())  // finish event indicates the end of the write component of the transform stream
-        htmlStream.pipe(parserStream)
+        htmlStream.pipe(parserStream).pipe(through.obj((url, enc, done) => {
+          this.push(url)
+          done()
+        }))
       })
       .catch(err => {
         this.on("error", err);
