@@ -21,6 +21,7 @@
     "htmlparser2": "^3.9.2",
     "le_node": "^1.7.1",
     "minimist": "^1.2.0",
+    "mkdirp": "^0.5.1",
     "robots": "^0.10.1",
     "robots-parser": "^1.0.1",
     "through2-concurrent": "^1.1.1",

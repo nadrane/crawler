@@ -1,18 +1,16 @@
 const DomainTracker = require("./domain-tracker");
 
 class Domains {
-  constructor() {
+  constructor(seedFile) {
     this.domainTrackers = new Map();
+    this.seedDomains(seedFile)
     this.domainGenerator = this._nextDomain();
   }
 
-  seedDomains(domainsPromise) {
-    return domainsPromise
-      .then(file => file.toString().split("\n"))
-      .then(lines =>
-        lines.map(domain => this.domainTrackers.set(domain, new DomainTracker(domain)))
-      )
-      .then(() => this);
+  seedDomains(seedFile) {
+    seedFile.toString()
+      .split("\n")
+      .map(domain => this.domainTrackers.set(domain, new DomainTracker(domain)))
   }
 
   countOpenFiles() {
@@ -50,13 +48,4 @@ class Domains {
   }
 }
 
-function domainsFactory(domainsPromise) {
-  let promiseForDomains;
-  if (!promiseForDomains) {
-    const domains = new Domains();
-    promiseForDomains = domains.seedDomains(domainsPromise);
-  }
-  return promiseForDomains;
-}
-
-module.exports = domainsFactory;
+module.exports = Domains;

@@ -1,14 +1,14 @@
 const { SEED_FILE_PROMISE } = require("APP/env");
 const { Readable } = require("stream");
-const domainFactoryPromise = require("./domains")(SEED_FILE_PROMISE);
+const Domains = require("./domains");
 
 class DomainReaderStream extends Readable {
-  constructor(domainFactory, concurrency) {
+  constructor(domains, concurrency) {
     super({ objectMode: true });
     this.outstandingRequests = 0;
     this.concurrency = concurrency;
     this.buffer = [];
-    this.domainFactory = domainFactory;
+    this.domains = domains;
     this.backPressure = false;
 
     // Since _read is not called until this.push is called,
@@ -42,8 +42,8 @@ class DomainReaderStream extends Readable {
   _getDomain() {
     let requestsKickedOff = 0;
     while (requestsKickedOff++ < this.concurrency) {
-      if (this.domainFactory.countOpenFiles() >= this.concurrency) return;
-      this.domainFactory
+      if (this.domains.countOpenFiles() >= this.concurrency) return;
+      this.domains
         .getNextUrlToScrape()
         .then(url => {
           // Eventually there are no domains ready for scraping and "" is returned
@@ -63,8 +63,6 @@ class DomainReaderStream extends Readable {
   }
 }
 
-module.exports = function(concurrency) {
-  return domainFactoryPromise.then(domainFactory => {
-    return new DomainReaderStream(domainFactory, concurrency);
-  });
+module.exports = function(concurrency, seedFile) {
+   return new DomainReaderStream(new Domains(seedFile), concurrency);
 };

@@ -1,34 +1,40 @@
 var argv = require("minimist")(process.argv.slice(2));
 const fs = require("fs");
 const path = require("path");
-const { c, o } = argv; // maximum file descriptors open | output file name
-const logger = require("./logger")("temp-log.txt");
+let { c, o } = argv; // maximum file descriptors open | output file name
+const env = require("../env/");
 
-c = c || 5; // defalt concurrency
+const maxConcurrency = c || env.MAX_CONCURRENCY;
+let logFile;
 
-const robotsStream = require("./robots-parser/")(c);
+if (o) {
+  logFile = path.join(env.LOGGING_DIR, o);
+} else {
+  logFile = path.join(env.LOGGING_DIR, "logs.txt");
+}
+const logger = require("./logger")(logFile);
+
+const robotsStream = require("./robots-parser/")(maxConcurrency);
 robotsStream.on("error", err => {
-  console.error('robots stream error', err)
-})
+  console.error("robots stream error", err);
+});
 
-const requestStream = require("./requester/")(c);
+const requestStream = require("./requester/")(maxConcurrency);
 requestStream.on("error", err => {
-  console.error('requests stream error', err)
-})
+  console.error("requests stream error", err);
+});
 
-// I should really fix this.
-// domains should not return a promise.
-// We need to pass in the env config (seed file) to file this
-// That way we can pull the async handling all out here
-require("./domains")(c).then(domainReader => {
-  domainReader.on("error", err => {
-    console.error('domain reader stream error', err)
-  })
+env.SEED_FILE_PROMISE.then(seedFile => {
+  const domainStream = require("./domains")(maxConcurrency, seedFile);
 
-  domainReader
-    .pipe(robotsStream)
-    .pipe(requestStream)
-    .pipe(process.stdout)
+  domainStream.on("error", err => {
+    console.error("domains stream error", err);
+  });
+
+  domainStream
+    // .pipe(robotsStream)
+    // .pipe(requestStream)
+    .pipe(process.stdout);
 });
 
 process.on("uncaughtException", function(err) {

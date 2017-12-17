@@ -2,9 +2,12 @@ const { URL } = require("url");
 
 const bluebird = require("bluebird");
 const { parse } = require("tldjs");
+const mkdirp = require("mkdirp")
+const path = require('path')
 
 class Logger {
   constructor(logAdaptor, outputFile) {
+    mkdirp.sync(path.dirname(outputFile))
     this.logger = logAdaptor(outputFile);
   }
 
