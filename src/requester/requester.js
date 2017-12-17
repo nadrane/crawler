@@ -1,5 +1,6 @@
 const logger = require("../logger/")();
 const axios = require("axios");
+const { parse } = require("tldjs");
 const { USER_AGENT } = require("APP/env");
 
 class Requester {
@@ -15,7 +16,7 @@ class Requester {
           userAgent: USER_AGENT
         }
       });
-      logger.GETResponseReceived(url, response.status);
+      // logger.GETResponseReceived(url, response.status);
       //TODO emit finished event. store url in bloom filter
       // Note we could easily hit the same url twice since we are choosing to keep
       // no record of urls currently being processed, though this is SUPER unlikely (if not impossible)

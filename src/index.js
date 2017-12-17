@@ -4,11 +4,23 @@ const path = require("path");
 const { c, o } = argv; // maximum file descriptors open | output file name
 const logger = require("./logger")("temp-log.txt");
 
-const concurrency = 10;
+const concurrency = 5;
+
 const robotsStream = require("./robots-parser/")(concurrency);
+robotsStream.on("error", err => {
+  console.error('robots stream error', err)
+})
+
 const requestStream = require("./requester/")(concurrency);
+requestStream.on("error", err => {
+  console.error('requests stream error', err)
+})
 
 require("./domains")(concurrency).then(domainReader => {
+  domainReader.on("error", err => {
+    console.error('domain reader stream error', err)
+  })
+
   domainReader
     .pipe(robotsStream)
     .pipe(requestStream)

@@ -21,7 +21,7 @@ class DomainReaderStream extends Readable {
     setInterval(() => {
       console.log("interval fired");
       this._getDomain();
-    }, 10 * 1000);
+    }, 5 * 1000);
   }
 
   /* _read will not get called a second time until push has been called
