@@ -4,11 +4,9 @@ const bloomFilter = require("./bloomFilter");
 
 module.exports = function(concurrency) {
   return throughConcurrent.obj({ maxConcurrency: concurrency }, function(url, enc, done) {
-    console.log('called with url', url)
     bloomFilter
       .check(url)
       .then(urlSeen => {
-        console.log("url seen", url, urlSeen)
         if (!urlSeen) {
           this.push(url);
         }
