@@ -6,7 +6,7 @@
   "scripts": {
     "prod": "cross-env NODE_ENV=production node src/index.js",
     "dev": "cross-env NODE_ENV=development node src/index.js",
-    "debug": "node --inspect src/index.js",
+    "debug": "cross-env NODE_ENV=development node --inspect src/index.js",
     "test": "./node_modules/mocha/bin/mocha tests/**/*test.js -w --reporter spec",
     "postinstall": "node -e \"var s='../',d='node_modules/APP',fs=require('fs');fs.exists(d,function(e){e||fs.symlinkSync(s,d,'dir')});\""
   },
@@ -15,6 +15,7 @@
   "dependencies": {
     "aws-sdk": "^2.137.0",
     "axios": "^0.16.2",
+    "bloomd": "^0.2.6",
     "bloomfilter": "^0.0.16",
     "bluebird": "^3.5.1",
     "bunyan": "^1.8.12",
