@@ -14,9 +14,9 @@ if (o) {
 }
 const logger = require("./logger")(logFile);
 
-const bloomFilter = require('./bloomFilter/bloomFilter')
+const bloomFilter = require('./bloom-filter/bloom-filter')
 
-const bloomFilterStream = require('./bloomFilter')(maxConcurrency)
+const bloomFilterStream = require('./bloom-filter')(maxConcurrency)
 bloomFilterStream.on("error", err => {
   logger.unexpectedError(err, "bloom filter stream error")
 });
@@ -40,8 +40,8 @@ initialization().then(([seedFile]) => {
 
   domainStream
     .pipe(bloomFilterStream)
-    // .pipe(robotsStream)
-    // .pipe(requestStream)
+    .pipe(robotsStream)
+    .pipe(requestStream)
     .pipe(process.stdout);
 });
 
