@@ -1,7 +1,7 @@
 const { Transform } = require("stream");
 const htmlparser = require("htmlparser2");
 const { URL } = require("url");
-// const logger = require("../logger")();
+const logger = require("../logger")();
 
 
 
@@ -21,8 +21,7 @@ class htmlTolinkStream extends Transform {
           }
         },
         onerror: err => {
-          console.error('error', err)
-          // logger.parserError(err, url);
+          logger.parserError(err, url);
         }
       },
       { decodeEntities: true }
