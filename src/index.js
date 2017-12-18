@@ -14,6 +14,13 @@ if (o) {
 }
 const logger = require("./logger")(logFile);
 
+const bloomFilter = require('./bloomFilter/bloomFilter')
+
+const bloomFilterStream = require('./bloomFilter')(maxConcurrency)
+bloomFilterStream.on("error", err => {
+  logger.unexpectedError(err, "bloom filter stream error")
+});
+
 const robotsStream = require("./robots-parser/")(maxConcurrency);
 robotsStream.on("error", err => {
   logger.unexpectedError(err, "robots stream error")
@@ -24,7 +31,7 @@ requestStream.on("error", err => {
   logger.unexpectedError(err, 'request stream error')
 });
 
-env.SEED_FILE_PROMISE.then(seedFile => {
+initialization().then(([seedFile]) => {
   const domainStream = require("./domains")(maxConcurrency, seedFile);
 
   domainStream.on("error", err => {
@@ -32,8 +39,9 @@ env.SEED_FILE_PROMISE.then(seedFile => {
   });
 
   domainStream
-    .pipe(robotsStream)
-    .pipe(requestStream)
+    .pipe(bloomFilterStream)
+    // .pipe(robotsStream)
+    // .pipe(requestStream)
     .pipe(process.stdout);
 });
 
@@ -44,3 +52,9 @@ process.on("uncaughtException", function(err) {
 process.on("unhandledRejection", (reason, p) => {
   logger.unexpectedError(reason, "unhandled promise rejection", p);
 });
+
+function initialization() {
+  const createBloomFilter = bloomFilter.create()
+  const seedFile = env.SEED_FILE_PROMISE
+  return Promise.all([seedFile, createBloomFilter])
+}
