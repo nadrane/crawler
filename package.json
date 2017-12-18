@@ -18,7 +18,7 @@
     "bloomfilter": "^0.0.16",
     "bluebird": "^3.5.1",
     "bunyan": "^1.8.12",
-    "cross-env": "^5.0.5",
+    "cross-env": "^5.1.1",
     "htmlparser2": "^3.9.2",
     "le_node": "^1.7.1",
     "minimist": "^1.2.0",
