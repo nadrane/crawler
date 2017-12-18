@@ -51,7 +51,7 @@ class DomainReaderStream extends Readable {
           if (this.backPressure) {
             this.buffer.push(url);
             return;
-          } else if (!this.push(url + "\n")) {
+          } else if (!this.push(url)) {
             this.backPressure = true;
           }
         })
