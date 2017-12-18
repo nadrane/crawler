@@ -10,7 +10,6 @@ module.exports = function(concurrency) {
       .crawlWithGetRequest(requestUrl)
       .then(response => {
         done();
-        console.log("got response", requestUrl);
         const htmlStream = response.data;
         const parserStream = new parser(requestUrl)
         // TODO we want to pipe the parser stream results into a through stream that pushes
@@ -23,7 +22,6 @@ module.exports = function(concurrency) {
         }); // finish event indicates the end of the write component of the transform stream
         htmlStream.pipe(parserStream).pipe(
           through.obj((url, enc, done) => {
-            // console.log("pricessing link", url);
             this.push(url);
             done();
           })
