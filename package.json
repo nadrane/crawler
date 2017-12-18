@@ -18,6 +18,7 @@
     "bloomfilter": "^0.0.16",
     "bluebird": "^3.5.1",
     "bunyan": "^1.8.12",
+    "cross-env": "^5.0.5",
     "htmlparser2": "^3.9.2",
     "le_node": "^1.7.1",
     "minimist": "^1.2.0",
@@ -29,7 +30,6 @@
   },
   "devDependencies": {
     "chai": "^4.1.2",
-    "cross-env": "^5.0.5",
     "eslint-config-google": "^0.9.1",
     "mocha": "^4.0.1",
     "rimraf": "^2.6.2",
