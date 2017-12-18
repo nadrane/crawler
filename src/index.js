@@ -16,24 +16,24 @@ const logger = require("./logger")(logFile);
 
 const robotsStream = require("./robots-parser/")(maxConcurrency);
 robotsStream.on("error", err => {
-  console.error("robots stream error", err);
+  logger.unexpectedError(err, "robots stream error")
 });
 
 const requestStream = require("./requester/")(maxConcurrency);
 requestStream.on("error", err => {
-  console.error("requests stream error", err);
+  logger.unexpectedError(err, 'request stream error')
 });
 
 env.SEED_FILE_PROMISE.then(seedFile => {
   const domainStream = require("./domains")(maxConcurrency, seedFile);
 
   domainStream.on("error", err => {
-    console.error("domains stream error", err);
+    logger.unexpectedError(err, 'domain stream error')
   });
 
   domainStream
-    // .pipe(robotsStream)
-    // .pipe(requestStream)
+    .pipe(robotsStream)
+    .pipe(requestStream)
     .pipe(process.stdout);
 });
 
