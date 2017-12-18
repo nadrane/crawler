@@ -1,11 +1,11 @@
-const throughConcurrent = require("through2-concurrent");
 const through = require("through2");
 const requester = require("./requester");
+const throughConcurrent = require("../through-concurrent");
 const parser = require("../parser/");
 const logger = require("../logger/")()
 
 module.exports = function(concurrency) {
-  return throughConcurrent.obj({ maxConcurrency: concurrency }, function(requestUrl, enc, done) {
+  return throughConcurrent('requester stream', concurrency, function(requestUrl, enc, done) {
     requester
       .crawlWithGetRequest(requestUrl)
       .then(response => {

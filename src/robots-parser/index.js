@@ -1,8 +1,8 @@
 const robotsParser = require("./robots-parser");
-const through2 = require("through2-concurrent");
+const throughConcurrent = require("../through-concurrent");
 
 module.exports = function(concurrency) {
-  return through2.obj({ maxConcurrency: concurrency }, function(url, enc, done) {
+  return throughConcurrent("robots stream", concurrency, function(url, enc, done) {
     robotsParser(url)
       .then(allowed => {
         this.push(url);

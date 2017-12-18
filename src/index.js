@@ -17,25 +17,14 @@ const logger = require("./logger")(logFile);
 const bloomFilter = require('./bloom-filter/bloom-filter')
 
 const bloomFilterStream = require('./bloom-filter')(maxConcurrency)
-bloomFilterStream.on("error", err => {
-  logger.unexpectedError(err, "bloom filter stream error")
-});
-
 const robotsStream = require("./robots-parser/")(maxConcurrency);
-robotsStream.on("error", err => {
-  logger.unexpectedError(err, "robots stream error")
-});
-
 const requestStream = require("./requester/")(maxConcurrency);
-requestStream.on("error", err => {
-  logger.unexpectedError(err, 'request stream error')
-});
 
 initialization().then(([seedFile]) => {
   const domainStream = require("./domains")(maxConcurrency, seedFile);
 
   domainStream.on("error", err => {
-    logger.unexpectedError(err, 'domain stream error')
+    logger.unexpectedError(err, 'domain stream')
   });
 
   domainStream

@@ -1,9 +1,9 @@
-const throughConcurrent = require("through2-concurrent");
+const throughConcurrent = require("../through-concurrent");
 const logger = require("../logger/")();
 const bloomFilter = require("./bloom-filter");
 
 module.exports = function(concurrency) {
-  return throughConcurrent.obj({ maxConcurrency: concurrency }, function(url, enc, done) {
+  return throughConcurrent("bloom filter stream", concurrency, function(url, enc, done) {
     bloomFilter
       .check(url)
       .then(urlSeen => {
