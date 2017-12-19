@@ -13,7 +13,7 @@ module.exports = function(concurrency) {
         done();
       })
       .catch(err => {
-        logger.unexpectedError(err, "failed at bloom filter check stream implementation");
+        logger.unexpectedError(err, "bloom filter check stream implementation");
       });
   });
 };
