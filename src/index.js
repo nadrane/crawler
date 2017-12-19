@@ -16,7 +16,8 @@ const logger = require("./logger")(logFile);
 
 const bloomFilter = require('./bloom-filter/bloom-filter')
 
-const bloomFilterStream = require('./bloom-filter')(maxConcurrency)
+const bloomFilterCheckStream = require('./bloom-filter/check-stream')(maxConcurrency)
+const bloomFilterSetStream = require('./bloom-filter/set-stream')(maxConcurrency)
 const robotsStream = require("./robots-parser/")(maxConcurrency);
 const requestStream = require("./requester/")(maxConcurrency);
 
@@ -28,8 +29,9 @@ initialization().then(([seedFile]) => {
   });
 
   domainStream
-    .pipe(bloomFilterStream)
+    .pipe(bloomFilterCheckStream)
     .pipe(robotsStream)
+    .pipe(bloomFilterSetStream)  // notice we mark it visited before visiting. If we the request fails, it fails for good
     .pipe(requestStream)
     .pipe(process.stdout);
 });

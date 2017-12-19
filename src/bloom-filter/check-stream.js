@@ -3,7 +3,7 @@ const logger = require("../logger/")();
 const bloomFilter = require("./bloom-filter");
 
 module.exports = function(concurrency) {
-  return throughConcurrent("bloom filter stream", concurrency, function(url, enc, done) {
+  return throughConcurrent("bloom filter check stream", concurrency, function(url, enc, done) {
     bloomFilter
       .check(url)
       .then(urlSeen => {
@@ -13,7 +13,7 @@ module.exports = function(concurrency) {
         done();
       })
       .catch(err => {
-        logger.unexpectedError(err, "failed at bloom filter stream implementation");
+        logger.unexpectedError(err, "failed at bloom filter check stream implementation");
       });
   });
 };
