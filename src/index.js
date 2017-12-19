@@ -9,9 +9,8 @@ let logFile;
 
 if (o) {
   logFile = path.join(env.LOGGING_DIR, o);
-} else {
-  logFile = path.join(env.LOGGING_DIR, "logs.txt");
 }
+
 const logger = require("./logger")(logFile);
 
 const bloomFilter = require('./bloom-filter/bloom-filter')
