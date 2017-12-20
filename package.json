@@ -8,6 +8,7 @@
     "dev": "cross-env NODE_ENV=development node src/index.js",
     "debug": "cross-env NODE_ENV=development node --inspect src/index.js",
     "test": "./node_modules/mocha/bin/mocha tests/**/*test.js -w --reporter spec",
+    "profile": "cross-env NODE_ENV=development node --prof src/index.js",
     "postinstall": "node -e \"var s='../',d='node_modules/APP',fs=require('fs');fs.exists(d,function(e){e||fs.symlinkSync(s,d,'dir')});\""
   },
   "author": "",
@@ -22,6 +23,7 @@
     "cross-env": "^5.1.1",
     "htmlparser2": "^3.9.2",
     "le_node": "^1.7.1",
+    "lru-cache": "^4.1.1",
     "minimist": "^1.2.0",
     "mkdirp": "^0.5.1",
     "robots": "^0.10.1",
@@ -32,6 +34,7 @@
   "devDependencies": {
     "chai": "^4.1.2",
     "eslint-config-google": "^0.9.1",
+    "heapdump": "^0.3.9",
     "mocha": "^4.0.1",
     "rimraf": "^2.6.2",
     "sinon": "^4.1.2"

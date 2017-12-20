@@ -1,10 +1,13 @@
 const robotsParser = require("robots-parser");
 const logger = require("../logger")();
 const axios = require("axios");
-const { USER_AGENT } = require("APP/env/");
-const { URL } = require("url");
+const LRU = require("lru-cache")
+const { USER_AGENT, NUMBER_TRACKED_DOMAINS } = require("APP/env/");
 
-const cache = {};
+const cache = LRU({ max: NUMBER_TRACKED_DOMAINS * 2,
+                    maxAge: 1000 * 60 * 60 })
+
+const { URL } = require("url");
 
 //IDEA garbage collection of robots cache
 //Maybe an LRU cache? Or eliminate if a domains frontier is empty for too long?
@@ -14,32 +17,27 @@ async function isAllowed(url) {
   // We want to cache robotsTxt results to avoid making an extra network request for every page.
   const parsedUrl = new URL(url);
   const { protocol, hostname } = parsedUrl;
-  let { port } = parsedUrl;
-  if (!port) {
-    port = defaultPort(protocol);
-  }
-  let isAllowed;
-  if (cache[protocol] && cache[protocol][port] && cache[protocol][port][hostname]) {
-    isAllowed = cache[protocol][port][hostname];
-  } else {
-    isAllowed = await getAndParseRobotsTxt(protocol, port, hostname);
-    if (!cache[protocol]) {
-      cache[protocol] = {};
-    }
-    if (!cache[protocol][port]) {
-      cache[protocol][port] = {};
-    }
+  const port = parsedUrl.port || defaultPort(protocol);
 
-    // IDEA Maybe it would be better to cache the robotsTxt file itself as
-    // opposed to this function. Maybe explore later
-    cache[protocol][port][hostname] = isAllowed;
+  if (cache.peek(makeCacheKey(protocol, port, hostname))) {
+    return cache.get(makeCacheKey(protocol, port, hostname))
   }
+
+  const isAllowed = await getAndParseRobotsTxt(protocol, port, hostname);
+  // IDEA Maybe it would be better to cache the robotsTxt file itself as
+  // opposed to this function. Maybe explore later
+  cache.set(makeCacheKey(protocol, port, hostname), isAllowed)
+
   return isAllowed(url);
 }
 
 function defaultPort(protocol) {
   if (protocol === "http:") return 80;
   else if (protocol === "https:") return 443;
+}
+
+function makeCacheKey(protocol, port, hostname) {
+  return protocol + '|' + port + '|' + hostname
 }
 
 async function getAndParseRobotsTxt(protocol, port, hostname) {
