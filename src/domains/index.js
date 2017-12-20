@@ -30,7 +30,7 @@ class DomainReaderStream extends Readable {
     this.backPressure = false;
     if (this.buffer.length) {
       const url = this.buffer.shift();
-      if (!this.push(url + "\n")) {
+      if (!this.push(url)) {
         this.backPressure = true;
       }
       return;
