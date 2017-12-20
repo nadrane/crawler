@@ -18,7 +18,8 @@ const Requester = {
       });
       logger.GETResponseReceived(url, response.status);
     } catch (err) {
-      this._failedRequest(err, url);
+      failedRequest(err, url);
+      return null
     }
     return response;
   }
