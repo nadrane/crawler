@@ -43,8 +43,11 @@ initialization().then(([seedFile]) => {
 
 if (env.isDev()) {
   const heapdump = require('heapdump');
+  const mkdirp = require('mkdirp')
+  const debugDir = path.join(env.LOGGING_DIR, "heap-dumps")
+  mkdirp(debugDir)
   setInterval(function() {
-    heapdump.writeSnapshot(path.join(env.LOGGING_DIR, "heap-dumps", Date.now() + '.heapsnapshot'));
+    heapdump.writeSnapshot(path.join(debugDir, Date.now() + '.heapsnapshot'));
   }, 10 * 1000)
 }
 
