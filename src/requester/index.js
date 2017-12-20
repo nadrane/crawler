@@ -21,7 +21,7 @@ module.exports = function(concurrency, eventCoordinator) {
           logger.unexpectError(err, "parser stream error")
         });
         htmlStream.pipe(parserStream)
-        const escapedUrl = requestUrl.split('://')[1].replace(new RegExp(/\//,'g'), '\\/')
+        const escapedUrl = requestUrl.split('://')[1].split('/').filter(piece => !!piece).join('-')
         htmlStream.pipe(createWriteStream(path.join(__dirname, '..', '..', 'crawled-html', escapedUrl)))
       })
       .catch(err => {
