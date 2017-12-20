@@ -16,7 +16,7 @@ class Logger {
   }
 
   unexpectedError(err, event, data) {
-    this.logger.error(err, event, data);
+    this.logger.error({err, event, data});
   }
 
   parserError(url, err) {
