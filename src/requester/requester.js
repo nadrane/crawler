@@ -8,7 +8,7 @@ class Requester {
     logger.GETRequestSent(url, this.totalRequestsMade);
     let response
     try {
-      response = axios({
+      response = await axios({
         method: "get",
         url,
         responseType: "stream",
