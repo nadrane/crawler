@@ -1,4 +1,5 @@
-const through = require("through2");
+const { createWriteStream } = require("fs")
+const path = require('path')
 const requester = require("./requester");
 const throughConcurrent = require("../through-concurrent");
 const parser = require("../parser/");
@@ -10,6 +11,8 @@ module.exports = function(concurrency, eventCoordinator) {
       .crawlWithGetRequest(requestUrl)
       .then(response => {
         done();
+        // In case the request failed
+        if (!response) return
         const htmlStream = response.data;
         const parserStream = new parser(requestUrl, eventCoordinator)
         // TODO we want to pipe the parser stream results into a through stream that pushes
@@ -18,12 +21,8 @@ module.exports = function(concurrency, eventCoordinator) {
           logger.unexpectError(err, "parser stream error")
         });
         htmlStream.pipe(parserStream)
-        htmlStream.pipe(
-          through.obj((url, enc, done) => {
-            this.push(url);
-            done();
-          })
-        );
+        const escapedUrl = requestUrl.split('://')[1].replace(new RegExp(/\//,'g'), '\\/')
+        htmlStream.pipe(createWriteStream(path.join(__dirname, '..', '..', 'crawled-html', escapedUrl)))
       })
       .catch(err => {
         logger.unexpectedError(err, 'requester error')
