@@ -41,6 +41,13 @@ initialization().then(([seedFile]) => {
   console.error('init error', err)
 })
 
+if (env.isDev()) {
+  const heapdump = require('heapdump');
+  setInterval(function() {
+    heapdump.writeSnapshot(path.join(env.LOGGING_DIR, "heap-dumps", Date.now() + '.heapsnapshot'));
+  }, 10 * 1000)
+}
+
 process.on("uncaughtException", function(err) {
   logger.unexpectedError(err, "uncaught exception");
 });
