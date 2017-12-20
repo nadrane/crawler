@@ -1,16 +1,29 @@
 const DomainTracker = require("./domain-tracker");
+const { parse } = require('tldjs');
 
 class Domains {
-  constructor(seedFile) {
+  constructor(seedFile, eventCoordinator) {
     this.domainTrackers = new Map();
     this.seedDomains(seedFile)
     this.domainGenerator = this._nextDomain();
+    eventCoordinator.on('new link', url => {
+      this.appendNewUrl(url)
+    })
   }
 
   seedDomains(seedFile) {
     seedFile.toString()
-      .split("\n")
-      .map(domain => this.domainTrackers.set(domain, new DomainTracker(domain)))
+    .split("\n")
+    .map(domain => this.domainTrackers.set(domain, new DomainTracker(domain)))
+  }
+
+  appendNewUrl(url) {
+    const domainTracker = this.domainTrackers.get(parse(url).domain)
+    // Only track a specific subset of domains on each server.
+    // If a link is found to an unseeded domain, ignore it
+    if (!domainTracker) return
+
+    domainTracker.appendNewUrl(url)
   }
 
   countOpenFiles() {

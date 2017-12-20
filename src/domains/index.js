@@ -19,7 +19,6 @@ class DomainReaderStream extends Readable {
     // the number of open files will remain unchanged. This means that
     // we will get not one but ~50 instances where countOpenFiles === 0
     setInterval(() => {
-      console.log("interval fired");
       this._getDomain();
     }, 5 * 1000);
   }
@@ -63,6 +62,6 @@ class DomainReaderStream extends Readable {
   }
 }
 
-module.exports = function(concurrency, seedFile) {
-   return new DomainReaderStream(new Domains(seedFile), concurrency);
+module.exports = function(concurrency, seedFile, eventCoordinator) {
+   return new DomainReaderStream(new Domains(seedFile, eventCoordinator), concurrency);
 };

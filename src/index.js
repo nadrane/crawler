@@ -1,9 +1,12 @@
-var argv = require("minimist")(process.argv.slice(2));
+const argv = require("minimist")(process.argv.slice(2));
+const { c, o } = argv; // maximum file descriptors open | output file name
+
 const fs = require("fs");
 const path = require("path");
-let { c, o } = argv; // maximum file descriptors open | output file name
-const env = require("../env/");
+const EventEmitter = require('events');
 
+const env = require("../env/");
+const eventCoordinator = new EventEmitter();
 const maxConcurrency = c || env.MAX_CONCURRENCY;
 let logFile;
 
@@ -18,10 +21,10 @@ const bloomFilter = require('./bloom-filter/bloom-filter')
 const bloomFilterCheckStream = require('./bloom-filter/check-stream')(maxConcurrency)
 const bloomFilterSetStream = require('./bloom-filter/set-stream')(maxConcurrency)
 const robotsStream = require("./robots-parser/")(maxConcurrency);
-const requestStream = require("./requester/")(maxConcurrency);
+const requestStream = require("./requester/")(maxConcurrency, eventCoordinator);
 
 initialization().then(([seedFile]) => {
-  const domainStream = require("./domains")(maxConcurrency, seedFile);
+  const domainStream = require("./domains")(maxConcurrency, seedFile, eventCoordinator);
 
   domainStream.on("error", err => {
     logger.unexpectedError(err, 'domain stream')
@@ -33,7 +36,10 @@ initialization().then(([seedFile]) => {
     .pipe(bloomFilterSetStream)  // notice we mark it visited before visiting. If we the request fails, it fails for good
     .pipe(requestStream)
     .pipe(process.stdout);
-});
+})
+.catch(err => {
+  console.error('init error', err)
+})
 
 process.on("uncaughtException", function(err) {
   logger.unexpectedError(err, "uncaught exception");
