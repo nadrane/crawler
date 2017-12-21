@@ -1,0 +1,6 @@
+{
+  "extends": "airbnb-base",
+  "rules": {
+    "quotes": [1, "double", "avoid-escape"]
+  }
+}
