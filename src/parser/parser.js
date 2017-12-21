@@ -3,7 +3,6 @@ const htmlparser = require("htmlparser2");
 const { URL } = require("url");
 const logger = require("../logger")();
 
-
 class htmlTolinkStream extends Transform {
   constructor(url, eventCoordinator) {
     super();
@@ -17,13 +16,14 @@ class htmlTolinkStream extends Transform {
           if (this._tagContainsValidUrl(name, href)) {
             const parsedUrl = new URL(href, this.originalUrl);
             eventCoordinator.emit("new link", parsedUrl.toString());
+            // process.send({ event: "new link", message: parsedUrl.toString(), pid: process.pid });
           }
         },
-        onerror: (err) => {
+        onerror: err => {
           logger.parserError(err, url);
-        },
+        }
       },
-      { decodeEntities: true },
+      { decodeEntities: true }
     );
   }
 

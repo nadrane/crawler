@@ -87,6 +87,12 @@ class Logger {
       event: "finalized crawl", url, domain, totalResponsesParsed,
     });
   }
+
+  spawningWorkerProcess(processId) {
+    this.logger.info({
+      event: "spawning worker process", processId,
+    });
+  }
 }
 
 function loggerCreator(logAdaptor, outputFile) {

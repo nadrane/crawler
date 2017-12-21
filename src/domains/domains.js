@@ -17,7 +17,7 @@ class Domains {
 
   appendNewUrl(url) {
     const domainTracker = this.domainTrackers.get(parse(url).domain);
-    // Only track a specific subset of domains on each server.
+    // Only track a specific subset of domains on each server and on each process.
     // If a link is found to an unseeded domain, ignore it
     if (!domainTracker) return;
 
