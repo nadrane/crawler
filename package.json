@@ -8,6 +8,7 @@
     "dev": "cross-env NODE_ENV=development node src/index.js",
     "debug": "cross-env NODE_ENV=development node --inspect src/index.js",
     "test": "./node_modules/mocha/bin/mocha tests/**/*test.js -w --reporter spec",
+    "lint": "./node_modules/.bin/eslint .",
     "profile": "cross-env NODE_ENV=development node --prof src/index.js",
     "postinstall": "node -e \"var s='../',d='node_modules/APP',fs=require('fs');fs.exists(d,function(e){e||fs.symlinkSync(s,d,'dir')});\""
   },
@@ -28,12 +29,15 @@
     "mkdirp": "^0.5.1",
     "robots": "^0.10.1",
     "robots-parser": "^1.0.1",
+    "sha1": "^1.1.1",
     "through2-concurrent": "^1.1.1",
     "tldjs": "^2.2.0"
   },
   "devDependencies": {
     "chai": "^4.1.2",
-    "eslint-config-google": "^0.9.1",
+    "eslint": "^4.13.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.8.0",
     "heapdump": "^0.3.9",
     "mocha": "^4.0.1",
     "rimraf": "^2.6.2",
