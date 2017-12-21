@@ -4,27 +4,26 @@ const { URL } = require("url");
 const logger = require("../logger")();
 
 
-
 class htmlTolinkStream extends Transform {
   constructor(url, eventCoordinator) {
     super();
     this.originalUrl = url;
-    this.backPressure = false
+    this.backPressure = false;
 
     this.parser = new htmlparser.Parser(
       {
         onopentag: (name, attribs) => {
-          const href = attribs.href
+          const { href } = attribs;
           if (this._tagContainsValidUrl(name, href)) {
             const parsedUrl = new URL(href, this.originalUrl);
-            eventCoordinator.emit('new link', parsedUrl.toString())
+            eventCoordinator.emit("new link", parsedUrl.toString());
           }
         },
-        onerror: err => {
+        onerror: (err) => {
           logger.parserError(err, url);
-        }
+        },
       },
-      { decodeEntities: true }
+      { decodeEntities: true },
     );
   }
 
@@ -40,19 +39,19 @@ class htmlTolinkStream extends Transform {
         if (!(err instanceof TypeError)) {
           throw err;
         }
-        return false;
       }
     }
+    return false;
   }
 
   _transform(buffer, enc, next) {
-    this.parser.write(buffer)
+    this.parser.write(buffer);
     next();
   }
 
   _final(done) {
     this.parser.parseComplete();
-    done() // execute the finish event
+    done(); // execute the finish event
   }
 }
 

@@ -1,1 +1,1 @@
-module.exports = require('./parser')
+module.exports = require("./parser");

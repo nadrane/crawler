@@ -1,13 +1,11 @@
 const { URL } = require("url");
-
-const bluebird = require("bluebird");
 const { parse } = require("tldjs");
-const mkdirp = require("mkdirp")
-const path = require('path')
+const mkdirp = require("mkdirp");
+const path = require("path");
 
 class Logger {
   constructor(logAdaptor, outputFile) {
-    mkdirp.sync(path.dirname(outputFile))
+    mkdirp.sync(path.dirname(outputFile));
     this.logger = logAdaptor(outputFile);
   }
 
@@ -16,7 +14,7 @@ class Logger {
   }
 
   unexpectedError(err, event, data) {
-    this.logger.error({err, event, data});
+    this.logger.error({ err, event, data });
   }
 
   parserError(url, err) {
@@ -25,17 +23,23 @@ class Logger {
 
   noRobotsResponseReceived(module, err, url) {
     const domain = parse(url);
-    this.logger.info({ module, event: "no robots response received", url, domain });
+    this.logger.info({
+      module, event: "no robots response received", url, domain,
+    });
   }
 
   GETResponseError(url, err, status, headers) {
     const domain = parse(url);
-    this.logger.info({ event: "response error", status, headers, err: err.message, url, domain });
+    this.logger.info({
+      event: "response error", status, headers, err: err.message, url, domain,
+    });
   }
 
   noGETResponseRecieved(err, url) {
     const domain = parse(url);
-    this.logger.info({ err, event: "no get response received", url, domain });
+    this.logger.info({
+      err, event: "no get response received", url, domain,
+    });
   }
 
   connectionReset(url) {
@@ -50,35 +54,43 @@ class Logger {
   addingToFrontier(fromUrl, newUrl) {
     const newDomain = parse(newUrl).domain;
     const fromDomain = parse(fromUrl).domain;
-    this.logger.info({ event: "new link", fromUrl, fromDomain, newUrl, newDomain });
+    this.logger.info({
+      event: "new link", fromUrl, fromDomain, newUrl, newDomain,
+    });
   }
   robotsRequestSent(url) {
     const { hostname } = new URL(url);
     this.logger.info({ event: "robots request sent", url, hostname });
   }
   GETRequestSent(url, totalRequestsMade) {
-    const domain = parse(url).domain;
-    this.logger.info({ event: "request sent", url, domain, totalRequestsMade });
+    const { domain } = parse(url);
+    this.logger.info({
+      event: "request sent", url, domain, totalRequestsMade,
+    });
   }
 
   GETResponseReceived(url, statusCode) {
-    const domain = parse(url).domain;
-    this.logger.info({ event: "response success", statusCode, url, domain });
+    const { domain } = parse(url);
+    this.logger.info({
+      event: "response success", statusCode, url, domain,
+    });
   }
 
   connectionMade(url) {
-    const domain = parse(url).domain;
+    const { domain } = parse(url);
     this.logger.info({ event: "new connection", url, domain });
   }
 
   finalizingCrawl(url, totalResponsesParsed) {
-    const domain = parse(url).domain;
-    this.logger.info({ event: "finalized crawl", url, domain, totalResponsesParsed });
+    const { domain } = parse(url);
+    this.logger.info({
+      event: "finalized crawl", url, domain, totalResponsesParsed,
+    });
   }
 }
 
 function loggerCreator(logAdaptor, outputFile) {
-  return new Logger(logAdaptor, outputFile)
+  return new Logger(logAdaptor, outputFile);
 }
 
 module.exports = loggerCreator;

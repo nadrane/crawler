@@ -1,14 +1,15 @@
 const bluebird = require("bluebird");
 const bloomd = require("bloomd");
+
 client = bloomd.createClient();
-// const logger = require('../logger/')()
+const logger = require("../logger/")();
 const { BLOOM_FILTER_NAME } = require("APP/env/");
 
-client.on("error", function(err) {
+client.on("error", (err) => {
   logger.unexpectedError(err, "bloom filter");
 });
 
-const set = function(key) {
+const set = function (key) {
   return new Promise((resolve, reject) => {
     client.set(BLOOM_FILTER_NAME, key, (err, data) => {
       if (err) reject(err);
@@ -17,7 +18,7 @@ const set = function(key) {
   });
 };
 
-const check = function(key) {
+const check = function (key) {
   return new Promise((resolve, reject) => {
     client.check(BLOOM_FILTER_NAME, key, (err, data) => {
       if (err) reject(err);
@@ -26,7 +27,7 @@ const check = function(key) {
   });
 };
 
-const create = function() {
+const create = function () {
   return new Promise((resolve, reject) => {
     client.create(BLOOM_FILTER_NAME, {}, (err, data) => {
       if (err) reject(err);
@@ -38,5 +39,5 @@ const create = function() {
 module.exports = {
   set,
   check,
-  create
+  create,
 };

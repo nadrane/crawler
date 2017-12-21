@@ -3,17 +3,19 @@ const sinon = require("sinon");
 const mocha = require("mocha");
 const { expect } = require("chai");
 const Frontier = require("APP/src/domains/frontier");
+
 const sandbox = sinon.createSandbox();
 
 describe("Frontier", () => {
-  let fileWriter, fileAppender
+  let fileWriter,
+    fileAppender;
   beforeEach(() => {
     fileWriter = sandbox.stub(fs, "writeFileSync");
     fileAppender = sandbox.stub(fs, "appendFileAsync");
   });
   afterEach(() => {
-    sandbox.restore()
-  })
+    sandbox.restore();
+  });
   describe("isEmpty", () => {
     it("should return false when the frontier is not empty", () => {
       const frontier = new Frontier("www.google.com");
@@ -77,7 +79,9 @@ describe("Frontier", () => {
     });
   });
   describe("flushNewLinkQueue", () => {
-    let frontier, newLinkQueueSpy, clock;
+    let frontier,
+      newLinkQueueSpy,
+      clock;
     beforeEach(() => {
       frontier = new Frontier("www.google.com");
       newLinkQueueSpy = sinon.spy(frontier, "flushNewLinkQueue");
@@ -117,7 +121,7 @@ describe("Frontier", () => {
       expect(fileAppender.calledOnce).to.be.true;
       expect(fileAppender.calledWithExactly(frontier.fileName, "www.microsoft.com\nwww.yahoo.com\n")).to
         .be.true;
-      expect(frontier.urlsInFrontier).to.equal(3)
+      expect(frontier.urlsInFrontier).to.equal(3);
       expect(frontier.flushScheduled).to.be.false;
       expect(frontier.queuedNewlinks).to.be.empty;
     });

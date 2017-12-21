@@ -1,5 +1,5 @@
 const Frontier = require("./frontier");
-const { DOMAIN_REQUEST_TIME_INTERVAL } = require('APP/env')
+const { DOMAIN_REQUEST_TIME_INTERVAL } = require("APP/env");
 
 class DomainTracker {
   constructor(domain) {
@@ -9,11 +9,11 @@ class DomainTracker {
   }
 
   currentlyReading() {
-    return this._frontier.currentlyReading
+    return this._frontier.currentlyReading;
   }
 
   readyToScrape() {
-    return this.politeToScrape() && this._frontier.readyForReading()
+    return this.politeToScrape() && this._frontier.readyForReading();
   }
 
   politeToScrape() {
@@ -21,17 +21,18 @@ class DomainTracker {
   }
 
   updateTimeLastScraped() {
-    return (this.lastScraped = Date.now());
+    this.lastScraped = Date.now();
+    return this.lastScraped;
   }
 
   getNextUrl() {
-    if (!this.readyToScrape()) return ""
+    if (!this.readyToScrape()) return "";
     this.updateTimeLastScraped();
-    return this._frontier.getNextUrl()
+    return this._frontier.getNextUrl();
   }
 
   appendNewUrl(url) {
-    this._frontier.append(url)
+    this._frontier.append(url);
   }
 }
 

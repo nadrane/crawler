@@ -22,41 +22,41 @@ the frontier was indexed by domain. Simple enough, I can just create a separate 
 file for every domain.
 */
 
-const assert = require('assert');
+const assert = require("assert");
 const bluebird = require("bluebird");
 const fs = require("fs");
 bluebird.promisifyAll(require("fs"));
 
 const logger = require("APP/src/logger")();
 const { join } = require("path");
-const { FRONTIER_DIRECTORY } = require('APP/env/')
+const { FRONTIER_DIRECTORY } = require("APP/env/");
 
 class Frontier {
   constructor(seedDomain) {
     this.domain = seedDomain;
-    this.urlsInFrontier = 1
-    this.currentlyReading = false
-    this.queuedNewlinks = []
-    this.flushScheduled = false
+    this.urlsInFrontier = 1;
+    this.currentlyReading = false;
+    this.queuedNewlinks = [];
+    this.flushScheduled = false;
 
     this.fileName = join(FRONTIER_DIRECTORY, `${seedDomain}.txt`);
 
-    let domainWithProtocol
-    if (!seedDomain.startsWith('http://')) {
-      domainWithProtocol = `http://${seedDomain}`
+    let domainWithProtocol;
+    if (!seedDomain.startsWith("http://")) {
+      domainWithProtocol = `http://${seedDomain}`;
     } else {
-      domainWithProtocol = seedDomain
+      domainWithProtocol = seedDomain;
     }
 
     try {
-      fs.writeFileSync(this.fileName, domainWithProtocol + '\n');
+      fs.writeFileSync(this.fileName, `${domainWithProtocol}\n`);
     } catch (err) {
       logger.unexpectedError(`failed to initialize frontier for domain ${seedDomain}`, err);
     }
   }
 
   readyForReading() {
-    return !this.isEmpty() && !this.currentlyReading
+    return !this.isEmpty() && !this.currentlyReading;
   }
 
   isEmpty() {
@@ -66,7 +66,7 @@ class Frontier {
 
   async getNextUrl() {
     let buffer;
-    if (!this.readyForReading()) return ""
+    if (!this.readyForReading()) return "";
     // This is effectively a lock and must occur before the read begins
     // Why the heck do we need locks in a single threaded environment?
     // The answer is because IO happens across multiple threads in Node.
@@ -89,12 +89,12 @@ class Frontier {
     // END: urlsInFrontier is now set to -1, and we returned and scraped the same URL twice.
     this.currentlyReading = true;
     try {
-      this.urlsInFrontier--;
+      this.urlsInFrontier -= 1;
       buffer = await fs.readFileAsync(this.fileName);
     } catch (err) {
       logger.unexpectedError(
         `failed to read from frontier file - getNextUrl ${this.fileName}`,
-        err
+        err,
       );
     }
     const allUrls = buffer.toString().split("\n");
@@ -111,28 +111,28 @@ class Frontier {
   }
 
   append(newUrl) {
-    this.queuedNewlinks.push(newUrl)
-    const oneMinute = 60 * 1000
+    this.queuedNewlinks.push(newUrl);
+    const oneMinute = 60 * 1000;
 
     // Often times we find many new links back to back on the same page
     // Queue them all at once
     if (!this.flushScheduled) {
-      setTimeout(this.flushNewLinkQueue.bind(this), oneMinute)
-      this.flushScheduled = true
+      setTimeout(this.flushNewLinkQueue.bind(this), oneMinute);
+      this.flushScheduled = true;
     }
   }
 
   async flushNewLinkQueue() {
-    assert(this.flushScheduled)
-    const linksToAppend = this.queuedNewlinks.join('\n')
-    assert(linksToAppend)
+    assert(this.flushScheduled);
+    const linksToAppend = this.queuedNewlinks.join("\n");
+    assert(linksToAppend);
 
     if (this.currentlyReading) {
-      const fiveSeconds = 5 * 1000
-      setTimeout(this.flushNewLinkQueue.bind(this), fiveSeconds)
-      return
+      const fiveSeconds = 5 * 1000;
+      setTimeout(this.flushNewLinkQueue.bind(this), fiveSeconds);
+      return;
     }
-    this.flushScheduled = false
+    this.flushScheduled = false;
 
     // Should never be true
 
@@ -143,7 +143,7 @@ class Frontier {
     try {
       await fs.appendFileAsync(this.fileName, `${linksToAppend}\n`);
       this.urlsInFrontier += this.queuedNewlinks.length;
-      this.queuedNewlinks = []
+      this.queuedNewlinks = [];
     } catch (err) {
       logger.unexpectedError(`failed to append to to frontier file - append ${this.fileName}`, err);
     }

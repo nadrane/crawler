@@ -1,22 +1,23 @@
-const path = require("path");
+const productionEnv = require("./production");
+const devEnv = require("./development");
 
 let env;
 if (process.env.NODE_ENV === "production") {
-  env = require('./production');
-} else if (process.env.NODE_ENV === "development"){
-  env = require('./development');
+  env = productionEnv;
+} else if (process.env.NODE_ENV === "development") {
+  env = devEnv;
 } else {
-  throw new Error('environment not defined')
+  throw new Error("environment not defined");
 }
 
-Object.assign(env, require('./defaults'));
+Object.assign(env, require("./defaults"));
 
-env.isProd = function() {
+env.isProd = function isProd() {
   return process.env.NODE_ENV === "production";
 };
 
-env.isDev = function() {
+env.isDev = function isDev() {
   return process.env.NODE_ENV === "development";
 };
 
-module.exports = env
+module.exports = env;

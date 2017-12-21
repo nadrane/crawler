@@ -1,4 +1,3 @@
-const { SEED_FILE_PROMISE } = require("APP/env");
 const { Readable } = require("stream");
 const Domains = require("./domains");
 
@@ -26,7 +25,7 @@ class DomainReaderStream extends Readable {
   /* _read will not get called a second time until push has been called
   this is why we have the while loop below
   */
-  _read(size) {
+  _read() {
     this.backPressure = false;
     if (this.buffer.length) {
       const url = this.buffer.shift();
@@ -44,24 +43,23 @@ class DomainReaderStream extends Readable {
       if (this.domains.countOpenFiles() >= this.concurrency) return;
       this.domains
         .getNextUrlToScrape()
-        .then(url => {
+        .then((url) => {
           // Eventually there are no domains ready for scraping and "" is returned
           if (!url) return;
           if (this.backPressure) {
             this.buffer.push(url);
-            return;
           } else if (!this.push(url)) {
             this.backPressure = true;
           }
         })
-        .catch(err => {
-          this.outstandingRequests--;
+        .catch((err) => {
+          this.outstandingRequests -= 1;
           return this.emit("error", err);
         });
     }
   }
 }
 
-module.exports = function(concurrency, seedFile, eventCoordinator) {
-   return new DomainReaderStream(new Domains(seedFile, eventCoordinator), concurrency);
+module.exports = function (concurrency, seedData, eventCoordinator) {
+  return new DomainReaderStream(new Domains(seedData, eventCoordinator), concurrency);
 };

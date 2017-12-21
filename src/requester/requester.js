@@ -13,16 +13,16 @@ const Requester = {
         url,
         responseType: "stream",
         headers: {
-          userAgent: USER_AGENT
-        }
+          userAgent: USER_AGENT,
+        },
       });
       logger.GETResponseReceived(url, response.status);
     } catch (err) {
       failedRequest(err, url);
-      return null
+      return null;
     }
     return response;
-  }
+  },
 };
 
 function failedRequest(err, url) {
@@ -36,7 +36,6 @@ function failedRequest(err, url) {
     // do not retry if connection reset
     // simply limiting complexity here
     if (err.code === "ECONNRESET") {
-      const { domain } = parse(url);
       logger.connectionReset(url);
     } else {
       logger.noGETResponseRecieved(err, url);
@@ -44,7 +43,7 @@ function failedRequest(err, url) {
   } else {
     logger.unexpectedError(err, "bad request", {
       module: "get request",
-      config: err.config
+      config: err.config,
     });
   }
 }

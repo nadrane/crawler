@@ -1,41 +1,39 @@
 const DomainTracker = require("./domain-tracker");
-const { parse } = require('tldjs');
+const { parse } = require("tldjs");
 
 class Domains {
-  constructor(seedFile, eventCoordinator) {
+  constructor(seedData, eventCoordinator) {
     this.domainTrackers = new Map();
-    this.seedDomains(seedFile)
+    this.seedDomains(seedData);
     this.domainGenerator = this._nextDomain();
-    eventCoordinator.on('new link', url => {
-      this.appendNewUrl(url)
-    })
+    eventCoordinator.on("new link", (url) => {
+      this.appendNewUrl(url);
+    });
   }
 
-  seedDomains(seedFile) {
-    seedFile.toString()
-    .split("\n")
-    .map(domain => this.domainTrackers.set(domain, new DomainTracker(domain)))
+  seedDomains(seedData) {
+    seedData.map(domain => this.domainTrackers.set(domain, new DomainTracker(domain)));
   }
 
   appendNewUrl(url) {
-    const domainTracker = this.domainTrackers.get(parse(url).domain)
+    const domainTracker = this.domainTrackers.get(parse(url).domain);
     // Only track a specific subset of domains on each server.
     // If a link is found to an unseeded domain, ignore it
-    if (!domainTracker) return
+    if (!domainTracker) return;
 
-    domainTracker.appendNewUrl(url)
+    domainTracker.appendNewUrl(url);
   }
 
   countOpenFiles() {
     let filesOpen = 0;
-    for (let domainTracker of this.domainTrackers.values()) {
+    for (const domainTracker of this.domainTrackers.values()) {
       filesOpen += domainTracker.currentlyReading() ? 1 : 0;
     }
     return filesOpen;
   }
 
-  *_nextDomain() {
-    for (let [domain, domainTracker] of this.domainTrackers) {
+  * _nextDomain() {
+    for (const [domain, domainTracker] of this.domainTrackers) {
       if (domainTracker.readyToScrape()) {
         yield domain;
       }
@@ -52,11 +50,11 @@ class Domains {
   }
 
   async getNextUrlToScrape() {
-    const domain = this.getDomainToScrape()
+    const domain = this.getDomainToScrape();
     if (!domain) {
-      return ""
+      return "";
     }
-    const domainTracker = this.domainTrackers.get(domain)
+    const domainTracker = this.domainTrackers.get(domain);
     return await domainTracker.getNextUrl();
   }
 }

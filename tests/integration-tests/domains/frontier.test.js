@@ -9,10 +9,10 @@ const { readFileSync } = require("fs");
 
 describe("Domains", () => {
   beforeEach(async () => {
-    await rimraf(FRONTIER_DIRECTORY + "/*");
+    await rimraf(`${FRONTIER_DIRECTORY}/*`);
   });
   afterEach(async () => {
-    await rimraf(FRONTIER_DIRECTORY + "/*");
+    await rimraf(`${FRONTIER_DIRECTORY}/*`);
   });
 
   describe("constructor", () => {
@@ -32,9 +32,7 @@ describe("Domains", () => {
       await frontier.flushNewLinkQueue();
 
       const expectedFilePath = path.join(FRONTIER_DIRECTORY, "google.com.txt");
-      expect(readFileSync(expectedFilePath).toString()).to.equal(
-        "http://google.com\nwww.google.com/search\ngoogle.com/link1\nwww.google.com/link2\n"
-      );
+      expect(readFileSync(expectedFilePath).toString()).to.equal("http://google.com\nwww.google.com/search\ngoogle.com/link1\nwww.google.com/link2\n");
     });
   });
 });
