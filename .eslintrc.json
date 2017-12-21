@@ -1,6 +1,8 @@
 {
   "extends": "airbnb-base",
   "rules": {
-    "quotes": [1, "double", "avoid-escape"]
+    "quotes": [1, "double", "avoid-escape"],
+    "no-underscore-dangle": [0],
+    "no-restricted-syntax": [0]
   }
 }
