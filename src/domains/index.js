@@ -60,6 +60,6 @@ class DomainReaderStream extends Readable {
   }
 }
 
-module.exports = function createDomainStream(concurrency, seedData, eventCoordinator) {
-  return new DomainReaderStream(new Domains(seedData, eventCoordinator), concurrency);
+module.exports = function createDomainStream(concurrency, seedData) {
+  return new DomainReaderStream(new Domains(seedData), concurrency);
 };

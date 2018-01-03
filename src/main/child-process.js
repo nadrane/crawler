@@ -1,11 +1,8 @@
 const path = require("path");
 const mkdirp = require("mkdirp");
-const Events = require("events");
 
 const env = require("../../env/");
 const bloomFilter = require("../bloom-filter/bloom-filter");
-
-const eventCoordinator = new Events();
 
 function configureHeapDumps() {
   if (env.isDev()) {
@@ -36,7 +33,7 @@ function initialization(maxConcurrency, logFile) {
   const bloomFilterCheckStream = require("../bloom-filter/check-stream")(maxConcurrency);
   const bloomFilterSetStream = require("../bloom-filter/set-stream")(maxConcurrency);
   const robotsStream = require("../robots-parser/")(maxConcurrency);
-  const requestStream = require("../requester/")(maxConcurrency, eventCoordinator);
+  const requestStream = require("../requester/")(maxConcurrency);
 
   const createBloomFilter = bloomFilter.create();
   const seedFile = new Promise(resolve => {
@@ -47,7 +44,7 @@ function initialization(maxConcurrency, logFile) {
 
   return Promise.all([seedFile, createBloomFilter])
     .then(([seedData]) => {
-      const domainStream = require("../domains")(maxConcurrency, seedData, eventCoordinator);
+      const domainStream = require("../domains")(maxConcurrency, seedData);
 
       domainStream.on("error", (err) => {
         logger.unexpectedError(err, "domain stream");

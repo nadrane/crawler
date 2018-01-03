@@ -6,7 +6,7 @@ const Parser = require("../parser/");
 const logger = require("../logger/")();
 const sha1 = require("sha1");
 
-module.exports = function createRequesterStream(concurrency, eventCoordinator) {
+module.exports = function createRequesterStream(concurrency) {
   return throughConcurrent("requester stream", concurrency, (requestUrl, enc, done) => {
     requester
       .crawlWithGetRequest(requestUrl)
@@ -15,7 +15,7 @@ module.exports = function createRequesterStream(concurrency, eventCoordinator) {
         // In case the request failed
         if (!response) return;
         const htmlStream = response.data;
-        const parserStream = new Parser(requestUrl, eventCoordinator);
+        const parserStream = new Parser(requestUrl);
         // TODO we want to pipe the parser stream results into a through stream that pushes
         // to the outtermost stream made by throughConcurrent above.
         parserStream.on("error", (err) => {

@@ -2,13 +2,10 @@ const DomainTracker = require("./domain-tracker");
 const { parse } = require("tldjs");
 
 class Domains {
-  constructor(seedData, eventCoordinator) {
+  constructor(seedData) {
     this.domainTrackers = new Map();
     this.seedDomains(seedData);
     this.domainGenerator = this._nextDomain();
-    eventCoordinator.on("new link", (url) => {
-      this.appendNewUrl(url);
-    });
   }
 
   seedDomains(seedData) {

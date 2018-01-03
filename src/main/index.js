@@ -11,21 +11,7 @@ const maxConcurrency = c || MAX_CONCURRENCY;
 const logFile = o || path.join(LOGGING_DIR, "log.txt");
 const logger = require("../logger/")(logFile);
 
-// function broadcast({ event, message, pid }) {
-//   cluster.workers.forEach(id => {
-//     if (pid === id) return;
-//     cluster.workers[id].send({ event, message });
-//   });
-// }
-
-// function configureMaster() {
-//   process.on("message", ({ event, message, pid }) => {
-//     broadcast({ event, message, pid });
-//   });
-// }
-
 if (cluster.isMaster) {
-  // configureMaster();
   for (let i = 0; i < numCPUs; i++) {
     const child = cluster.fork();
     logger.spawningWorkerProcess(child.pid);

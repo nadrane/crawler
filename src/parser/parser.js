@@ -4,7 +4,7 @@ const { URL } = require("url");
 const logger = require("../logger")();
 
 class htmlTolinkStream extends Transform {
-  constructor(url, eventCoordinator) {
+  constructor(url) {
     super();
     this.originalUrl = url;
     this.backPressure = false;
@@ -15,8 +15,6 @@ class htmlTolinkStream extends Transform {
           const { href } = attribs;
           if (this._tagContainsValidUrl(name, href)) {
             const parsedUrl = new URL(href, this.originalUrl);
-            eventCoordinator.emit("new link", parsedUrl.toString());
-            // process.send({ event: "new link", message: parsedUrl.toString(), pid: process.pid });
           }
         },
         onerror: err => {
