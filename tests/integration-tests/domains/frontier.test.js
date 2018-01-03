@@ -1,4 +1,3 @@
-const mocha = require("mocha");
 const { expect } = require("chai");
 const { promisify } = require("util");
 const path = require("path");
@@ -7,7 +6,7 @@ const Frontier = require("APP/src/domains/frontier");
 const { FRONTIER_DIRECTORY } = require("APP/env/");
 const { readFileSync } = require("fs");
 
-describe("Domains", () => {
+describe("Frontier", () => {
   beforeEach(async () => {
     await rimraf(`${FRONTIER_DIRECTORY}/*`);
   });
