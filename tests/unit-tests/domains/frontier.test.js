@@ -3,7 +3,7 @@ const { expect } = require("chai");
 const Frontier = require("APP/src/domains/frontier");
 
 describe("Frontier", () => {
-  let storage = {};
+  const storage = {};
   beforeEach(() => {
     storage.writeFileSync = sinon.spy();
     storage.readFileAsync = sinon.spy();
