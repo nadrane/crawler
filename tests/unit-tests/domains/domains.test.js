@@ -1,4 +1,3 @@
-const fs = require("fs");
 const sinon = require("sinon");
 const { expect } = require("chai");
 const Domains = require("APP/src/domains/domains");
