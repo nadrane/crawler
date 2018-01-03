@@ -2,9 +2,9 @@ const Frontier = require("./frontier");
 const { DOMAIN_REQUEST_TIME_INTERVAL } = require("APP/env");
 
 class DomainTracker {
-  constructor(domain) {
+  constructor(domain, storage) {
     this.domain = domain;
-    this._frontier = new Frontier(domain);
+    this._frontier = new Frontier(domain, storage);
     this.lastScraped = 0; // A really early time so it will definitely be scrapped.
   }
 
