@@ -130,13 +130,20 @@ describe("Frontier", () => {
       storage.readFileAsync = sinon
         .stub()
         .returns("www.bing.com\nwww.bing.com/link1\nwww.bing.com/link2");
-
-      frontier = new Frontier("www.bing.com", storage);
+      const frontier = new Frontier("www.bing.com", storage);
       frontier.urlsInFrontier = 3;
 
       expect(await frontier.getNextUrl()).to.equal("www.bing.com");
       expect(frontier.urlsInFrontier).to.equal(2);
       expect(frontier.currentlyReading).to.be.false;
     });
+    it("does not change the number of urls in the frontier if the read fails", async () => {
+      storage.readFileAsync = sinon.stub().returns(Promise.reject());
+      const frontier = new Frontier("www.bing.com", storage);
+
+      expect(frontier.urlsInFrontier).to.equal(1)
+      await frontier.getNextUrl()
+      expect(frontier.urlsInFrontier).to.equal(1)
+    })
   });
 });

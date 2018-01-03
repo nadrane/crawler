@@ -93,10 +93,12 @@ class Frontier {
       this.urlsInFrontier -= 1;
       buffer = await this.storage.readFileAsync(this.fileName);
     } catch (err) {
+      this.urlsInFrontier += 1;
       logger.unexpectedError(
         `failed to read from frontier file - getNextUrl ${this.fileName}`,
         err,
       );
+      return "";
     }
     const allUrls = buffer.toString().split("\n");
     const nextUrl = allUrls[0];
