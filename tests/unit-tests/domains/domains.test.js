@@ -1,6 +1,5 @@
 const fs = require("fs");
 const sinon = require("sinon");
-const mocha = require("mocha");
 const { expect } = require("chai");
 const domainFactory = require("APP/src/domains/domains");
 

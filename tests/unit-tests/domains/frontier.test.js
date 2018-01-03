@@ -4,7 +4,7 @@ const Frontier = require("APP/src/domains/frontier");
 
 const sandbox = sinon.createSandbox();
 
-describe.only("Frontier", () => {
+describe("Frontier", () => {
   let storage = {};
   beforeEach(() => {
     storage.writeFileSync = sinon.spy();
