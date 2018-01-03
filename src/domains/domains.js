@@ -55,7 +55,7 @@ class Domains {
   getNextUrlToScrape() {
     const domain = this.getDomainToScrape();
     if (!domain) {
-      return "";
+      return Promise.resolve("");
     }
     const domainTracker = this.domainTrackers.get(domain);
     return domainTracker.getNextUrl();

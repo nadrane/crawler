@@ -77,5 +77,12 @@ describe("Domains", () => {
       expect(await domains.getNextUrlToScrape()).to.equal("www.google.com");
       expect(await domains.getNextUrlToScrape()).to.equal("www.yahoo.com");
     });
+    it("returns a promise that resolve to '' when there are no domains to scrape", async () => {
+      const eventCoordinator = new Events();
+      const seed = [];
+      const domains = new Domains(seed, eventCoordinator, storage);
+
+      expect(await domains.getNextUrlToScrape()).to.equal("");
+    });
   });
 });
