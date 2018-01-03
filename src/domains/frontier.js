@@ -32,12 +32,13 @@ const { join } = require("path");
 const { FRONTIER_DIRECTORY } = require("APP/env/");
 
 class Frontier {
-  constructor(seedDomain) {
+  constructor(seedDomain, storage=fs) {
     this.domain = seedDomain;
     this.urlsInFrontier = 1;
     this.currentlyReading = false;
     this.queuedNewlinks = [];
     this.flushScheduled = false;
+    this.storage = storage;
 
     this.fileName = join(FRONTIER_DIRECTORY, `${seedDomain}.txt`);
 
@@ -49,7 +50,7 @@ class Frontier {
     }
 
     try {
-      fs.writeFileSync(this.fileName, `${domainWithProtocol}\n`);
+      storage.writeFileSync(this.fileName, `${domainWithProtocol}\n`);
     } catch (err) {
       logger.unexpectedError(`failed to initialize frontier for domain ${seedDomain}`, err);
     }
@@ -90,7 +91,7 @@ class Frontier {
     this.currentlyReading = true;
     try {
       this.urlsInFrontier -= 1;
-      buffer = await fs.readFileAsync(this.fileName);
+      buffer = await this.storage.readFileAsync(this.fileName);
     } catch (err) {
       logger.unexpectedError(
         `failed to read from frontier file - getNextUrl ${this.fileName}`,
@@ -102,7 +103,7 @@ class Frontier {
     // This probably does not need to be awaited because the politness check
     // would stop us from scraping the same domain twice in a short period of time.
     try {
-      await fs.writeFileAsync(this.fileName, allUrls.slice(1).join("\n"));
+      await this.storage.writeFileAsync(this.fileName, allUrls.slice(1).join("\n"));
     } catch (err) {
       logger.unexpectedError(`failed to write to frontier file - getNextUrl ${this.fileName}`, err);
     }
@@ -141,7 +142,7 @@ class Frontier {
     // to avoid exceeding unix file open limits
     this.currentlyReading = true;
     try {
-      await fs.appendFileAsync(this.fileName, `${linksToAppend}\n`);
+      await this.storage.appendFileAsync(this.fileName, `${linksToAppend}\n`);
       this.urlsInFrontier += this.queuedNewlinks.length;
       this.queuedNewlinks = [];
     } catch (err) {
