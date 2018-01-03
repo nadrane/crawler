@@ -2,8 +2,6 @@ const sinon = require("sinon");
 const { expect } = require("chai");
 const Frontier = require("APP/src/domains/frontier");
 
-const sandbox = sinon.createSandbox();
-
 describe("Frontier", () => {
   let storage = {};
   beforeEach(() => {
