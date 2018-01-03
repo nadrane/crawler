@@ -43,7 +43,7 @@ class DomainReaderStream extends Readable {
       if (this.domains.countOpenFiles() >= this.concurrency) return;
       this.domains
         .getNextUrlToScrape()
-        .then((url) => {
+        .then(url => {
           // Eventually there are no domains ready for scraping and "" is returned
           if (!url) return;
           if (this.backPressure) {
@@ -52,7 +52,7 @@ class DomainReaderStream extends Readable {
             this.backPressure = true;
           }
         })
-        .catch((err) => {
+        .catch(err => {
           this.outstandingRequests -= 1;
           return this.emit("error", err);
         });
@@ -60,6 +60,6 @@ class DomainReaderStream extends Readable {
   }
 }
 
-module.exports = function (concurrency, seedData, eventCoordinator) {
+module.exports = function makeDomainStream(concurrency, seedData, eventCoordinator) {
   return new DomainReaderStream(new Domains(seedData, eventCoordinator), concurrency);
 };
