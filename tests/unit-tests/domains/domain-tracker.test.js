@@ -3,7 +3,7 @@ const { expect } = require("chai");
 const DomainTracker = require("APP/src/domains/domain-tracker");
 const { DOMAIN_REQUEST_TIME_INTERVAL } = require("APP/env");
 
-describe.only("Domain Tracker", () => {
+describe("Domain Tracker", () => {
   let storage = {};
   beforeEach(() => {
     storage.writeFileSync = sinon.spy();
