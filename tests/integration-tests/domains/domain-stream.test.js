@@ -9,15 +9,17 @@ function testAllUrlsReadFromStream(stream, seed, done) {
   let urlsRead = 0;
   const numberOfUrls = seed.length;
   stream.on("readable", () => {
-    const url = stream.read();
+    let url = stream.read();
     urlsRead += 1;
+    if (url.startsWith('http://')) {
+      url = url.split('http://')[1];
+    }
     if (seed.includes(url)) {
       const pos = seed.indexOf(url);
       seed.splice(pos, 1);
     }
     if (urlsRead === numberOfUrls && seed.length !== 0) {
-      console.log(seed)
-      done(new Error("Not every url was streamed"))
+      done(new Error("Not every url was streamed"));
     }
     if (urlsRead === numberOfUrls && seed.length === 0) {
       done();
@@ -25,7 +27,7 @@ function testAllUrlsReadFromStream(stream, seed, done) {
   });
 }
 
-describe.only("domain stream", () => {
+describe("domain stream", () => {
   beforeEach(async () => {
     await rimraf(`${FRONTIER_DIRECTORY}/*`);
   });
@@ -35,12 +37,12 @@ describe.only("domain stream", () => {
   it("returns a sequence of different urls from the seed file", done => {
     const eventCoordinator = new Events();
     const seed = [
-      "http://google.com",
-      "http://youtube.com",
-      "http://facebook.com",
-      "http://wikipedia.com",
-      "http://alibaba.com",
-      "http://fakesite.com"
+      "google.com",
+      "youtube.com",
+      "facebook.com",
+      "wikipedia.com",
+      "alibaba.com",
+      "fakesite.com"
     ];
     const domainStream = makeDomainStream(2, seed, eventCoordinator);
 
@@ -48,9 +50,9 @@ describe.only("domain stream", () => {
   });
   it("handles backpressure appropriately", done => {
     const eventCoordinator = new Events();
-    const seed = require('APP/seed-domains')
-    const domainStream = makeDomainStream(2, seed, eventCoordinator);
+    const seed = require('APP/seed-domains-sans-subs')
+    const domainStream = makeDomainStream(20, seed, eventCoordinator);
 
     testAllUrlsReadFromStream(domainStream, seed, done);
-  }).timeout(5000);
+  }).timeout(6000);
 });
