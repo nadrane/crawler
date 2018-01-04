@@ -11,8 +11,8 @@ function testAllUrlsReadFromStream(stream, seed, done) {
   stream.on("readable", () => {
     let url = stream.read();
     urlsRead += 1;
-    if (url.startsWith('http://')) {
-      url = url.split('http://')[1];
+    if (url.startsWith("http://")) {
+      url = url.split("http://")[1];
     }
     if (seed.includes(url)) {
       const pos = seed.indexOf(url);
@@ -48,11 +48,30 @@ describe("domain stream", () => {
 
     testAllUrlsReadFromStream(domainStream, seed, done);
   });
+
   it("handles backpressure appropriately", done => {
     const eventCoordinator = new Events();
-    const seed = require('APP/seed-domains-sans-subs')
+    const seed = require("APP/seed-domains-sans-subs");
     const domainStream = makeDomainStream(20, seed, eventCoordinator);
 
     testAllUrlsReadFromStream(domainStream, seed, done);
   }).timeout(6000);
+
+  // I'm trying to verify that the pause()/resume() API works like I think.
+  // It seems to, though I'm not sure how to formulate this as a real test
+  // without creating some kind of in-memory test stream. But that would just be
+  // testing the NodeJS core stream API anyway... I'll leave this here anyhow in
+  // in case it's useful when plugging the various streams together
+  // it.only("stops emitted urls when the stream is paused", done => {
+  //   const eventCoordinator = new Events();
+  //   const seed = require("APP/seed-domains-sans-subs");
+  //   const domainStream = makeDomainStream(20, seed, eventCoordinator);
+  //   domainStream.pipe(process.stdout);
+  //   setTimeout(() => {
+  //     eventCoordinator.emit("stop");
+  //     setTimeout(() => {
+  //       eventCoordinator.emit("start");
+  //     }, 3000);
+  //   }, 500);
+  // }).timeout(6000);
 });

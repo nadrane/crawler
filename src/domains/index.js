@@ -2,14 +2,23 @@ const { Readable } = require("stream");
 const Domains = require("./domains");
 
 class DomainReaderStream extends Readable {
-  constructor(domains, concurrency) {
+  constructor(domains, concurrency, eventCoordinator) {
     super({ objectMode: true });
     this.outstandingRequests = 0;
     this.concurrency = concurrency;
     this.buffer = [];
     this.domains = domains;
     this.backPressure = false;
-
+    eventCoordinator.on("stop", () => {
+      if (!this.isPaused()) {
+        this.pause();
+      }
+    });
+    eventCoordinator.on("start", () => {
+      if (this.isPaused()) {
+        this.resume();
+      }
+    });
     // Since _read is not called until this.push is called,
     // if we run out of urls, we need to make sure we check again eventually
     // You'd think we could do this inside the callback of getNextUrlToScrape
@@ -61,5 +70,9 @@ class DomainReaderStream extends Readable {
 }
 
 module.exports = function makeDomainStream(concurrency, seedData, eventCoordinator) {
-  return new DomainReaderStream(new Domains(seedData, eventCoordinator), concurrency);
+  return new DomainReaderStream(
+    new Domains(seedData, eventCoordinator),
+    concurrency,
+    eventCoordinator
+  );
 };
