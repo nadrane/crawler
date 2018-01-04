@@ -4,9 +4,23 @@ const mkdirp = require("mkdirp");
 const path = require("path");
 
 class Logger {
-  constructor(logAdaptor, outputFile) {
+  constructor(eventCoordinator, outputFile, logAdaptor) {
     mkdirp.sync(path.dirname(outputFile));
     this.logger = logAdaptor(outputFile);
+    this.lastFiveUnexpected = [];
+    this.eventCoordinator = eventCoordinator;
+  }
+
+  trackUnexpectedErrors() {
+    this.lastFiveUnexpected.unshift(new Date());
+    if (this.lastFiveUnexpected.length >= 5) {
+      const timeElapsed =
+      this.lastFiveUnexpected[0] - this.lastFiveUnexpected[this.lastFiveUnexpected.length - 1];
+      if (timeElapsed < 1000) {
+        this.eventCoordinator.emit("stop");
+      }
+      this.lastFiveUnexpected.pop();
+    }
   }
 
   initializationLog(maxConnectionsOpen, maxOpenFiles) {
@@ -15,6 +29,7 @@ class Logger {
 
   unexpectedError(err, event, data) {
     this.logger.error({ err, event, data });
+    this.trackUnexpectedErrors();
   }
 
   parserError(url, err) {
@@ -24,21 +39,32 @@ class Logger {
   noRobotsResponseReceived(module, err, url) {
     const domain = parse(url);
     this.logger.info({
-      module, event: "no robots response received", url, domain,
+      module,
+      event: "no robots response received",
+      url,
+      domain
     });
   }
 
   GETResponseError(url, err, status, headers) {
     const domain = parse(url);
     this.logger.info({
-      event: "response error", status, headers, err: err.message, url, domain,
+      event: "response error",
+      status,
+      headers,
+      err: err.message,
+      url,
+      domain
     });
   }
 
   noGETResponseRecieved(err, url) {
     const domain = parse(url);
     this.logger.info({
-      err, event: "no get response received", url, domain,
+      err,
+      event: "no get response received",
+      url,
+      domain
     });
   }
 
@@ -55,7 +81,11 @@ class Logger {
     const newDomain = parse(newUrl).domain;
     const fromDomain = parse(fromUrl).domain;
     this.logger.info({
-      event: "new link", fromUrl, fromDomain, newUrl, newDomain,
+      event: "new link",
+      fromUrl,
+      fromDomain,
+      newUrl,
+      newDomain
     });
   }
   robotsRequestSent(url) {
@@ -65,14 +95,20 @@ class Logger {
   GETRequestSent(url, totalRequestsMade) {
     const { domain } = parse(url);
     this.logger.info({
-      event: "request sent", url, domain, totalRequestsMade,
+      event: "request sent",
+      url,
+      domain,
+      totalRequestsMade
     });
   }
 
   GETResponseReceived(url, statusCode) {
     const { domain } = parse(url);
     this.logger.info({
-      event: "response success", statusCode, url, domain,
+      event: "response success",
+      statusCode,
+      url,
+      domain
     });
   }
 
@@ -84,13 +120,12 @@ class Logger {
   finalizingCrawl(url, totalResponsesParsed) {
     const { domain } = parse(url);
     this.logger.info({
-      event: "finalized crawl", url, domain, totalResponsesParsed,
+      event: "finalized crawl",
+      url,
+      domain,
+      totalResponsesParsed
     });
   }
 }
 
-function loggerCreator(logAdaptor, outputFile) {
-  return new Logger(logAdaptor, outputFile);
-}
-
-module.exports = loggerCreator;
+module.exports = Logger;
