@@ -39,6 +39,17 @@ describe("Domains", () => {
       expect(domains.domainTrackers.has("stock.finance.yahoo.com")).to.be.false;
       expect(domains.domainTrackers.has("finance.yahoo.com")).to.be.false;
     });
+
+    it("successfully loads a large seed file", () => {
+      const eventCoordinator = new Events();
+      const seed = require("APP/seed-domains.json");
+      const domains = new Domains(seed, eventCoordinator, storage);
+
+      const { domainTrackers } = domains;
+      expect(domainTrackers.has('google.com')).to.be.true;
+      expect(domainTrackers.has('andaluspress.com')).to.be.true;
+      expect(domainTrackers.has('progressive.com')).to.be.true;
+    });
   });
 
   describe("getDomainToScrape", () => {
