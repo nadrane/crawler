@@ -1,5 +1,5 @@
 const DomainTracker = require("./domain-tracker");
-const { parse } = require("tldjs");
+const { getDomain } = require("tldjs");
 
 class Domains {
   constructor(seedData, eventCoordinator, storage) {
@@ -14,7 +14,8 @@ class Domains {
 
   seedDomains(seedData) {
     seedData.forEach(domain => {
-      const domainWithoutSubdomains = parse(domain).domain;
+      const domainWithoutSubdomains = getDomain(domain);
+      if (!domainWithoutSubdomains) return;
       this.domainTrackers.set(
         domainWithoutSubdomains,
         new DomainTracker(domainWithoutSubdomains, this.storage)
@@ -23,7 +24,7 @@ class Domains {
   }
 
   appendNewUrl(url) {
-    const { domain } = parse(url);
+    const domain = getDomain(url);
     const domainTracker = this.domainTrackers.get(domain);
     // Only track a specific subset of domains on each server.
     // If a link is found to an unseeded domain, ignore it
