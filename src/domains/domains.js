@@ -13,13 +13,18 @@ class Domains {
   }
 
   seedDomains(seedData) {
-    seedData.map(domain =>
-      this.domainTrackers.set(domain, new DomainTracker(domain, this.storage))
-    );
+    seedData.forEach(domain => {
+      const domainWithoutSubdomains = parse(domain).domain;
+      this.domainTrackers.set(
+        domainWithoutSubdomains,
+        new DomainTracker(domainWithoutSubdomains, this.storage)
+      );
+    });
   }
 
   appendNewUrl(url) {
-    const domainTracker = this.domainTrackers.get(parse(url).domain);
+    const { domain } = parse(url);
+    const domainTracker = this.domainTrackers.get(domain);
     // Only track a specific subset of domains on each server.
     // If a link is found to an unseeded domain, ignore it
     if (!domainTracker) return;

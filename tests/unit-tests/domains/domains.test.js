@@ -12,6 +12,35 @@ describe("Domains", () => {
     storage.appendFileAsync = sinon.spy();
   });
 
+  describe("constructor", () => {
+    it("should register a 'new link' event handler that appends urls to the appropriate frontier", async () => {
+      const eventCoordinator = new Events();
+      const seed = ["google.com", "yahoo.com", "bing.com"];
+      const domains = new Domains(seed, eventCoordinator, storage);
+      // I know it's bad practice (law of demeter) to reach through object graphs like this...
+      // but maybe it's okay for testing purposes??
+      const frontier = domains.domainTrackers.get("google.com")._frontier;
+
+      expect(frontier.urlsInFrontier).to.equal(1);
+      eventCoordinator.emit("new link", "google.com/search");
+      await frontier.flushNewLinkQueue();
+      expect(frontier.urlsInFrontier).to.equal(2);
+    });
+
+    it("should parse out any subdomains when creating domain tracker objects", () => {
+      const eventCoordinator = new Events();
+      const seed = ["www.google.com", "stock.finance.yahoo.com", "bing.com"];
+      const domains = new Domains(seed, eventCoordinator, storage);
+
+      expect(domains.domainTrackers.has("google.com")).to.be.true;
+      expect(domains.domainTrackers.has("yahoo.com")).to.be.true;
+      expect(domains.domainTrackers.has("bing.com")).to.be.true;
+      expect(domains.domainTrackers.has("www.google.com")).to.be.false;
+      expect(domains.domainTrackers.has("stock.finance.yahoo.com")).to.be.false;
+      expect(domains.domainTrackers.has("finance.yahoo.com")).to.be.false;
+    });
+  });
+
   describe("getDomainToScrape", () => {
     it("should return the next domain that is polite to scrape and empty string if there are no polite options", () => {
       const eventCoordinator = new Events();
