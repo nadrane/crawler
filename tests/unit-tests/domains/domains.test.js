@@ -47,9 +47,9 @@ describe("Domains", () => {
       const seed = ["www.google.com", "www.yahoo.com", "www.bing.com"];
       const domains = new Domains(seed, eventCoordinator, storage);
 
-      expect(domains.getDomainToScrape()).to.equal("www.google.com");
-      expect(domains.getDomainToScrape()).to.equal("www.yahoo.com");
-      expect(domains.getDomainToScrape()).to.equal("www.bing.com");
+      expect(domains.getDomainToScrape()).to.equal("google.com");
+      expect(domains.getDomainToScrape()).to.equal("yahoo.com");
+      expect(domains.getDomainToScrape()).to.equal("bing.com");
     });
 
     it("should reset to the beginning of the generator when depleted", () => {
@@ -61,9 +61,9 @@ describe("Domains", () => {
       const twoMinutes = 60 * 2 * 1000;
       clock.tick(twoMinutes); // this is necessary because time starts at 0 in Sinon
 
-      expect(domains.getDomainToScrape()).to.equal("www.google.com");
+      expect(domains.getDomainToScrape()).to.equal("google.com");
       clock.tick(twoMinutes);
-      expect(domains.getDomainToScrape()).to.equal("www.google.com");
+      expect(domains.getDomainToScrape()).to.equal("google.com");
 
       clock.restore();
     });
