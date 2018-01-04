@@ -1,6 +1,8 @@
+const path = require("path")
 const sinon = require("sinon");
 const { expect } = require("chai");
 const Frontier = require("APP/src/domains/frontier");
+const { FRONTIER_DIRECTORY } = require("APP/env/");
 
 describe("Frontier", () => {
   const storage = {};
@@ -9,6 +11,20 @@ describe("Frontier", () => {
     storage.readFileAsync = sinon.spy();
     storage.writeFileAsync = sinon.spy();
     storage.appendFileAsync = sinon.spy();
+  });
+  describe("constructor", () => {
+    it("sets the filename equal to the frontier directory plus the name of the domain", () => {
+      const frontier = new Frontier("google.com", storage);
+      const expectedFilename = path.join(FRONTIER_DIRECTORY, "google.com.txt");
+
+      expect(frontier.fileName).to.equal(expectedFilename);
+    });
+    it("when setting file names, it disregards the protocol, if included", () => {
+      const frontier = new Frontier("http://google.com", storage);
+      const expectedFilename = path.join(FRONTIER_DIRECTORY, "google.com.txt");
+
+      expect(frontier.fileName).to.equal(expectedFilename);
+    });
   });
   describe("isEmpty", () => {
     it("should return false when the frontier is not empty", () => {
@@ -139,9 +155,9 @@ describe("Frontier", () => {
       storage.readFileAsync = sinon.stub().returns(Promise.reject());
       const frontier = new Frontier("www.bing.com", storage);
 
-      expect(frontier.urlsInFrontier).to.equal(1)
-      await frontier.getNextUrl()
-      expect(frontier.urlsInFrontier).to.equal(1)
-    })
+      expect(frontier.urlsInFrontier).to.equal(1);
+      await frontier.getNextUrl();
+      expect(frontier.urlsInFrontier).to.equal(1);
+    });
   });
 });

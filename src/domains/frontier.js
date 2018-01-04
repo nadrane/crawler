@@ -32,7 +32,7 @@ const { join } = require("path");
 const { FRONTIER_DIRECTORY } = require("APP/env/");
 
 class Frontier {
-  constructor(seedDomain, storage=fs) {
+  constructor(seedDomain, storage = fs) {
     this.domain = seedDomain;
     this.urlsInFrontier = 1;
     this.currentlyReading = false;
@@ -40,13 +40,13 @@ class Frontier {
     this.flushScheduled = false;
     this.storage = storage;
 
-    this.fileName = join(FRONTIER_DIRECTORY, `${seedDomain}.txt`);
-
     let domainWithProtocol;
-    if (!seedDomain.startsWith("http://")) {
-      domainWithProtocol = `http://${seedDomain}`;
-    } else {
+    if (seedDomain.startsWith("http://")) {
       domainWithProtocol = seedDomain;
+      this.fileName = join(FRONTIER_DIRECTORY, `${seedDomain.split("http://")[1]}.txt`);
+    } else {
+      domainWithProtocol = `http://${seedDomain}`;
+      this.fileName = join(FRONTIER_DIRECTORY, `${seedDomain}.txt`);
     }
 
     try {
@@ -96,7 +96,7 @@ class Frontier {
       this.urlsInFrontier += 1;
       logger.unexpectedError(
         `failed to read from frontier file - getNextUrl ${this.fileName}`,
-        err,
+        err
       );
       return "";
     }
