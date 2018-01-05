@@ -1,6 +1,5 @@
 const logger = require("../logger/")();
 const axios = require("axios");
-const { parse } = require("tldjs");
 const { USER_AGENT } = require("APP/env");
 
 const Requester = {
