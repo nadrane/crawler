@@ -7,6 +7,7 @@ let logger;
 module.exports = function createLogger(eventCoordinator, inputtedOuputFile, logAdaptor = bunyanFactory) {
   let outputFile;
   if (!logger) {
+    if (!eventCoordinator) throw new Error("event coordinator expected");
     outputFile = inputtedOuputFile || path.join(LOGGING_DIR, "logs.txt");
     logger = new Logger(eventCoordinator, outputFile, logAdaptor);
   }
