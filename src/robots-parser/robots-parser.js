@@ -1,55 +1,49 @@
+const { URL } = require("url");
 const robotsParser = require("robots-parser");
 const logger = require("../logger")();
-const axios = require("axios");
 const LRU = require("lru-cache");
 const { USER_AGENT, NUMBER_TRACKED_DOMAINS } = require("APP/env/");
 
 const cache = LRU({
   max: NUMBER_TRACKED_DOMAINS * 2,
-  maxAge: 1000 * 60 * 60,
+  maxAge: 1000 * 60 * 60
 });
 
-const { URL } = require("url");
+const makeRobotsTxtUrl = (protocol, port, hostname) =>
+  port ? `${protocol}//${hostname}:${port}/robots.txt` : `${protocol}//${hostname}/robots.txt`;
+const makeCacheKey = (protocol, port, hostname) =>
+  port ? `${protocol}|${port}|${hostname}` : `${protocol}|${hostname}`;
+const approveAll = () => true;
+const approveNone = () => false;
 
 // IDEA garbage collection of robots cache
 // Maybe an LRU cache? Or eliminate if a domains frontier is empty for too long?
-async function isAllowed(url) {
+async function isAllowed(url, http) {
   // A given robotsTxt file is valid for a given hostname, protocol, port combination (https://developers.google.com/search/reference/robots_txt)
   // A robotsTxt file is not valid in subdomains of its url.
   // We want to cache robotsTxt results to avoid making an extra network request for every page.
   const parsedUrl = new URL(url);
-  const { protocol, hostname } = parsedUrl;
-  const port = parsedUrl.port || defaultPort(protocol);
-
+  const { protocol, hostname, port } = parsedUrl;
+  let allowed;
   if (cache.peek(makeCacheKey(protocol, port, hostname))) {
-    return cache.get(makeCacheKey(protocol, port, hostname));
+    allowed = cache.get(makeCacheKey(protocol, port, hostname));
+  } else {
+    // IDEA Maybe it would be better to cache the robotsTxt file itself as
+    // opposed to this function. Maybe explore later
+    allowed = await getAndParseRobotsTxt(makeRobotsTxtUrl(protocol, port, hostname), http);
+    cache.set(makeCacheKey(protocol, port, hostname), allowed);
   }
 
-  const allowed = await getAndParseRobotsTxt(protocol, port, hostname);
-  // IDEA Maybe it would be better to cache the robotsTxt file itself as
-  // opposed to this function. Maybe explore later
-  cache.set(makeCacheKey(protocol, port, hostname), allowed);
-
-  return allowed(url);
+  return allowed(parsedUrl.toString());
 }
 
-function defaultPort(protocol) {
-  if (protocol === "http:") return 80;
-  else if (protocol === "https:") return 443;
-}
-
-function makeCacheKey(protocol, port, hostname) {
-  return `${protocol}|${port}|${hostname}`;
-}
-
-async function getAndParseRobotsTxt(protocol, port, hostname) {
-  const robotsTxtUrl = `${protocol}//${hostname}:${port}/robots.txt`;
+async function getAndParseRobotsTxt(robotsTxtUrl, http) {
   let robotsResponse;
   logger.robotsRequestSent(robotsTxtUrl);
   try {
-    robotsResponse = await axios({
+    robotsResponse = await http({
       url: robotsTxtUrl,
-      maxRedirects: 5,
+      maxRedirects: 5
     });
   } catch (err) {
     return handleHttpError(err);
@@ -62,7 +56,6 @@ async function getAndParseRobotsTxt(protocol, port, hostname) {
   } catch (err) {
     return approveAll;
   }
-
   return url => parser.isAllowed(url, USER_AGENT);
 }
 
@@ -77,40 +70,29 @@ function handleHttpError(err) {
       return approveAll;
     } else if (err.response.status >= 300) {
       return approveAll;
-    // I don't think I can ever get here
+      // I don't think I can ever get here
     }
-    logger.unexpectedError(
-      err.response, "status not 2xx, 3xx, 4xx or 5xx",
-      {
-        module: "robots-parser",
-        url: err.config.url,
-        headers: err.headers,
-      },
-    );
+    logger.unexpectedError(err.response, "status not 2xx, 3xx, 4xx or 5xx", {
+      module: "robots-parser",
+      url: err.config.url,
+      headers: err.headers
+    });
     return approveNone;
 
     // The request was made but no response was received
   } else if (err.request) {
     logger.noRobotsResponseReceived(err.response, {
       module: "robots-parser",
-      url: err.config.url,
+      url: err.config.url
     });
     return approveNone;
     // Something happened in setting up the request that triggered an Error
   }
   logger.unexpectedError(err, "bad robots request", {
     module: "robots-parser",
-    config: err.config,
+    config: err.config
   });
   return approveNone;
-}
-
-function approveAll() {
-  return true;
-}
-
-function approveNone() {
-  return false;
 }
 
 module.exports = isAllowed;
