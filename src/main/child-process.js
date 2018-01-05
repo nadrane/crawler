@@ -1,9 +1,7 @@
 const path = require("path");
 const mkdirp = require("mkdirp");
-const Events = require("events");
-const env = require("../../env/");
 
-const eventCoorindator = new Events();
+const env = require("../../env/");
 
 function configureHeapDumps() {
   if (env.isDev()) {
@@ -27,8 +25,8 @@ function configureProcessErrorHandling(logger) {
   });
 }
 
-function initialization(maxConcurrency, logFile) {
-  const logger = require("../logger")(logFile);
+function initialization(maxConcurrency, eventCoorindator) {
+  const logger = require("../logger")();
   configureProcessErrorHandling(logger);
 
   const bloomFilterCheckStream = require("../bloom-filter/check-stream")(maxConcurrency);
@@ -50,11 +48,12 @@ function initialization(maxConcurrency, logFile) {
         logger.unexpectedError(err, "domain stream");
       });
 
-      domainStream.pipe(bloomFilterCheckStream).pipe(process.stdout);
-      // .pipe(robotsStream)
-      // .pipe(bloomFilterSetStream) // notice we mark it visited before visiting. If we the request fails, it fails for good
-      // .pipe(requestStream)
-      // .pipe(process.stdout);
+      domainStream
+        .pipe(bloomFilterCheckStream)
+        .pipe(robotsStream)
+        .pipe(bloomFilterSetStream) // notice we mark it visited before visiting. If we the request fails, it fails for good
+        .pipe(requestStream)
+        .pipe(process.stdout);
     })
     .catch(err => {
       console.error("init error", err);

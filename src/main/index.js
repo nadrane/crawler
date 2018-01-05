@@ -1,17 +1,19 @@
 const crypto = require("crypto");
 const cluster = require("cluster");
+const Events = require("events");
 const path = require("path");
 const numCPUs = require("os").cpus().length;
 const childProcess = require("./child-process");
 const argv = require("minimist")(process.argv.slice(2));
 
+const eventCoordinator = new Events();
 const { LOGGING_DIR, MAX_CONCURRENCY, SEED_FILE_PROMISE } = require("../../env/");
 
 const { n, c, o } = argv; // number of machines | maximum file descriptors open | output file name
 const numberOfMachines = n || 1;
 const maxConcurrency = c || MAX_CONCURRENCY;
 const logFile = o || path.join(LOGGING_DIR, "log.txt");
-const logger = require("../logger/")(logFile);
+const logger = require("../logger/")(eventCoordinator, logFile);
 const bloomFilter = require("../bloom-filter/bloom-filter");
 
 if (cluster.isMaster) {
@@ -23,7 +25,7 @@ if (cluster.isMaster) {
       createChildren(chunkByIndex(seed));
     });
 } else {
-  childProcess(maxConcurrency, logFile);
+  childProcess(maxConcurrency, eventCoordinator);
 }
 
 async function setupBloomFilter() {
