@@ -10,6 +10,7 @@ class DomainReaderStream extends Readable {
     this.domains = domains;
     this.backPressure = false;
     eventCoordinator.on("stop", () => {
+      console.log("stopping");
       if (!this.isPaused()) {
         this.pause();
       }

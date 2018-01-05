@@ -10,11 +10,41 @@ const { c, o } = argv; // maximum file descriptors open | output file name
 const maxConcurrency = c || MAX_CONCURRENCY;
 const logFile = o || path.join(LOGGING_DIR, "log.txt");
 const logger = require("../logger/")(logFile);
+const bloomFilter = require("../bloom-filter/bloom-filter");
 
 if (cluster.isMaster) {
+  setupBloomFilter().then(() => {
+    createChildren();
+  });
+} else {
+  childProcess(maxConcurrency, logFile);
+}
+
+async function setupBloomFilter() {
+  await bloomFilter.drop();
+  let tries = 0;
+  while (tries < 5) {
+    try {
+      console.log("attempting BF create");
+      await bloomFilter.create();
+      break;
+    } catch (err) {
+      console.log("BF create failed");
+      tries += 1;
+    }
+    await sleep(1000);
+  }
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function createChildren() {
   for (let i = 0; i < numCPUs; i++) {
     const child = cluster.fork();
     logger.spawningWorkerProcess(child.pid);
+
     SEED_FILE_PROMISE.then(data => {
       const delimitedData = data.toString().split("\n");
       const { length } = delimitedData;
@@ -22,6 +52,4 @@ if (cluster.isMaster) {
       child.send(delimitedData.slice(i * chunkSize, (i + 1) * chunkSize));
     });
   }
-} else {
-  childProcess(maxConcurrency, logFile);
 }

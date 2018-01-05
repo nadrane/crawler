@@ -36,8 +36,19 @@ const create = function () {
   });
 };
 
+const drop = function () {
+  return new Promise((resolve, reject) => {
+    client.drop(BLOOM_FILTER_NAME, (err, data) => {
+      console.log('drop')
+      if (err) reject(err);
+      else resolve(data);
+    });
+  });
+};
+
 module.exports = {
   set,
   check,
   create,
+  drop
 };

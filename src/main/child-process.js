@@ -1,8 +1,9 @@
 const path = require("path");
 const mkdirp = require("mkdirp");
-
+const Events = require("events");
 const env = require("../../env/");
-const bloomFilter = require("../bloom-filter/bloom-filter");
+
+const eventCoorindator = new Events();
 
 function configureHeapDumps() {
   if (env.isDev()) {
@@ -17,7 +18,7 @@ function configureHeapDumps() {
 configureHeapDumps();
 
 function configureProcessErrorHandling(logger) {
-  process.on("uncaughtException", (err) => {
+  process.on("uncaughtException", err => {
     logger.unexpectedError(err, "uncaught exception");
   });
 
@@ -33,31 +34,29 @@ function initialization(maxConcurrency, logFile) {
   const bloomFilterCheckStream = require("../bloom-filter/check-stream")(maxConcurrency);
   const bloomFilterSetStream = require("../bloom-filter/set-stream")(maxConcurrency);
   const robotsStream = require("../robots-parser/")(maxConcurrency);
-  const requestStream = require("../requester/")(maxConcurrency);
+  const requestStream = require("../requester/")(maxConcurrency, eventCoorindator);
 
-  const createBloomFilter = bloomFilter.create();
   const seedFile = new Promise(resolve => {
-    process.on("message", (data) => {
+    process.on("message", data => {
       resolve(data);
     });
   });
 
-  return Promise.all([seedFile, createBloomFilter])
-    .then(([seedData]) => {
-      const domainStream = require("../domains")(maxConcurrency, seedData);
+  seedFile
+    .then(seedData => {
+      const domainStream = require("../domains")(maxConcurrency, seedData, eventCoorindator);
 
-      domainStream.on("error", (err) => {
+      domainStream.on("error", err => {
         logger.unexpectedError(err, "domain stream");
       });
 
-      domainStream
-        .pipe(bloomFilterCheckStream)
-        .pipe(robotsStream)
-        .pipe(bloomFilterSetStream) // notice we mark it visited before visiting. If we the request fails, it fails for good
-        .pipe(requestStream)
-        .pipe(process.stdout);
+      domainStream.pipe(bloomFilterCheckStream).pipe(process.stdout);
+      // .pipe(robotsStream)
+      // .pipe(bloomFilterSetStream) // notice we mark it visited before visiting. If we the request fails, it fails for good
+      // .pipe(requestStream)
+      // .pipe(process.stdout);
     })
-    .catch((err) => {
+    .catch(err => {
       console.error("init error", err);
     });
 }
