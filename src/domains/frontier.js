@@ -125,9 +125,10 @@ class Frontier {
   }
 
   async flushNewLinkQueue() {
-    assert(this.flushScheduled, "flushNewLinkQueue called but not scheduled");
+    if (!this.flushScheduled) {
+      return;
+    }
     const linksToAppend = this.queuedNewlinks.join("\n");
-    assert(linksToAppend, "flushNewLinkQueue called but no links to append");
     if (!linksToAppend) {
       this.flushScheduled = false;
       return;
