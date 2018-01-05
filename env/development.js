@@ -10,7 +10,9 @@ const { DEV_TOKEN } = require("../logentries-credentials");
 
 module.exports = {
   LOGENTRIES_TOKEN_PROMISE: Promise.resolve(DEV_TOKEN),
-  SEED_FILE_PROMISE: readFileAsync("./seed-domains.txt"),
+  SEED_FILE_PROMISE: new Promise((resolve, reject) => {
+    resolve(require("APP/seed-domains-sans-subs.json"))
+  }),
   FRONTIER_DIRECTORY: path.resolve(__dirname, "../frontiers"),
   DOMAIN_REQUEST_TIME_INTERVAL: 20 * 1000,
 };

@@ -1,21 +1,27 @@
+const crypto = require("crypto");
 const cluster = require("cluster");
 const path = require("path");
 const numCPUs = require("os").cpus().length;
 const childProcess = require("./child-process");
-
 const argv = require("minimist")(process.argv.slice(2));
+
 const { LOGGING_DIR, MAX_CONCURRENCY, SEED_FILE_PROMISE } = require("../../env/");
 
-const { c, o } = argv; // maximum file descriptors open | output file name
+const { n, c, o } = argv; // number of machines | maximum file descriptors open | output file name
+const numberOfMachines = n || 1;
 const maxConcurrency = c || MAX_CONCURRENCY;
 const logFile = o || path.join(LOGGING_DIR, "log.txt");
 const logger = require("../logger/")(logFile);
 const bloomFilter = require("../bloom-filter/bloom-filter");
 
 if (cluster.isMaster) {
-  setupBloomFilter().then(() => {
-    createChildren();
-  });
+  setupBloomFilter()
+    .then(() => {
+      return SEED_FILE_PROMISE;
+    })
+    .then(seed => {
+      createChildren(chunkByIndex(seed));
+    });
 } else {
   childProcess(maxConcurrency, logFile);
 }
@@ -44,16 +50,26 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function createChildren() {
+function createChildren(urlChunks) {
   for (let i = 0; i < numCPUs; i++) {
     const child = cluster.fork();
     logger.spawningWorkerProcess(child.pid);
-
-    SEED_FILE_PROMISE.then(data => {
-      const delimitedData = data.toString().split("\n");
-      const { length } = delimitedData;
-      const chunkSize = Math.ceil(length / numCPUs);
-      child.send(delimitedData.slice(i * chunkSize, (i + 1) * chunkSize));
-    });
+    child.send(urlChunks[i])
   }
+}
+
+function chunkByPredicate(seed, predicate) {
+  const chunks = [];
+  seed.forEach((url, index) => {
+    if (Array.isArray(chunks[predicate(index)])) {
+      chunks[predicate(index)].push(url);
+    } else {
+      chunks[predicate(index)] = [url];
+    }
+  })
+  return chunks;
+}
+
+function chunkByIndex(seed) {
+  return chunkByPredicate(seed, index => index % numCPUs)
 }
