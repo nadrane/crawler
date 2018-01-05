@@ -3,8 +3,7 @@ const htmlparser = require("htmlparser2");
 const { URL } = require("url");
 const logger = require("../logger")();
 
-
-class htmlTolinkStream extends Transform {
+class HtmlTolinkStream extends Transform {
   constructor(url, eventCoordinator) {
     super();
     this.originalUrl = url;
@@ -19,11 +18,11 @@ class htmlTolinkStream extends Transform {
             eventCoordinator.emit("new link", parsedUrl.toString());
           }
         },
-        onerror: (err) => {
+        onerror: err => {
           logger.parserError(err, url);
-        },
+        }
       },
-      { decodeEntities: true },
+      { decodeEntities: true }
     );
   }
 
@@ -55,4 +54,10 @@ class htmlTolinkStream extends Transform {
   }
 }
 
-module.exports = htmlTolinkStream;
+module.exports = function makeParserStream(url, eventCoordinator) {
+  const stream = new HtmlTolinkStream(url, eventCoordinator);
+  stream.on("error", err => {
+    logger.unexpectError(err, "parser stream error");
+  });
+  return stream;
+};
