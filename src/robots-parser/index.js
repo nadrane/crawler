@@ -1,16 +1,19 @@
-const robotsParser = require("./robots-parser");
+const axios = require("axios");
+const makeRobotParser = require("./robots-parser");
 const throughConcurrent = require("../through-concurrent");
+
+const isAllowed = makeRobotParser();
 
 module.exports = function createRobotsStream(concurrency) {
   return throughConcurrent("robots stream", concurrency, function getRobotsTxt(url, enc, done) {
-    robotsParser(url)
-      .then((allowed) => {
+    isAllowed(url, axios)
+      .then(allowed => {
         if (allowed) {
           this.push(url);
         }
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         this.on("error", err);
       });
   });
