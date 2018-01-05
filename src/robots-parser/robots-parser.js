@@ -2,12 +2,7 @@ const { URL } = require("url");
 const robotsParser = require("robots-parser");
 const logger = require("../logger")();
 const LRU = require("lru-cache");
-const { USER_AGENT, NUMBER_TRACKED_DOMAINS } = require("APP/env/");
-
-const cache = LRU({
-  max: NUMBER_TRACKED_DOMAINS * 2,
-  maxAge: 1000 * 60 * 60
-});
+const { USER_AGENT } = require("APP/env/");
 
 const makeRobotsTxtUrl = (protocol, port, hostname) =>
   port ? `${protocol}//${hostname}:${port}/robots.txt` : `${protocol}//${hostname}/robots.txt`;
@@ -18,7 +13,7 @@ const approveNone = () => false;
 
 // IDEA garbage collection of robots cache
 // Maybe an LRU cache? Or eliminate if a domains frontier is empty for too long?
-async function isAllowed(url, http) {
+async function isAllowed(cache, url, http) {
   // A given robotsTxt file is valid for a given hostname, protocol, port combination (https://developers.google.com/search/reference/robots_txt)
   // A robotsTxt file is not valid in subdomains of its url.
   // We want to cache robotsTxt results to avoid making an extra network request for every page.
@@ -70,7 +65,7 @@ function handleHttpError(err) {
       return approveAll;
     } else if (err.response.status >= 300) {
       return approveAll;
-      // I don't think I can ever get here
+      // I don't think I can ever get here because 3xx wouldn't reject...
     }
     logger.unexpectedError(err.response, "status not 2xx, 3xx, 4xx or 5xx", {
       module: "robots-parser",
@@ -95,4 +90,13 @@ function handleHttpError(err) {
   return approveNone;
 }
 
-module.exports = isAllowed;
+module.exports = function makeRobotsValidator(
+  domainsPerServer = 20000,
+  maxCacheAge = 1000 * 60 * 60
+) {
+  const cache = LRU({
+    max: domainsPerServer,
+    maxAge: maxCacheAge
+  });
+  return isAllowed.bind(null, cache);
+};
