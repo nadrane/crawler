@@ -61,7 +61,6 @@ class Frontier {
   }
 
   isEmpty() {
-    assert(this.urlsInFrontier >= 0);
     return this.urlsInFrontier === 0;
   }
 
@@ -126,16 +125,20 @@ class Frontier {
   }
 
   async flushNewLinkQueue() {
-    assert(this.flushScheduled);
+    assert(this.flushScheduled, "flushNewLinkQueue called but not scheduled");
     const linksToAppend = this.queuedNewlinks.join("\n");
-    assert(linksToAppend);
+    assert(linksToAppend, "flushNewLinkQueue called but no links to append");
+    if (!linksToAppend) {
+      this.flushScheduled = false;
+      return;
+    }
 
     if (this.currentlyReading) {
       const fiveSeconds = 5 * 1000;
       setTimeout(this.flushNewLinkQueue.bind(this), fiveSeconds);
       return;
     }
-    this.flushScheduled = false;
+
 
     // Should never be true
 
@@ -151,6 +154,7 @@ class Frontier {
       logger.unexpectedError(`failed to append to to frontier file - append ${this.fileName}`, err);
     }
     this.currentlyReading = false;
+    this.flushScheduled = false;
   }
 }
 
