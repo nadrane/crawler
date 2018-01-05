@@ -23,16 +23,20 @@ if (cluster.isMaster) {
 async function setupBloomFilter() {
   await bloomFilter.drop();
   let tries = 0;
-  while (tries < 5) {
+  let success = false;
+  while (tries < 5 && !success) {
     try {
       console.log("attempting BF create");
       await bloomFilter.create();
-      break;
+      success = true;
     } catch (err) {
       console.log("BF create failed");
       tries += 1;
     }
     await sleep(1000);
+  }
+  if (!success) {
+    throw new Error("failed to initialize bloom filter");
   }
 }
 
