@@ -126,6 +126,12 @@ class Logger {
       totalResponsesParsed
     });
   }
+
+  spawningWorkerProcess(processId) {
+    this.logger.info({
+      event: "spawning worker process", processId,
+    });
+  }
 }
 
 module.exports = Logger;
