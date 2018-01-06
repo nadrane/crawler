@@ -20,7 +20,7 @@ class LogStream extends Writable {
 
   _makeRequest(callback) {
     this.http
-      .post(this.url, this.buffer.join("\n"), { responseType: "stream" })
+      .post(this.url, this.buffer.join("\n"))
       .then(() => {
         this.buffer = [];
         callback();
