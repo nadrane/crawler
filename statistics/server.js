@@ -1,43 +1,75 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const ndjson = require("ndjson");
+const { isDev, isProd } = require("APP/env/");
 
 const app = express();
 app.use(bodyParser.json());
 
 const stats = {};
+const requestsPerMinuteLog = [];
+let totalRequests = 0;
+
+setInterval(() => {
+  if (!requestsPerMinuteLog.length) {
+    requestsPerMinuteLog.push(totalRequests);
+  } else {
+    requestsPerMinuteLog.push(
+      totalRequests - requestsPerMinuteLog[requestsPerMinuteLog.length - 2]
+    );
+  }
+}, 1000 * 60);
 
 app.post("/log", (req, res) => {
-  console.log('got it')
   req.pipe(ndjson.parse()).on("data", line => {
     const { event, domain, hostname } = line;
     if (!stats.hasOwnProperty(hostname)) {
       stats[hostname] = {};
-      stats[hostname].total = 0;
+      stats[hostname].totalEvents = 0;
     }
-    if (!stats[hostname].hasOwnProperty(domain)) {
-      stats[hostname][domain] = {};
-      stats[hostname][domain] = 0;
+    if (!stats[hostname].hasOwnProperty(event)) {
+      stats[hostname][event] = 0;
     }
-    if (!stats[hostname][domain].hasOwnProperty(event)) {
-      stats[hostname][domain][event] = 0;
+
+    if (!stats.hasOwnProperty(domain)) {
+      stats[domain] = {};
+      stats[domain].totalEvents = 0;
     }
+    if (!stats[domain].hasOwnProperty(event)) {
+      stats[domain][event] = 0;
+    }
+    stats[domain][event] += 1;
+    stats[domain].totalEvents += 1;
+
+    stats[hostname][event] += 1;
+    stats[hostname].totalEvents += 1;
+
     if (event === "request sent") {
-      stats[hostname].total += 1;
-      stats[hostname][domain].total += 1;
+      totalRequests += 1;
     }
   });
   res.sendStatus(200);
 });
 
 app.get("/log", (req, res) => {
-  res.send(stats);
+  res.send({
+    currentRPM: requestsPerMinuteLog.length
+      ? requestsPerMinuteLog[requestsPerMinuteLog.length - 1]
+      : totalRequests,
+    RPM: requestsPerMinuteLog,
+    totalRequests,
+    stats
+  });
 });
 app.use((err, req, res, next) => {
   res.status(500);
   res.send(err);
 });
 
-app.listen(80, "0.0.0.0", () => {
-  console.log("stats server starting");
-});
+if (isProd()) {
+  app.listen(80, "0.0.0.0", () => {
+    console.log("stats server starting");
+  });
+}
+
+module.exports = app;
