@@ -73,10 +73,6 @@ class Logger {
     this.logger.info({ event: "connection reset", url, domain });
   }
 
-  domainExhausted(domain) {
-    this.logger.info({ event: "domain exhausted", domain });
-  }
-
   addingToFrontier(fromUrl, newUrl) {
     const newDomain = parse(newUrl).domain;
     const fromDomain = parse(fromUrl).domain;

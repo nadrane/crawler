@@ -2,33 +2,42 @@ const AWS = require("aws-sdk");
 
 const s3 = new AWS.S3({
   httpOptions: {
-    xhrAsync: false,
-  },
+    xhrAsync: false
+  }
 });
 
-const credentialsPromise = new Promise(((resolve, reject) => {
-  s3.getObject({
-    Bucket: "crawler-nick",
-    Key: "logentries-credentials.json",
-  }, (err, data) => {
-    if (err) reject(err);
-    else resolve(JSON.parse(data.Body.toString()).DEV_TOKEN);
-  });
-}));
+const statsServerIp = new Promise((resolve, reject) => {
+  s3.getObject(
+    {
+      Bucket: "crawler-nick",
+      Key: "stats-server-credentials.json"
+    },
+    (err, data) => {
+      if (err) reject(err);
+      else resolve(JSON.parse(data.Body.toString()).IP_ADDRESS);
+    }
+  );
+});
+statsServerIp.then(data => {
+  console.log('server data', JSON.parse(data.Body.toString()));
+});
 
-const seedFilePromise = new Promise(((resolve, reject) => {
-  s3.getObject({
-    Bucket: "crawler-nick",
-    Key: "seed-domains.txt",
-  }, (err, data) => {
-    if (err) reject(err);
-    else resolve(data.Body);
-  });
-}));
+const seedFilePromise = new Promise((resolve, reject) => {
+  s3.getObject(
+    {
+      Bucket: "crawler-nick",
+      Key: "seed-domains.txt"
+    },
+    (err, data) => {
+      if (err) reject(err);
+      else resolve(data.Body);
+    }
+  );
+});
 
 module.exports = {
   // TODO change to prod token
-  LOGENTRIES_TOKEN_PROMISE: credentialsPromise,
+  STATS_SERVER_IP: statsServerIp,
   SEED_FILE_PROMISE: seedFilePromise,
-  FRONTIER_DIRECTORY: "/frontiers", // volume mounted in Docker
+  FRONTIER_DIRECTORY: "/frontiers" // volume mounted in Docker
 };
