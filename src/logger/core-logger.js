@@ -1,5 +1,5 @@
 const { URL } = require("url");
-const { parse } = require("tldjs");
+const { parse, getDomain } = require("tldjs");
 const mkdirp = require("mkdirp");
 const path = require("path");
 
@@ -15,7 +15,7 @@ class Logger {
     this.lastFiveUnexpected.unshift(new Date());
     if (this.lastFiveUnexpected.length >= 5) {
       const timeElapsed =
-      this.lastFiveUnexpected[0] - this.lastFiveUnexpected[this.lastFiveUnexpected.length - 1];
+        this.lastFiveUnexpected[0] - this.lastFiveUnexpected[this.lastFiveUnexpected.length - 1];
       if (timeElapsed < 1000) {
         this.eventCoordinator.emit("stop");
       }
@@ -37,7 +37,7 @@ class Logger {
   }
 
   noRobotsResponseReceived(module, err, url) {
-    const domain = parse(url);
+    const domain = getDomain(url);
     this.logger.info({
       module,
       event: "no robots response received",
@@ -47,7 +47,7 @@ class Logger {
   }
 
   GETResponseError(url, err, status, headers) {
-    const domain = parse(url);
+    const domain = getDomain(url);
     this.logger.info({
       event: "response error",
       status,
@@ -59,7 +59,7 @@ class Logger {
   }
 
   noGETResponseRecieved(err, url) {
-    const domain = parse(url);
+    const domain = getDomain(url);
     this.logger.info({
       err,
       event: "no get response received",
@@ -69,7 +69,7 @@ class Logger {
   }
 
   connectionReset(url) {
-    const domain = parse(url);
+    const domain = getDomain(url);
     this.logger.info({ event: "connection reset", url, domain });
   }
 
@@ -85,8 +85,8 @@ class Logger {
     });
   }
   robotsRequestSent(url) {
-    const { hostname } = new URL(url);
-    this.logger.info({ event: "robots request sent", url, hostname });
+    const domain = getDomain(url);
+    this.logger.info({ event: "robots request sent", url, domain });
   }
   GETRequestSent(url, totalRequestsMade) {
     const { domain } = parse(url);
@@ -125,7 +125,8 @@ class Logger {
 
   spawningWorkerProcess(processId) {
     this.logger.info({
-      event: "spawning worker process", processId,
+      event: "spawning worker process",
+      processId
     });
   }
 }
