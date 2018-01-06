@@ -32,8 +32,8 @@ def install_docker_and_start_dameon():
   run("sudo yum install -y docker")
   run("sudo service docker start")
 
-def start_crawler():
-  run("sudo docker run --ulimit nofile=10000:10000 -p 80:80 -p 443:433 -v /frontiers:/frontiers drane128/crawler2")
+def start_crawler(instance_number, total_machines):
+  run("sudo docker run -e NUM={} TOTAL={} --ulimit nofile=10000:10000 -p 80:80 -p 443:433 -v /frontiers:/frontiers drane128/crawler2".format(instance_number, total_machines))
 
 def make_frontier_folder():
   run("sudo mkdir /frontiers")
@@ -41,8 +41,10 @@ def make_frontier_folder():
 instances = []
 
 class Instance:
-  def __init__(self, ec2_instance):
+  def __init__(self, ec2_instance, instance_number, total_machines):
     self.ec2_instance = ec2_instance
+    self.instance_number = instance_number
+    self.total_machines = total_machines
     self.is_instance_running = False
     self.is_docker_running = False
     self.is_frontier_created = False
@@ -51,7 +53,7 @@ class Instance:
     self.failed_connection_attempts = 0
     self.initialize_docker = partial(self.perform_task, "is_docker_running", install_docker_and_start_dameon)
     self.make_frontier_folder = partial(self.perform_task, "is_frontier_created", make_frontier_folder)
-    self.start_crawler = partial(self.perform_task, "is_crawl_running", start_crawler)
+    self.start_crawler = partial(self.perform_task, "is_crawl_running", partial(start_crawler, self.instance_number, self.total_machines))
 
   def wait_until_running(self):
     while (self.ec2_instance.state["Name"] != 'running'):
@@ -83,9 +85,10 @@ class Instance:
     return True
 
 if __name__ == "__main__":
-  instance = Instance(create_instances(1)[0])
-  instances.append(instance)
-  if not instance.start():
-    print("failed to start instance")
-    instances.remove(instance)
+  while true:
+    instance = Instance(create_instances(1)[0])
+    instances.append(instance)
+    if not instance.start():
+      print("failed to start instance")
+      instances.remove(instance)
 
