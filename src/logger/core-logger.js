@@ -1,4 +1,3 @@
-const { URL } = require("url");
 const { parse, getDomain } = require("tldjs");
 const mkdirp = require("mkdirp");
 const path = require("path");

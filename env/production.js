@@ -18,9 +18,6 @@ const statsServerIp = new Promise((resolve, reject) => {
     }
   );
 });
-statsServerIp.then(data => {
-  console.log('server data', JSON.parse(data.Body.toString()));
-});
 
 const seedFilePromise = new Promise((resolve, reject) => {
   s3.getObject(
