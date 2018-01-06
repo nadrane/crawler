@@ -12,23 +12,23 @@ class LogStream extends Writable {
   _write(log, encoding, callback) {
     this.buffer.push(log);
     if (this.buffer.length >= this.bufferSize) {
-      this._makeRequest()
+      this._makeRequest(callback);
     } else {
       callback();
     }
   }
 
-  _makeRequest() {
+  _makeRequest(callback) {
     this.http
-    .post(this.url, this.buffer.join("\n"), { responseType: "stream" })
-    .then(() => {
-      this.buffer = [];
-      callback();
-    })
-    .catch(err => {
-      //just ignore the error and don't reset the buffer
-      callback();
-    });
+      .post(this.url, this.buffer.join("\n"), { responseType: "stream" })
+      .then(() => {
+        this.buffer = [];
+        callback();
+      })
+      .catch(err => {
+        //just ignore the error and don't reset the buffer
+        callback();
+      });
   }
 
   _final(callback) {
