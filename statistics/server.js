@@ -31,6 +31,6 @@ app.use((err, req, res, next) => {
   res.send(err);
 });
 
-app.listen(8080, () => {
+app.listen(80, "0.0.0.0", () => {
   console.log("stats server starting");
 });
