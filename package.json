@@ -6,6 +6,7 @@
   "scripts": {
     "prod": "cross-env NODE_ENV=production node src/index.js",
     "dev": "cross-env NODE_ENV=development node src/index.js",
+    "stat-prod": "cross-env NODE_ENV=production node statistics/server.js",
     "debug": "cross-env NODE_ENV=development node --inspect src/index.js",
     "test-unit": "./node_modules/mocha/bin/mocha tests/unit-tests/**/*test.js -w --reporter spec",
     "test-integration": "./node_modules/mocha/bin/mocha tests/integration-tests/**/*test.js -w --reporter spec",
@@ -47,6 +48,7 @@
     "heapdump": "^0.3.9",
     "mocha": "^4.0.1",
     "rimraf": "^2.6.2",
-    "sinon": "^4.1.2"
+    "sinon": "^4.1.2",
+    "supertest": "^3.0.0"
   }
 }
