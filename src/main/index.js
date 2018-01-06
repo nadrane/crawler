@@ -1,34 +1,43 @@
-const crypto = require("crypto");
 const cluster = require("cluster");
 const Events = require("events");
 const path = require("path");
 const numCPUs = require("os").cpus().length;
 const childProcess = require("./child-process");
 const argv = require("minimist")(process.argv.slice(2));
+const axios = require("axios");
 
 const eventCoordinator = new Events();
-const { LOGGING_DIR, MAX_CONCURRENCY, SEED_FILE_PROMISE } = require("../../env/");
-
+const { LOGGING_DIR, MAX_CONCURRENCY, SEED_FILE_PROMISE, STATS_SERVER_IP } = require("../../env/");
 const { n, c, o } = argv; // number of machines | maximum file descriptors open | output file name
 const numberOfMachines = n || 1;
 const maxConcurrency = c || MAX_CONCURRENCY;
 const logFile = o || path.join(LOGGING_DIR, "log.txt");
-const logger = require("../logger/")(eventCoordinator, logFile);
-const bloomFilter = require("../bloom-filter/bloom-filter");
 
-if (cluster.isMaster) {
-  setupBloomFilter()
-    .then(() => {
-      return SEED_FILE_PROMISE;
-    })
+process.on("uncaughtException", err => {
+  console.log(err, "uncaught exception");
+});
+
+process.on("unhandledRejection", (reason, p) => {
+  console.log(reason, "unhandled promise rejection", p);
+});
+
+let logger;
+STATS_SERVER_IP.then(statServerIp => {
+  logger = require("../logger/")(eventCoordinator, axios, statServerIp, logFile);
+  if (cluster.isMaster) {
+    setupBloomFilter()
+    .then(() => SEED_FILE_PROMISE)
     .then(seed => {
       createChildren(chunkByIndex(seed));
     });
-} else {
-  childProcess(maxConcurrency, eventCoordinator);
-}
+  } else {
+    childProcess(maxConcurrency, eventCoordinator);
+  }
+});
+
 
 async function setupBloomFilter() {
+  const bloomFilter = require("../bloom-filter/bloom-filter");
   await bloomFilter.drop();
   let tries = 0;
   let success = false;
@@ -56,7 +65,7 @@ function createChildren(urlChunks) {
   for (let i = 0; i < numCPUs; i++) {
     const child = cluster.fork();
     logger.spawningWorkerProcess(child.pid);
-    child.send(urlChunks[i])
+    child.send(urlChunks[i]);
   }
 }
 
@@ -68,10 +77,10 @@ function chunkByPredicate(seed, predicate) {
     } else {
       chunks[predicate(index)] = [url];
     }
-  })
+  });
   return chunks;
 }
 
 function chunkByIndex(seed) {
-  return chunkByPredicate(seed, index => index % numCPUs)
+  return chunkByPredicate(seed, index => index % numCPUs);
 }
