@@ -9,7 +9,7 @@ module.exports = function createLogger(eventCoordinator, http, statServerUrl, in
   if (!logger) {
     // if (!eventCoordinator) throw new Error("event coordinator expected");
     outputFile = inputtedOuputFile || path.join(LOGGING_DIR, "logs.txt");
-    logger = new Logger(eventCoordinator, outputFile, bunyanWithHTTPStream(statServerUrl, http));
+    logger = new Logger(eventCoordinator, outputFile, bunyanWithHTTPStream(`${statServerUrl}/log`, http));
   }
   return logger;
 };
