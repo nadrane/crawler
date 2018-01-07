@@ -22,7 +22,6 @@ the frontier was indexed by domain. Simple enough, I can just create a separate 
 file for every domain.
 */
 
-const assert = require("assert");
 const bluebird = require("bluebird");
 const fs = require("fs");
 bluebird.promisifyAll(require("fs"));
