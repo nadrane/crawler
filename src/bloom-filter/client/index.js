@@ -1,5 +1,5 @@
 const bloomd = require("bloomd");
-const { BLOOM_FILTER_NAME } = require("../../env/");
+const { BLOOM_FILTER_NAME } = require("APP/env/");
 
 module.exports = function(logger, host) {
   const client = bloomd.createClient({ host });
