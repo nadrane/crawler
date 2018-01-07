@@ -1,8 +1,10 @@
-const path = require("path")
+const path = require("path");
 const sinon = require("sinon");
 const { expect } = require("chai");
 const Frontier = require("APP/src/domains/frontier");
 const { FRONTIER_DIRECTORY } = require("APP/env/");
+const makeLogger = require("APP/src/logger/");
+const Events = require("events");
 
 describe("Frontier", () => {
   const storage = {};
@@ -14,18 +16,24 @@ describe("Frontier", () => {
   });
   describe("constructor", () => {
     it("sets the filename equal to the frontier directory plus the name of the domain", () => {
-      const frontier = new Frontier("google.com", storage);
+      const eventCoordinator = new Events();
+      const logger = makeLogger(eventCoordinator);
+      const frontier = new Frontier("google.com", logger, storage);
       const expectedFilename = path.join(FRONTIER_DIRECTORY, "google.com.txt");
 
       expect(frontier.fileName).to.equal(expectedFilename);
     });
+
     it("when setting file names, it disregards the protocol, if included", () => {
-      const frontier = new Frontier("http://google.com", storage);
+      const eventCoordinator = new Events();
+      const logger = makeLogger(eventCoordinator);
+      const frontier = new Frontier("http://google.com", logger, storage);
       const expectedFilename = path.join(FRONTIER_DIRECTORY, "google.com.txt");
 
       expect(frontier.fileName).to.equal(expectedFilename);
     });
   });
+
   describe("isEmpty", () => {
     it("should return false when the frontier is not empty", () => {
       const frontier = new Frontier("www.google.com", storage);
@@ -38,6 +46,7 @@ describe("Frontier", () => {
       expect(frontier.isEmpty()).to.be.true;
     });
   });
+
   describe("readyForReading", () => {
     it("should be ready for reading upon creation", () => {
       const frontier = new Frontier("www.google.com", storage);
@@ -50,6 +59,7 @@ describe("Frontier", () => {
       expect(frontier.readyForReading()).to.be.false;
     });
   });
+
   describe("append", () => {
     it("queues up a link to add to the frontier", () => {
       const frontier = new Frontier("www.google.com", storage);
@@ -90,17 +100,22 @@ describe("Frontier", () => {
   });
   describe("flushNewLinkQueue", () => {
     let frontier, newLinkQueueSpy, clock;
+
     beforeEach(() => {
-      frontier = new Frontier("www.google.com", storage);
+      const eventCoordinator = new Events();
+      const logger = makeLogger(eventCoordinator);
+      frontier = new Frontier("www.google.com", logger, storage);
       newLinkQueueSpy = sinon.spy(frontier, "flushNewLinkQueue");
       clock = sinon.useFakeTimers();
       frontier.flushScheduled = true;
       frontier.queuedNewlinks = ["www.microsoft.com", "www.yahoo.com"];
     });
+
     afterEach(() => {
       clock.restore();
       newLinkQueueSpy.restore();
     });
+
     it("if a read is in progress, it reschedules to flush operation for 5 seconds in the future", async () => {
       frontier.currentlyReading = true;
       await frontier.flushNewLinkQueue();
@@ -138,22 +153,28 @@ describe("Frontier", () => {
       expect(frontier.queuedNewlinks).to.be.empty;
     });
   });
+
   describe("getNextUrl", () => {
     it("returns the first url in the frontier", async () => {
       storage.writeFileAsync = sinon.stub().returns(Promise.resolve());
       storage.readFileAsync = sinon
         .stub()
         .returns("www.bing.com\nwww.bing.com/link1\nwww.bing.com/link2");
-      const frontier = new Frontier("www.bing.com", storage);
+      const eventCoordinator = new Events();
+      const logger = makeLogger(eventCoordinator);
+      const frontier = new Frontier("www.bing.com", logger, storage);
       frontier.urlsInFrontier = 3;
 
       expect(await frontier.getNextUrl()).to.equal("www.bing.com");
       expect(frontier.urlsInFrontier).to.equal(2);
       expect(frontier.currentlyReading).to.be.false;
     });
+
     it("does not change the number of urls in the frontier if the read fails", async () => {
       storage.readFileAsync = sinon.stub().returns(Promise.reject());
-      const frontier = new Frontier("www.bing.com", storage);
+      const eventCoordinator = new Events();
+      const logger = makeLogger(eventCoordinator);
+      const frontier = new Frontier("www.bing.com", logger, storage);
 
       expect(frontier.urlsInFrontier).to.equal(1);
       await frontier.getNextUrl();

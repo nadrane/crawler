@@ -1,12 +1,11 @@
 const DomainTracker = require("./domain-tracker");
 const { getDomain } = require("tldjs");
-const logger = require("../logger")();
 
 class Domains {
-  constructor(seedData, eventCoordinator, storage) {
+  constructor(seedData, eventCoordinator, storage, logger) {
     this.domainTrackers = new Map();
     this.storage = storage;
-    this.seedDomains(seedData);
+    this.seedDomains(seedData, logger);
     this.domainGenerator = this._nextDomain();
     eventCoordinator.on("new link", ({ fromUrl, newUrl }) => {
       this.appendNewUrl(newUrl);
@@ -14,19 +13,18 @@ class Domains {
     });
   }
 
-  seedDomains(seedData) {
+  seedDomains(seedData, logger) {
     seedData.forEach(domain => {
       const domainWithoutSubdomains = getDomain(domain);
       if (!domainWithoutSubdomains) return;
       this.domainTrackers.set(
         domainWithoutSubdomains,
-        new DomainTracker(domainWithoutSubdomains, this.storage)
+        new DomainTracker(domainWithoutSubdomains, logger, this.storage)
       );
     });
   }
 
   appendNewUrl(url) {
-    console.log("append", url);
     const domain = getDomain(url);
     const domainTracker = this.domainTrackers.get(domain);
     // Only track a specific subset of domains on each server.

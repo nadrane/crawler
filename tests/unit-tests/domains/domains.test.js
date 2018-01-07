@@ -2,6 +2,7 @@ const sinon = require("sinon");
 const { expect } = require("chai");
 const Domains = require("APP/src/domains/domains");
 const Events = require("events");
+const makeLogger = require("APP/src/logger/");
 
 describe("Domains", () => {
   const storage = {};
@@ -13,10 +14,11 @@ describe("Domains", () => {
   });
 
   describe("constructor", () => {
-    it.only("should register a 'new link' event handler that appends urls to the appropriate frontier", async () => {
+    it("should register a 'new link' event handler that appends urls to the appropriate frontier", async () => {
       const eventCoordinator = new Events();
       const seed = ["google.com", "yahoo.com", "bing.com"];
-      const domains = new Domains(seed, eventCoordinator, storage);
+      const logger = makeLogger(eventCoordinator);
+      const domains = new Domains(seed, eventCoordinator, storage, logger);
       // I know it's bad practice (law of demeter) to reach through object graphs like this...
       // but maybe it's okay for testing purposes??
       const frontier = domains.domainTrackers.get("google.com")._frontier;
@@ -30,7 +32,8 @@ describe("Domains", () => {
     it("should parse out any subdomains when creating domain tracker objects", () => {
       const eventCoordinator = new Events();
       const seed = ["www.google.com", "stock.finance.yahoo.com", "bing.com"];
-      const domains = new Domains(seed, eventCoordinator, storage);
+      const logger = makeLogger(eventCoordinator);
+      const domains = new Domains(seed, eventCoordinator, storage, logger);
 
       expect(domains.domainTrackers.has("google.com")).to.be.true;
       expect(domains.domainTrackers.has("yahoo.com")).to.be.true;
@@ -43,7 +46,8 @@ describe("Domains", () => {
     it("successfully loads a large seed file", () => {
       const eventCoordinator = new Events();
       const seed = require("APP/seed-domains.json");
-      const domains = new Domains(seed, eventCoordinator, storage);
+      const logger = makeLogger(eventCoordinator);
+      const domains = new Domains(seed, eventCoordinator, storage, logger);
 
       const { domainTrackers } = domains;
       expect(domainTrackers.has("google.com")).to.be.true;
@@ -56,7 +60,8 @@ describe("Domains", () => {
     it("should return the next domain that is polite to scrape and empty string if there are no polite options", () => {
       const eventCoordinator = new Events();
       const seed = ["www.google.com", "www.yahoo.com", "www.bing.com"];
-      const domains = new Domains(seed, eventCoordinator, storage);
+      const logger = makeLogger(eventCoordinator);
+      const domains = new Domains(seed, eventCoordinator, storage, logger);
 
       expect(domains.getDomainToScrape()).to.equal("google.com");
       expect(domains.getDomainToScrape()).to.equal("yahoo.com");
@@ -66,7 +71,8 @@ describe("Domains", () => {
     it("should reset to the beginning of the generator when depleted", () => {
       const eventCoordinator = new Events();
       const seed = ["www.google.com"];
-      const domains = new Domains(seed, eventCoordinator, storage);
+      const logger = makeLogger(eventCoordinator);
+      const domains = new Domains(seed, eventCoordinator, storage, logger);
 
       const clock = sinon.useFakeTimers();
       const twoMinutes = 60 * 2 * 1000;
@@ -92,7 +98,8 @@ describe("Domains", () => {
     it("should correctly count the number of open files", () => {
       const eventCoordinator = new Events();
       const seed = ["www.google.com", "www.yahoo.com"];
-      const domains = new Domains(seed, eventCoordinator, storage);
+      const logger = makeLogger(eventCoordinator);
+      const domains = new Domains(seed, eventCoordinator, storage, logger);
 
       domains.getNextUrlToScrape();
       expect(domains.countOpenFiles()).to.equal(1);
@@ -105,7 +112,8 @@ describe("Domains", () => {
     it("returns the urls from the file", async () => {
       const eventCoordinator = new Events();
       const seed = ["www.google.com", "www.yahoo.com"];
-      const domains = new Domains(seed, eventCoordinator, storage);
+      const logger = makeLogger(eventCoordinator);
+      const domains = new Domains(seed, eventCoordinator, storage, logger);
       storage.readFileAsync = sinon
         .stub()
         .onFirstCall()
@@ -116,10 +124,12 @@ describe("Domains", () => {
       expect(await domains.getNextUrlToScrape()).to.equal("www.google.com");
       expect(await domains.getNextUrlToScrape()).to.equal("www.yahoo.com");
     });
+
     it("returns a promise that resolve to '' when there are no domains to scrape", async () => {
       const eventCoordinator = new Events();
       const seed = [];
-      const domains = new Domains(seed, eventCoordinator, storage);
+      const logger = makeLogger(eventCoordinator);
+      const domains = new Domains(seed, eventCoordinator, storage, logger);
 
       expect(await domains.getNextUrlToScrape()).to.equal("");
     });

@@ -26,18 +26,18 @@ const bluebird = require("bluebird");
 const fs = require("fs");
 bluebird.promisifyAll(require("fs"));
 
-const logger = require("APP/src/logger")();
 const { join } = require("path");
 const { FRONTIER_DIRECTORY } = require("APP/env/");
 
 class Frontier {
-  constructor(seedDomain, storage = fs) {
+  constructor(seedDomain, logger, storage = fs) {
     this.domain = seedDomain;
     this.urlsInFrontier = 1;
     this.currentlyReading = false;
     this.queuedNewlinks = [];
     this.flushScheduled = false;
     this.storage = storage;
+    this.logger = logger;
 
     let domainWithProtocol;
     if (seedDomain.startsWith("http://")) {
@@ -51,7 +51,7 @@ class Frontier {
     try {
       storage.writeFileSync(this.fileName, `${domainWithProtocol}\n`);
     } catch (err) {
-      logger.unexpectedError(`failed to initialize frontier for domain ${seedDomain}`, err);
+      this.logger.unexpectedError(`failed to initialize frontier for domain ${seedDomain}`, err);
     }
   }
 
@@ -92,7 +92,7 @@ class Frontier {
       buffer = await this.storage.readFileAsync(this.fileName);
     } catch (err) {
       this.urlsInFrontier += 1;
-      logger.unexpectedError(
+      this.logger.unexpectedError(
         `failed to read from frontier file - getNextUrl ${this.fileName}`,
         err
       );
@@ -105,7 +105,10 @@ class Frontier {
     try {
       await this.storage.writeFileAsync(this.fileName, allUrls.slice(1).join("\n"));
     } catch (err) {
-      logger.unexpectedError(`failed to write to frontier file - getNextUrl ${this.fileName}`, err);
+      this.logger.unexpectedError(
+        `failed to write to frontier file - getNextUrl ${this.fileName}`,
+        err
+      );
     }
     this.currentlyReading = false;
     return nextUrl;
@@ -139,7 +142,6 @@ class Frontier {
       return;
     }
 
-
     // Should never be true
 
     // This flag is not to protect against a race condition but rather
@@ -151,7 +153,10 @@ class Frontier {
       this.urlsInFrontier += this.queuedNewlinks.length;
       this.queuedNewlinks = [];
     } catch (err) {
-      logger.unexpectedError(`failed to append to to frontier file - append ${this.fileName}`, err);
+      this.logger.unexpectedError(
+        `failed to append to to frontier file - append ${this.fileName}`,
+        err
+      );
     }
     this.currentlyReading = false;
     this.flushScheduled = false;
