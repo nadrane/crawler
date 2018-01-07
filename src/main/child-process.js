@@ -13,7 +13,7 @@ function configureHeapDumps() {
     }, 10 * 1000);
   }
 }
-configureHeapDumps();
+// configureHeapDumps();
 
 function configureProcessErrorHandling(logger) {
   process.on("uncaughtException", err => {

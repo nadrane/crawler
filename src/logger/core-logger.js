@@ -23,6 +23,7 @@ class Logger {
   }
 
   unexpectedError(err, event, data) {
+    console.log('expected error', err, event)
     this.logger.error({ err, event, data });
     this.trackUnexpectedErrors();
   }

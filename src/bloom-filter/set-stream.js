@@ -11,8 +11,9 @@ module.exports = function createBFSetStream(concurrency) {
         this.push(url);
         done();
       })
-      .catch((err) => {
+      .catch(err => {
         logger.unexpectedError(err, "bloom filter set stream implementation");
+        done();
       });
   });
 };

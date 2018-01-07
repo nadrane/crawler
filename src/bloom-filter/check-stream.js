@@ -14,6 +14,7 @@ module.exports = function createBFCheckStream(concurrency) {
       })
       .catch((err) => {
         logger.unexpectedError(err, "bloom filter check stream implementation");
+        done();
       });
   });
 };

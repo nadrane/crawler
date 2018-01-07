@@ -26,6 +26,7 @@ class LogStream extends Writable {
         callback();
       })
       .catch(err => {
+        // console.log('log stream error write', err)
         //just ignore the error and don't reset the buffer
         callback();
       });
@@ -34,6 +35,10 @@ class LogStream extends Writable {
   _final(callback) {
     this.http.post(this.url, this.buffer.join("\n")).then(() => {
       callback();
+    })
+    .catch(err => {
+      callback()
+      // console.log('log stream error final', err)
     });
   }
 }
