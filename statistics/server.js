@@ -11,11 +11,11 @@ const requestsPerMinuteLog = [];
 let totalRequests = 0;
 
 setInterval(() => {
-  if (!requestsPerMinuteLog.length) {
+  if (requestsPerMinuteLog.length === 0) {
     requestsPerMinuteLog.push(totalRequests);
   } else {
     requestsPerMinuteLog.push(
-      totalRequests - requestsPerMinuteLog[requestsPerMinuteLog.length - 2]
+      totalRequests - requestsPerMinuteLog.reduce((accum, next) => accum + next, 0)
     );
   }
 }, 1000 * 60);
