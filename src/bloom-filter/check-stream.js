@@ -1,10 +1,8 @@
 const throughConcurrent = require("../through-concurrent");
-const logger = require("../logger/")();
-const bloomFilter = require("./bloom-filter");
 
-module.exports = function createBFCheckStream(concurrency) {
-  return throughConcurrent("bloom filter check stream", concurrency, function BFCheck(url, enc, done) {
-    bloomFilter
+module.exports = function createBFCheckStream(client, logger, concurrency) {
+  return throughConcurrent("bloom filter check stream", concurrency, function (url, enc, done) {
+    client
       .check(url)
       .then((urlSeen) => {
         if (!urlSeen) {
@@ -14,6 +12,7 @@ module.exports = function createBFCheckStream(concurrency) {
       })
       .catch((err) => {
         logger.unexpectedError(err, "bloom filter check stream implementation");
+        done();
       });
   });
 };
