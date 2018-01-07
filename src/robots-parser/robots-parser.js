@@ -1,6 +1,5 @@
 const { URL } = require("url");
 const robotsParser = require("robots-parser");
-const logger = require("../logger")();
 const LRU = require("lru-cache");
 const { USER_AGENT } = require("APP/env/");
 
@@ -13,7 +12,7 @@ const approveNone = () => false;
 
 // IDEA garbage collection of robots cache
 // Maybe an LRU cache? Or eliminate if a domains frontier is empty for too long?
-async function isAllowed(cache, url, http) {
+async function isAllowed(cache, logger, http, url) {
   // A given robotsTxt file is valid for a given hostname, protocol, port combination (https://developers.google.com/search/reference/robots_txt)
   // A robotsTxt file is not valid in subdomains of its url.
   // We want to cache robotsTxt results to avoid making an extra network request for every page.
@@ -25,14 +24,14 @@ async function isAllowed(cache, url, http) {
   } else {
     // IDEA Maybe it would be better to cache the robotsTxt file itself as
     // opposed to this function. Maybe explore later
-    allowed = await getAndParseRobotsTxt(makeRobotsTxtUrl(protocol, port, hostname), http);
+    allowed = await getAndParseRobotsTxt(makeRobotsTxtUrl(protocol, port, hostname), http, logger);
     cache.set(makeCacheKey(protocol, port, hostname), allowed);
   }
 
   return allowed(parsedUrl.toString());
 }
 
-async function getAndParseRobotsTxt(robotsTxtUrl, http) {
+async function getAndParseRobotsTxt(robotsTxtUrl, http, logger) {
   let robotsResponse;
   logger.robotsRequestSent(robotsTxtUrl);
   try {
@@ -41,7 +40,7 @@ async function getAndParseRobotsTxt(robotsTxtUrl, http) {
       maxRedirects: 5
     });
   } catch (err) {
-    return handleHttpError(err);
+    return handleHttpError(err, logger);
   }
   let parser;
 
@@ -55,7 +54,7 @@ async function getAndParseRobotsTxt(robotsTxtUrl, http) {
 }
 
 // Do what Google does: https://developers.google.com/search/reference/robots_txt
-function handleHttpError(err) {
+function handleHttpError(err, logger) {
   // The request was made and the server responded with a status code
   // that falls out of the range of 2xx
   if (err.response) {
@@ -91,6 +90,8 @@ function handleHttpError(err) {
 }
 
 module.exports = function makeRobotsValidator(
+  logger,
+  http,
   domainsPerServer = 20000,
   maxCacheAge = 1000 * 60 * 60
 ) {
@@ -98,5 +99,5 @@ module.exports = function makeRobotsValidator(
     max: domainsPerServer,
     maxAge: maxCacheAge
   });
-  return isAllowed.bind(null, cache);
+  return isAllowed.bind(null, cache, logger, http);
 };
