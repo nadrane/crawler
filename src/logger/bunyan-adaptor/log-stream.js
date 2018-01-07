@@ -32,9 +32,14 @@ class LogStream extends Writable {
   }
 
   _final(callback) {
-    this.http.post(this.url, this.buffer.join("\n")).then(() => {
-      callback();
-    });
+    this.http
+      .post(this.url, this.buffer.join("\n"))
+      .then(() => {
+        callback();
+      })
+      .catch(err => {
+        callback();
+      });
   }
 }
 
