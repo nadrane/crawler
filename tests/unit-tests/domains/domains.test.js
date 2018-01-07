@@ -13,7 +13,7 @@ describe("Domains", () => {
   });
 
   describe("constructor", () => {
-    it("should register a 'new link' event handler that appends urls to the appropriate frontier", async () => {
+    it.only("should register a 'new link' event handler that appends urls to the appropriate frontier", async () => {
       const eventCoordinator = new Events();
       const seed = ["google.com", "yahoo.com", "bing.com"];
       const domains = new Domains(seed, eventCoordinator, storage);
@@ -22,7 +22,7 @@ describe("Domains", () => {
       const frontier = domains.domainTrackers.get("google.com")._frontier;
 
       expect(frontier.urlsInFrontier).to.equal(1);
-      eventCoordinator.emit("new link", "google.com/search");
+      eventCoordinator.emit("new link", { newUrl: "google.com/search", fromUrl: "google.com" });
       await frontier.flushNewLinkQueue();
       expect(frontier.urlsInFrontier).to.equal(2);
     });
@@ -46,9 +46,9 @@ describe("Domains", () => {
       const domains = new Domains(seed, eventCoordinator, storage);
 
       const { domainTrackers } = domains;
-      expect(domainTrackers.has('google.com')).to.be.true;
-      expect(domainTrackers.has('andaluspress.com')).to.be.true;
-      expect(domainTrackers.has('progressive.com')).to.be.true;
+      expect(domainTrackers.has("google.com")).to.be.true;
+      expect(domainTrackers.has("andaluspress.com")).to.be.true;
+      expect(domainTrackers.has("progressive.com")).to.be.true;
     });
   });
 
