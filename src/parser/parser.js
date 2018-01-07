@@ -15,7 +15,10 @@ class HtmlTolinkStream extends Transform {
           const { href } = attribs;
           if (this._tagContainsValidUrl(name, href)) {
             const parsedUrl = new URL(href, this.originalUrl);
-            eventCoordinator.emit("new link", parsedUrl.toString());
+            eventCoordinator.emit("new link", {
+              fromUrl: this.originalUrl,
+              newUrl: parsedUrl.toString()
+            });
           }
         },
         onerror: err => {

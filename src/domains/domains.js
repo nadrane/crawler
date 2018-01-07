@@ -1,5 +1,6 @@
 const DomainTracker = require("./domain-tracker");
 const { getDomain } = require("tldjs");
+const logger = require("../logger")()
 
 class Domains {
   constructor(seedData, eventCoordinator, storage) {
@@ -7,8 +8,9 @@ class Domains {
     this.storage = storage;
     this.seedDomains(seedData);
     this.domainGenerator = this._nextDomain();
-    eventCoordinator.on("new link", url => {
-      this.appendNewUrl(url);
+    eventCoordinator.on("new link", ({fromUrl, newUrl}) => {
+      this.appendNewUrl(newUrl);
+      logger.addingToFrontier(fromUrl, newUrl)
     });
   }
 
