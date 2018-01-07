@@ -1,4 +1,4 @@
-const { parse, getDomain } = require("tldjs");
+const { getDomain } = require("tldjs");
 const mkdirp = require("mkdirp");
 const path = require("path");
 
@@ -20,10 +20,6 @@ class Logger {
       }
       this.lastFiveUnexpected.pop();
     }
-  }
-
-  initializationLog(maxConnectionsOpen, maxOpenFiles) {
-    this.logger.info({ event: "crawler initialization", maxConnectionsOpen, maxOpenFiles });
   }
 
   unexpectedError(err, event, data) {
@@ -73,8 +69,8 @@ class Logger {
   }
 
   addingToFrontier(fromUrl, newUrl) {
-    const newDomain = parse(newUrl).domain;
-    const fromDomain = parse(fromUrl).domain;
+    const newDomain = getDomain(newUrl);
+    const fromDomain = getDomain(fromUrl);
     this.logger.info({
       event: "new link",
       fromUrl,
@@ -83,12 +79,14 @@ class Logger {
       newDomain
     });
   }
+
   robotsRequestSent(url) {
     const domain = getDomain(url);
     this.logger.info({ event: "robots request sent", url, domain });
   }
+
   GETRequestSent(url, totalRequestsMade) {
-    const { domain } = parse(url);
+    const domain = getDomain(url);
     this.logger.info({
       event: "request sent",
       url,
@@ -98,27 +96,12 @@ class Logger {
   }
 
   GETResponseReceived(url, statusCode) {
-    const { domain } = parse(url);
+    const domain = getDomain(url);
     this.logger.info({
       event: "response success",
       statusCode,
       url,
       domain
-    });
-  }
-
-  connectionMade(url) {
-    const { domain } = parse(url);
-    this.logger.info({ event: "new connection", url, domain });
-  }
-
-  finalizingCrawl(url, totalResponsesParsed) {
-    const { domain } = parse(url);
-    this.logger.info({
-      event: "finalized crawl",
-      url,
-      domain,
-      totalResponsesParsed
     });
   }
 
