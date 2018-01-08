@@ -11,6 +11,7 @@ const Requester = {
         method: "get",
         url,
         responseType: "stream",
+        timeout: 5000,
         headers: {
           userAgent: USER_AGENT,
         },
@@ -36,6 +37,7 @@ function failedRequest(err, url) {
     // simply limiting complexity here
     if (err.code === "ECONNRESET") {
       logger.connectionReset(url);
+      // TODO add condition for timeouts
     } else {
       logger.noGETResponseRecieved(err, url);
     }
