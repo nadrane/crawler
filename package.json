@@ -50,6 +50,7 @@
     "mocha": "^4.0.1",
     "rimraf": "^2.6.2",
     "sinon": "^4.1.2",
+    "stream-array": "^1.1.2",
     "supertest": "^3.0.0"
   }
 }
