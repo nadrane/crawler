@@ -1,12 +1,12 @@
 const { expect } = require("chai");
 const Events = require("events");
 const sinon = require("sinon");
-const { PassThrough } = require("stream");
+const TestStream = require("../../testStream");
 
 const makeRobotsStream = require("APP/src/robots-parser");
 const makeLogger = require("APP/src/logger/");
 
-describe.only("robots-parser", () => {
+describe("robots-parser", () => {
   describe("stream", () => {
     it("returns a response for every inputted url", async () => {
       const fakeLoggerHttp = {
@@ -37,19 +37,3 @@ describe.only("robots-parser", () => {
     });
   });
 });
-
-class TestStream extends PassThrough {
-  constructor(options) {
-    super(options);
-    this.buffer = [];
-  }
-
-  _transform(data, enc, done) {
-    this.buffer.push(data);
-    done();
-  }
-
-  toString() {
-    return this.buffer.join("\n");
-  }
-}
