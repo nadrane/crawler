@@ -5,7 +5,7 @@ module.exports = function createRobotsStream(logger, http, concurrency) {
   const isAllowed = makeRobotParser(logger, http);
   return throughConcurrent(logger, "robots stream", concurrency, async function(url, enc, done) {
     try {
-      if (await isAllowed(url, http)) {
+      if (await isAllowed(url)) {
         this.push(url);
       }
     } catch (err) {
