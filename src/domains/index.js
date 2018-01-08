@@ -1,6 +1,27 @@
 const { Readable } = require("stream");
 const Domains = require("./domains");
 
+module.exports = function makeDomainStream(
+  seedData,
+  eventCoordinator,
+  storage,
+  logger,
+  concurrency
+) {
+  const domainStream = new DomainReaderStream(
+    new Domains(seedData, eventCoordinator, storage, logger),
+    concurrency,
+    eventCoordinator
+  );
+
+  domainStream.on("error", err => {
+    console.log(err);
+    // logger.unexpectedError(err, "domain stdsfream");
+  });
+
+  return domainStream;
+};
+
 class DomainReaderStream extends Readable {
   constructor(domains, concurrency, eventCoordinator) {
     super({ objectMode: true });
@@ -10,7 +31,6 @@ class DomainReaderStream extends Readable {
     this.domains = domains;
     this.backPressure = false;
     eventCoordinator.on("stop", () => {
-      console.log("stopping");
       if (!this.isPaused()) {
         this.pause();
       }
@@ -69,11 +89,3 @@ class DomainReaderStream extends Readable {
     }
   }
 }
-
-module.exports = function makeDomainStream(concurrency, seedData, eventCoordinator) {
-  return new DomainReaderStream(
-    new Domains(seedData, eventCoordinator),
-    concurrency,
-    eventCoordinator
-  );
-};
