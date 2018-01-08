@@ -35,7 +35,6 @@ async function isAllowed(cache, logger, http, url) {
     allowed = await getAndParseRobotsTxt(makeRobotsTxtUrl(protocol, port, hostname), http, logger);
     cache.set(makeCacheKey(protocol, port, hostname), allowed);
   }
-
   return allowed(parsedUrl.toString());
 }
 

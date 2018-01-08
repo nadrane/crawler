@@ -4,7 +4,7 @@ const makeRobotsValidator = require("APP/src/robots-parser/robots-parser");
 const makeLogger = require("APP/src/logger/");
 const Events = require("events");
 
-describe.only("robots-parser", () => {
+describe("robots-parser", () => {
   describe("isAllowed", () => {
     it("allows all urls when the robots.txt approves everything", async () => {
       const logger = makeLogger(new Events());
