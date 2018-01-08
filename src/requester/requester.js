@@ -1,4 +1,3 @@
-const axios = require("axios");
 const { USER_AGENT } = require("APP/env");
 
 module.exports = function makeRequester(logger, http) {
@@ -9,8 +8,7 @@ async function crawlWithGetRequest(logger, http, url) {
   logger.GETRequestSent(url);
   let response;
   try {
-    response = await axios({
-      method: "get",
+    response = await http.get({
       url,
       responseType: "stream",
       timeout: 5000,
@@ -20,12 +18,12 @@ async function crawlWithGetRequest(logger, http, url) {
     });
     logger.GETResponseReceived(url, response.status);
   } catch (err) {
-    response = failedRequest(err, url);
+    return failedRequest(logger, err, url);
   }
-  return response;
+  return response.data;
 }
 
-function failedRequest(err, url) {
+function failedRequest(logger, err, url) {
   // The request was made and the server responded with a status code
   // that falls out of the range of 2xx
   if (err.response) {
@@ -47,6 +45,6 @@ function failedRequest(err, url) {
       config: err.config
     });
   }
-  return "";
+  return null;
 }
 
