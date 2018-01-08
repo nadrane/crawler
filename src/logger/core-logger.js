@@ -4,7 +4,7 @@ const path = require("path");
 const serializeError = require("serialize-error");
 
 class Logger {
-  constructr(eventCoordinator, outputFile, logAdaptor) {
+  constructor(eventCoordinator, outputFile, logAdaptor) {
     mkdirp.sync(path.dirname(outputFile));
     this.logger = logAdaptor(outputFile);
     this.lastFiveUnexpected = [];
