@@ -87,13 +87,12 @@ class Logger {
     this.logger.info({ event: "robots request sent", url, domain });
   }
 
-  GETRequestSent(url, totalRequestsMade) {
+  GETRequestSent(url) {
     const domain = getDomain(url);
     this.logger.info({
       event: "request sent",
       url,
       domain,
-      totalRequestsMade
     });
   }
 
