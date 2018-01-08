@@ -72,4 +72,13 @@ describe("robots-parser", () => {
       expect(await isAllowed2("http://google.com/theBestSite")).to.be.false;
     });
   });
+
+  describe("error cases", () => {
+    it("returns false when the url is not parsable", async () => {
+      const url = "google.com"; // the URL constructor will fire an error given no protocol
+      const isAllowed = makeRobotsValidator();
+
+      expect(await isAllowed(url)).to.be.false;
+    });
+  });
 });
