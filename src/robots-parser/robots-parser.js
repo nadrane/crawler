@@ -44,6 +44,7 @@ async function getAndParseRobotsTxt(robotsTxtUrl, http, logger) {
   try {
     robotsResponse = await http({
       url: robotsTxtUrl,
+      timeout: 2000,
       maxRedirects: 5
     });
   } catch (err) {
