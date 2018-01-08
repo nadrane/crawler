@@ -90,6 +90,7 @@ function handleHttpError(err, logger) {
     return approveNone;
     // Something happened in setting up the request that triggered an Error
   }
+  // TODO add condition for timeouts
   logger.unexpectedError(err, "bad robots request", {
     module: "robots-parser",
     config: err.config
