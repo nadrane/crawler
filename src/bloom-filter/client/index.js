@@ -43,10 +43,35 @@ module.exports = function(logger, host) {
     });
   };
 
+  const initializeBloomFilter = async function() {
+    await client.drop();
+    let tries = 0;
+    let success = false;
+    while (tries < 5 && !success) {
+      try {
+        console.log("attempting BF create");
+        await client.create();
+        success = true;
+      } catch (err) {
+        console.log("BF create failed");
+        tries += 1;
+      }
+      await sleep(1000);
+    }
+    if (!success) {
+      throw new Error("failed to initialize bloom filter");
+    }
+  };
+
   return {
     set,
     check,
     create,
-    drop
+    drop,
+    initializeBloomFilter
   };
 };
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
