@@ -1,28 +1,29 @@
-const logger = require("../logger/")();
 const axios = require("axios");
 const { USER_AGENT } = require("APP/env");
 
-const Requester = {
-  async crawlWithGetRequest(url) {
-    logger.GETRequestSent(url, this.totalRequestsMade);
-    let response;
-    try {
-      response = await axios({
-        method: "get",
-        url,
-        responseType: "stream",
-        timeout: 5000,
-        headers: {
-          userAgent: USER_AGENT,
-        },
-      });
-      logger.GETResponseReceived(url, response.status);
-    } catch (err) {
-      response = failedRequest(err, url);
-    }
-    return response;
-  },
+module.exports = function makeRequester(logger, http) {
+  return crawlWithGetRequest.bind(null, logger, http);
 };
+
+async function crawlWithGetRequest(logger, http, url) {
+  logger.GETRequestSent(url);
+  let response;
+  try {
+    response = await axios({
+      method: "get",
+      url,
+      responseType: "stream",
+      timeout: 5000,
+      headers: {
+        userAgent: USER_AGENT
+      }
+    });
+    logger.GETResponseReceived(url, response.status);
+  } catch (err) {
+    response = failedRequest(err, url);
+  }
+  return response;
+}
 
 function failedRequest(err, url) {
   // The request was made and the server responded with a status code
@@ -43,10 +44,9 @@ function failedRequest(err, url) {
   } else {
     logger.unexpectedError(err, "bad request", {
       module: "get request",
-      config: err.config,
+      config: err.config
     });
   }
   return "";
 }
 
-module.exports = Requester;
