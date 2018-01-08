@@ -47,4 +47,3 @@ function failedRequest(logger, err, url) {
   }
   return null;
 }
-
