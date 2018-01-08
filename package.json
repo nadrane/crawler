@@ -36,6 +36,7 @@
     "robots": "^0.10.1",
     "robots-parser": "^1.0.1",
     "s3-upload-stream": "^1.0.7",
+    "serialize-error": "^2.1.0",
     "sha1": "^1.1.1",
     "through2-concurrent": "^1.1.1",
     "tldjs": "^2.2.0"

@@ -1,6 +1,7 @@
 const { getDomain } = require("tldjs");
 const mkdirp = require("mkdirp");
 const path = require("path");
+const serializeError = require('serialize-error');
 
 class Logger {
   constructor(eventCoordinator, outputFile, logAdaptor) {
@@ -23,7 +24,8 @@ class Logger {
   }
 
   unexpectedError(err, event, data) {
-    this.logger.error({ err, event, data });
+    const jsonError = serializeError(err)
+    this.logger.error({ err: jsonError, event, data });
     this.trackUnexpectedErrors();
   }
 
