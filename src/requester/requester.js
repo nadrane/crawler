@@ -18,8 +18,7 @@ const Requester = {
       });
       logger.GETResponseReceived(url, response.status);
     } catch (err) {
-      failedRequest(err, url);
-      return null;
+      response = failedRequest(err, url);
     }
     return response;
   },
@@ -47,6 +46,7 @@ function failedRequest(err, url) {
       config: err.config,
     });
   }
+  return "";
 }
 
 module.exports = Requester;
