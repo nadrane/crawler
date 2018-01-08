@@ -57,7 +57,7 @@ class HtmlTolinkStream extends Transform {
 }
 
 module.exports = function makeParserStream(url, eventCoordinator, logger) {
-  const stream = new HtmlTolinkStream(url, eventCoordinator);
+  const stream = new HtmlTolinkStream(url, eventCoordinator, logger);
   stream.on("error", err => {
     logger.unexpectError(err, "parser stream error");
   });

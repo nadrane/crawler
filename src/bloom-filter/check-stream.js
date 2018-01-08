@@ -1,7 +1,7 @@
 const throughConcurrent = require("../through-concurrent");
 
 module.exports = function createBFCheckStream(client, logger, concurrency) {
-  return throughConcurrent("BF check stream", concurrency, async function(url, enc, done) {
+  return throughConcurrent(logger, "BF check stream", concurrency, async function(url, enc, done) {
     let urlHasBeenVisied;
     try {
       urlHasBeenVisied = await client.check(url);

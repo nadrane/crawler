@@ -9,7 +9,7 @@ const s3Stream = require("s3-upload-stream")(s3);
 
 module.exports = function createRequesterStream(logger, http, eventCoordinator, concurrency) {
   const crawlWithGetRequest = makeRequester(logger, http);
-  return throughConcurrent("requester stream", concurrency, async (requestUrl, enc, done) => {
+  return throughConcurrent(logger, "requester stream", concurrency, async (requestUrl, enc, done) => {
     let htmlStream;
     try {
       htmlStream = await crawlWithGetRequest(requestUrl);
