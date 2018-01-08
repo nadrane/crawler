@@ -16,9 +16,17 @@ async function isAllowed(cache, logger, http, url) {
   // A given robotsTxt file is valid for a given hostname, protocol, port combination (https://developers.google.com/search/reference/robots_txt)
   // A robotsTxt file is not valid in subdomains of its url.
   // We want to cache robotsTxt results to avoid making an extra network request for every page.
-  const parsedUrl = new URL(url);
-  const { protocol, hostname, port } = parsedUrl;
+
+  let parsedUrl;
   let allowed;
+  try {
+    // It might not be possible to parse some urls
+    parsedUrl = new URL(url);
+  } catch (err) {
+    return false;
+  }
+  const { protocol, hostname, port } = parsedUrl;
+
   if (cache.peek(makeCacheKey(protocol, port, hostname))) {
     allowed = cache.get(makeCacheKey(protocol, port, hostname));
   } else {
