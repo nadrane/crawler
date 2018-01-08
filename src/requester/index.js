@@ -27,7 +27,7 @@ module.exports = function createRequesterStream(logger, http, eventCoordinator, 
       });
     });
 
-    const parserStream = new Parser(requestUrl, eventCoordinator);
+    const parserStream = new Parser(requestUrl, eventCoordinator, logger);
     htmlStream.pipe(parserStream);
 
     const upload = s3Stream.upload({

@@ -1,10 +1,9 @@
 const { Transform } = require("stream");
 const htmlparser = require("htmlparser2");
 const { URL } = require("url");
-const logger = require("../logger")();
 
 class HtmlTolinkStream extends Transform {
-  constructor(url, eventCoordinator) {
+  constructor(url, eventCoordinator, logger) {
     super();
     this.originalUrl = url;
     this.backPressure = false;
@@ -57,7 +56,7 @@ class HtmlTolinkStream extends Transform {
   }
 }
 
-module.exports = function makeParserStream(url, eventCoordinator) {
+module.exports = function makeParserStream(url, eventCoordinator, logger) {
   const stream = new HtmlTolinkStream(url, eventCoordinator);
   stream.on("error", err => {
     logger.unexpectError(err, "parser stream error");
