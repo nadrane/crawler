@@ -20,6 +20,10 @@ module.exports = async function initializeChildProcess(
     });
   });
 
+  process.on("disconnect", () => {
+    console.log(process.pid, "disconnected");
+  });
+
   let seedData;
   try {
     seedData = await seedFile;

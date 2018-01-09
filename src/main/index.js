@@ -58,6 +58,7 @@ function createChildren(logger, urlChunks) {
 
 function configureServerTermination() {
   onDeath(() => {
+    console.log(`${process.pid}: server terminated, killing children`);
     if (!statServer.killed) {
       statServer.kill();
     }
