@@ -1,9 +1,10 @@
 const Events = require("events");
-const { expect } = require("chai");
+const fs = require("fs");
 const { promisify } = require("util");
 const rimraf = promisify(require("rimraf"));
 const { FRONTIER_DIRECTORY } = require("APP/env/");
 const makeDomainStream = require("APP/src/domains");
+const makeLogger = require("APP/src/logger");
 
 function testAllUrlsReadFromStream(stream, seed, done) {
   let urlsRead = 0;
@@ -36,6 +37,7 @@ describe("domain stream", () => {
   });
   it("returns a sequence of different urls from the seed file", done => {
     const eventCoordinator = new Events();
+    const logger = makeLogger(eventCoordinator);
     const seed = [
       "google.com",
       "youtube.com",
@@ -44,15 +46,16 @@ describe("domain stream", () => {
       "alibaba.com",
       "fakesite.com"
     ];
-    const domainStream = makeDomainStream(2, seed, eventCoordinator);
+    const domainStream = makeDomainStream(seed, eventCoordinator, fs, logger, 1);
 
     testAllUrlsReadFromStream(domainStream, seed, done);
   });
 
   it("handles backpressure appropriately", done => {
     const eventCoordinator = new Events();
+    const logger = makeLogger(eventCoordinator);
     const seed = require("APP/seed-domains-sans-subs");
-    const domainStream = makeDomainStream(20, seed, eventCoordinator);
+    const domainStream = makeDomainStream(seed, eventCoordinator, fs, logger, 20);
 
     testAllUrlsReadFromStream(domainStream, seed, done);
   }).timeout(6000);

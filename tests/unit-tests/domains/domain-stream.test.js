@@ -1,7 +1,9 @@
 const { expect } = require("chai");
 const makeDomainStream = require("APP/src/domains");
+const makeLogger = require("APP/src/logger/");
 const Events = require("events");
 const sinon = require("sinon");
+const fs = require("fs");
 
 const seed = [
   "google.com",
@@ -23,7 +25,8 @@ describe("Domain Stream", () => {
 
   it("pauses the stream whent the 'stop' event is emitted", () => {
     const eventCoordinator = new Events();
-    const domainStream = makeDomainStream(1, seed, eventCoordinator);
+    const logger = makeLogger(eventCoordinator);
+    const domainStream = makeDomainStream(seed, eventCoordinator, fs, logger, 1);
 
     expect(domainStream.isPaused()).to.be.false;
     eventCoordinator.emit("stop");
@@ -31,8 +34,11 @@ describe("Domain Stream", () => {
   });
 
   it("resumes the stream whent the 'start' event is emitted", () => {
+    // Q: Should I just pass blank objects in if they aren't used?
+    //    or this? Or just stub them?
     const eventCoordinator = new Events();
-    const domainStream = makeDomainStream(1, seed, eventCoordinator);
+    const logger = makeLogger(eventCoordinator);
+    const domainStream = makeDomainStream(seed, eventCoordinator, fs, logger, 1);
 
     domainStream.pause();
     eventCoordinator.emit("start");
