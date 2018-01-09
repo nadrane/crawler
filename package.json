@@ -8,16 +8,12 @@
     "dev": "cross-env NODE_ENV=development node src/index.js",
     "stat-prod": "cross-env NODE_ENV=production node statistics/server.js",
     "debug": "cross-env NODE_ENV=development node --inspect src/index.js",
-    "test-unit":
-      "cross-env NODE_ENV=test ./node_modules/mocha/bin/mocha tests/unit-tests/**/*test.js -w --reporter spec",
-    "test-integration":
-      "cross-env NODE_ENV=test ./node_modules/mocha/bin/mocha tests/integration-tests/**/*test.js -w --reporter spec",
-    "test":
-      "cross-env NODE_ENV=test ./node_modules/mocha/bin/mocha tests/**/*test.js -w --reporter spec",
+    "test-unit": "cross-env NODE_ENV=test ./node_modules/mocha/bin/mocha tests/unit-tests/**/*test.js -w --reporter spec",
+    "test-integration": "cross-env NODE_ENV=test ./node_modules/mocha/bin/mocha tests/integration-tests/**/*test.js -w --reporter spec",
+    "test": "cross-env NODE_ENV=test ./node_modules/mocha/bin/mocha tests/**/*test.js -w --reporter spec",
     "lint": "./node_modules/.bin/eslint .",
     "profile": "cross-env NODE_ENV=development node --prof src/index.js",
-    "postinstall":
-      "node -e \"var s='../',d='node_modules/APP',fs=require('fs');fs.exists(d,function(e){e||fs.symlinkSync(s,d,'dir')});\""
+    "postinstall": "node -e \"var s='../',d='node_modules/APP',fs=require('fs');fs.exists(d,function(e){e||fs.symlinkSync(s,d,'dir')});\""
   },
   "author": "",
   "license": "ISC",
@@ -30,6 +26,7 @@
     "body-parser": "^1.18.2",
     "bunyan": "^1.8.12",
     "cross-env": "^5.1.1",
+    "death": "^1.1.0",
     "express": "^4.16.2",
     "htmlparser2": "^3.9.2",
     "lru-cache": "^4.1.1",
