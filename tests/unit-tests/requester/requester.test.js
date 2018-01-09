@@ -11,13 +11,9 @@ describe("requester", () => {
     it("returns a stream of html given a url", async () => {
       const logger = makeLogger(new Events());
       sinon.stub(logger);
-      const http = {
-        get: sinon
-          .stub()
-          .returns(
-            Promise.resolve({ data: streamify("<html><head></head><body>nick</body></html>") })
-          )
-      };
+      const http = sinon
+        .stub()
+        .returns(Promise.resolve({ data: streamify("<html><head></head><body>nick</body></html>") }));
       const testStream = new TestStream();
       const crawlWithGETRequest = makeRequester(logger, http);
 
@@ -35,9 +31,7 @@ describe("requester", () => {
       sinon.stub(logger);
       const requestError = new Error("Failed to make request");
       requestError.request = {};
-      const http = {
-        get: sinon.stub().returns(Promise.reject(requestError))
-      };
+      const http = sinon.stub().returns(Promise.reject(requestError));
       const crawlWithGETRequest = makeRequester(logger, http);
 
       const response = await crawlWithGETRequest("http://google.com");

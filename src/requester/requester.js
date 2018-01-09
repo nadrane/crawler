@@ -8,7 +8,7 @@ async function crawlWithGetRequest(logger, http, url) {
   logger.GETRequestSent(url);
   let response;
   try {
-    response = await http.get({
+    response = await http({
       url,
       responseType: "stream",
       timeout: 5000,
