@@ -60,6 +60,8 @@ module.exports = function(logger, host) {
     }
     if (!success) {
       throw new Error("failed to initialize bloom filter");
+    } else {
+      console.log("BF created");
     }
   };
 
