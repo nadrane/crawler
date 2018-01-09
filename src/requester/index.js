@@ -17,7 +17,10 @@ module.exports = function createRequesterStream(logger, http, eventCoordinator, 
       logger.unexpectError(err, "requester stream failure");
     }
     // In case the request failed
-    if (!htmlStream) return;
+    if (!htmlStream) {
+      done();
+      return;
+    }
 
     const responseClosed = new Promise(resolve => {
       // the streams file descriptor should close on this event
@@ -30,18 +33,29 @@ module.exports = function createRequesterStream(logger, http, eventCoordinator, 
     const parserStream = new Parser(requestUrl, eventCoordinator, logger);
     htmlStream.pipe(parserStream);
 
+    logger.s3UploadStarted(requestUrl);
     const upload = s3Stream.upload({
       Bucket: "crawler-nick",
       Key: `sites/${sha1(requestUrl)}`
     });
+
     htmlStream.pipe(upload);
-    const uploadFinished = new Promise(resolve => {
+    const uploadFinished = new Promise((resolve, reject) => {
       upload.on("uploaded", () => {
         resolve();
+        logger.s3UploadFinished(requestUrl);
+      });
+      upload.on("error", err => {
+        reject();
+        logger.unexpectError(err, "s3 stream error");
       });
     });
-    Promise.all([responseClosed, uploadFinished]).then(() => {
-      done();
-    });
+    Promise.all([responseClosed, uploadFinished])
+      .then(() => {
+        done();
+      })
+      .catch(() => {
+        done();
+      });
   });
 };

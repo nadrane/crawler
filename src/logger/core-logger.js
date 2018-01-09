@@ -124,6 +124,22 @@ class Logger {
     });
   }
 
+  s3UploadStarted(url) {
+    const domain = getDomain(url);
+    this.logger.info({
+      event: "s3 upload started",
+      domain
+    });
+  }
+
+  s3UploadFinished(url) {
+    const domain = getDomain(url);
+    this.logger.info({
+      event: "s3 upload finished",
+      domain
+    });
+  }
+
   spawningWorkerProcess(processId) {
     this.logger.info({
       event: "spawning worker process",
