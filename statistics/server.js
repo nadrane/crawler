@@ -66,10 +66,11 @@ app.use((err, req, res, next) => {
   res.send(err);
 });
 
-if (isProd()) {
-  app.listen(80, "0.0.0.0", () => {
-    console.log("stats server starting");
-  });
-}
-
-module.exports = app;
+module.exports = function startServer(port = "8080", ipAddress = "127.0.0.1") {
+  if (isProd() || isDev()) {
+    app.listen(port, ipAddress, () => {
+      console.log("stats server starting");
+    });
+  }
+  return app;
+};

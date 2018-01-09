@@ -1,10 +1,10 @@
-const sinon = require("sinon");
 const { expect } = require("chai");
-const server = require("APP/statistics/server");
+const makeServer = require("APP/statistics/server");
 const request = require("supertest");
 
 describe("Stats Server", () => {
   it("initially responds with default stats", () => {
+    const server = makeServer();
     return request(server)
       .get("/log")
       .expect(200)
@@ -14,6 +14,7 @@ describe("Stats Server", () => {
   });
 
   it("records domain and hostname level stats", () => {
+    const server = makeServer();
     const r = request(server);
     const logs = [
       { domain: "google.com", hostname: 1, event: "request sent" },
