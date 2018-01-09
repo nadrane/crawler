@@ -5,8 +5,11 @@ const Logger = require("APP/src/logger");
 
 describe("Logger", () => {
   it("should create the logger without error", () => {
-    const eventCoordinator = new Events();
-    const logger = new Logger(eventCoordinator, axios, "fake url", "fake file.txt");
+    const logger = Logger(new Events(), axios, {
+      statServerUrl: "fake url",
+      statServerPort: 80,
+      outputFile: "fake file.txt"
+    });
     expect(logger).to.be.a("object");
     expect(logger).to.be.a.property("unexpectedError");
   });
