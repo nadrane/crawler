@@ -65,6 +65,7 @@ async function getAndParseRobotsTxt(robotsTxtUrl, http, logger) {
 function handleHttpError(err, logger) {
   // The request was made and the server responded with a status code
   // that falls out of the range of 2xx
+  const { url } = err.config;
   if (err.response) {
     if (err.response.status >= 500) {
       return approveNone;
@@ -76,21 +77,24 @@ function handleHttpError(err, logger) {
     }
     logger.unexpectedError(err.response, "status not 2xx, 3xx, 4xx or 5xx", {
       module: "robots-parser",
-      url: err.config.url,
-      headers: err.headers
+      headers: err.headers,
+      url
     });
     return approveNone;
 
     // The request was made but no response was received
   } else if (err.request) {
-    logger.noRobotsResponseReceived(err.response, {
-      module: "robots-parser",
-      url: err.config.url
-    });
+    if (err.code === "ECONNABORTED") {
+      logger.robotsRequestTimeout(url);
+    } else {
+      logger.noRobotsResponseReceived(err.response, {
+        module: "robots-parser",
+        url
+      });
+    }
     return approveNone;
     // Something happened in setting up the request that triggered an Error
   }
-  // TODO add condition for timeouts
   logger.unexpectedError(err, "bad robots request", {
     module: "robots-parser",
     config: err.config

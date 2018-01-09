@@ -5,7 +5,7 @@ const serializeError = require("serialize-error");
 
 class Logger {
   constructor(eventCoordinator, outputFile, logAdaptor) {
-    mkdirp.sync(path.dirname(outputFile));
+    mkdirp.sync(path.dirname(outputFile)); //QUESTION: minor dependency but can't stub out without affecting global
     this.logger = logAdaptor(outputFile);
     this.lastFiveUnexpected = [];
     this.eventCoordinator = eventCoordinator;
@@ -31,6 +31,15 @@ class Logger {
 
   parserError(url, err) {
     this.logger.error({ event: "parser error", err, url });
+  }
+
+  robotsRequestTimeout(url) {
+    const domain = getDomain(url);
+    this.logger.info({
+      event: "robots request timeout",
+      url,
+      domain
+    });
   }
 
   noRobotsResponseReceived(module, err, url) {
@@ -101,6 +110,15 @@ class Logger {
     this.logger.info({
       event: "response success",
       statusCode,
+      url,
+      domain
+    });
+  }
+
+  GETRequestTimeout(url) {
+    const domain = getDomain(url);
+    this.logger.info({
+      event: "response timeout",
       url,
       domain
     });
