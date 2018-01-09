@@ -35,7 +35,8 @@ function failedRequest(logger, err, url) {
     // simply limiting complexity here
     if (err.code === "ECONNRESET") {
       logger.connectionReset(url);
-      // TODO add condition for timeouts
+    } else if (err.code === "ECONNABORTED") {
+      logger.GETRequestTimeout(url);
     } else {
       logger.noGETResponseRecieved(err, url);
     }
