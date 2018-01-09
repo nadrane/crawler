@@ -10,6 +10,9 @@ module.exports = function createLogger(
 ) {
   if (!eventCoordinator) throw new Error("event coordinator expected");
   outputFile = outputFile || path.join(LOGGING_DIR, "logs.txt");
+  if (!statServerUrl.startsWith("http://")) {
+    statServerUrl = `http://${statServerUrl}`;
+  }
   return new Logger(
     eventCoordinator,
     outputFile,
