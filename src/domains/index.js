@@ -1,13 +1,7 @@
 const { Readable } = require("stream");
 const Domains = require("./domains");
 
-module.exports = function makeDomainStream(
-  seedData,
-  eventCoordinator,
-  storage,
-  logger,
-  concurrency
-) {
+module.exports = function makeDomainStream(seedData, eventCoordinator, storage, logger, concurrency) {
   const domainStream = new DomainReaderStream(
     new Domains(seedData, eventCoordinator, storage, logger),
     concurrency,
@@ -15,8 +9,7 @@ module.exports = function makeDomainStream(
   );
 
   domainStream.on("error", err => {
-    console.log(err);
-    // logger.unexpectedError(err, "domain stdsfream");
+    logger.unexpectedError(err, "domain stream");
   });
 
   return domainStream;
