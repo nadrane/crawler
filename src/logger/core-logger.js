@@ -52,6 +52,24 @@ class Logger {
     });
   }
 
+  robotsCacheHit(url) {
+    const domain = getDomain(url);
+    this.logger.info({
+      event: "robotstxt cache hit",
+      url,
+      domain
+    });
+  }
+
+  robotsCacheMiss(url) {
+    const domain = getDomain(url);
+    this.logger.info({
+      event: "robotstxt cache miss",
+      url,
+      domain
+    });
+  }
+
   GETResponseError(url, err, status, headers) {
     const domain = getDomain(url);
     this.logger.info({

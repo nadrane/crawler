@@ -26,13 +26,16 @@ async function isAllowed(cache, logger, http, url) {
     return false;
   }
   const { protocol, hostname, port } = parsedUrl;
+  const robotsTxtUrl = makeRobotsTxtUrl(protocol, port, hostname);
 
   if (cache.peek(makeCacheKey(protocol, port, hostname))) {
+    logger.robotsCacheHit(robotsTxtUrl);
     allowed = cache.get(makeCacheKey(protocol, port, hostname));
   } else {
+    logger.robotsCacheMiss(robotsTxtUrl);
     // IDEA Maybe it would be better to cache the robotsTxt file itself as
     // opposed to this function. Maybe explore later
-    allowed = await getAndParseRobotsTxt(makeRobotsTxtUrl(protocol, port, hostname), http, logger);
+    allowed = await getAndParseRobotsTxt(robotsTxtUrl, http, logger);
     cache.set(makeCacheKey(protocol, port, hostname), allowed);
   }
   return allowed(parsedUrl.toString());
