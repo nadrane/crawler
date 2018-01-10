@@ -48,7 +48,7 @@ async function getAndParseRobotsTxt(robotsTxtUrl, http, logger) {
       maxRedirects: 5
     });
   } catch (err) {
-    return handleHttpError(err, logger);
+    return handleHttpError(robotsTxtUrl, err, logger);
   }
   let parser;
 
@@ -62,10 +62,9 @@ async function getAndParseRobotsTxt(robotsTxtUrl, http, logger) {
 }
 
 // Do what Google does: https://developers.google.com/search/reference/robots_txt
-function handleHttpError(err, logger) {
+function handleHttpError(url, err, logger) {
   // The request was made and the server responded with a status code
   // that falls out of the range of 2xx
-  const { url } = err.config;
   if (err.response) {
     if (err.response.status >= 500) {
       return approveNone;
@@ -105,7 +104,7 @@ function handleHttpError(err, logger) {
 module.exports = function makeRobotsValidator(
   logger,
   http,
-  domainsPerServer = 20000,
+  domainsPerServer = 5000,
   maxCacheAge = 1000 * 60 * 60
 ) {
   const cache = LRU({
