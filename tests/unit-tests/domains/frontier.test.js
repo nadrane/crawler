@@ -6,6 +6,8 @@ const { FRONTIER_DIRECTORY } = require("APP/env/");
 const makeLogger = require("APP/src/logger/");
 const Events = require("events");
 
+//QUESTION: Should I have just mocked out the file system to test this?
+// As is, I don't really get the coverage I'd like
 describe("Frontier", () => {
   const storage = {};
   beforeEach(() => {
@@ -47,6 +49,8 @@ describe("Frontier", () => {
     });
   });
 
+  //QUESTION How the heck should I test the currentlyReading flag??
+  // setting it in test setup feels wrong
   describe("readyForReading", () => {
     it("should be ready for reading upon creation", () => {
       const frontier = new Frontier("www.google.com", storage);

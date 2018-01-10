@@ -6,16 +6,13 @@ const { LOGGING_DIR } = require("APP/env/");
 module.exports = function createLogger(
   eventCoordinator,
   http,
-  { statServerUrl, statServerPort, outputFile } = {}
+  { statServerUrl, statServerPort, outputFile } = { statServerUrl: "localhost", statServerPort: "8080" }
 ) {
   if (!eventCoordinator) throw new Error("event coordinator expected");
   outputFile = outputFile || path.join(LOGGING_DIR, "logs.txt");
   if (!statServerUrl.startsWith("http://")) {
     statServerUrl = `http://${statServerUrl}`;
   }
-  return new Logger(
-    eventCoordinator,
-    outputFile,
-    bunyanWithHTTPStream(`${statServerUrl}:${statServerPort}/log`, http)
-  );
+  const bunyanHTTPStream = bunyanWithHTTPStream(`${statServerUrl}:${statServerPort}/log`, http);
+  return new Logger(eventCoordinator, outputFile, bunyanHTTPStream);
 };

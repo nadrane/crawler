@@ -22,13 +22,13 @@ const axios = require("axios");
 
 // req.end()
 
-
-
-const req = axios
-  .post(
-    "http://ec2-54-198-128-220.compute-1.amazonaws.com/log",
-    { dsfdsfdsfdsfhjdsfhdsgvfhgdvsfghvdsfgvdshgfsdghvf: Buffer.alloc(1000 * 1000 * 3) },
-  )
-  .then(res => console.log("res", res.request));
-
-console.log("request headers", req);
+console.log("requesting");
+axios({
+  method: "get",
+  url: "http://localhost:8080/log",
+  timeout: 1
+})
+  .then(res => console.log("res", res.request))
+  .catch(res => {
+    console.log(res);
+  });

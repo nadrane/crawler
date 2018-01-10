@@ -17,7 +17,7 @@ describe("Domains", () => {
     it("should register a 'new link' event handler that appends urls to the appropriate frontier", async () => {
       const eventCoordinator = new Events();
       const seed = ["google.com", "yahoo.com", "bing.com"];
-      const logger = makeLogger(eventCoordinator);
+      const logger = makeLogger(eventCoordinator); // QUESTION do I really need to pass in a dummy http object every time!??
       const domains = new Domains(seed, eventCoordinator, storage, logger);
       // I know it's bad practice (law of demeter) to reach through object graphs like this...
       // but maybe it's okay for testing purposes??
