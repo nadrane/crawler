@@ -7,6 +7,7 @@ const app = express();
 app.use(bodyParser.json());
 
 const stats = {};
+const errors = [];
 const requestsPerMinuteLog = [];
 let totalRequests = 0;
 
@@ -22,7 +23,10 @@ setInterval(() => {
 
 app.post("/log", (req, res) => {
   req.pipe(ndjson.parse()).on("data", line => {
-    const { event, domain, hostname } = line;
+    const { event, domain, hostname, err } = line;
+    if (err) {
+      errors.push(err);
+    }
     if (!stats.hasOwnProperty(hostname)) {
       stats[hostname] = {};
       stats[hostname].totalEvents = 0;
@@ -53,6 +57,7 @@ app.post("/log", (req, res) => {
 
 app.get("/log", (req, res) => {
   res.send({
+    errors,
     currentRPM: requestsPerMinuteLog.length
       ? requestsPerMinuteLog[requestsPerMinuteLog.length - 1]
       : totalRequests,
