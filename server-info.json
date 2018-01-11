@@ -1,4 +1,5 @@
 {
   "statServerUrl": "ec2-54-198-128-220.compute-1.amazonaws.com",
-  "bloomFilterUrl": "ec2-54-209-25-21.compute-1.amazonaws.com"
+  "bloomFilterUrl": "ec2-54-209-25-21.compute-1.amazonaws.com",
+  "statServerPort": "80"
 }
