@@ -24,6 +24,7 @@ file for every domain.
 
 const bluebird = require("bluebird");
 const fs = require("fs");
+const mkdirp = require("mkdirp");
 bluebird.promisifyAll(require("fs"));
 
 const { join } = require("path");
@@ -38,6 +39,8 @@ class Frontier {
     this.flushScheduled = false;
     this.storage = storage;
     this.logger = logger;
+
+    mkdirp.sync(FRONTIER_DIRECTORY);
 
     let domainWithProtocol;
     if (seedDomain.startsWith("http://")) {
@@ -105,10 +108,7 @@ class Frontier {
     try {
       await this.storage.writeFileAsync(this.fileName, allUrls.slice(1).join("\n"));
     } catch (err) {
-      this.logger.unexpectedError(
-        `failed to write to frontier file - getNextUrl ${this.fileName}`,
-        err
-      );
+      this.logger.unexpectedError(`failed to write to frontier file - getNextUrl ${this.fileName}`, err);
     }
     this.currentlyReading = false;
     return nextUrl;
@@ -153,10 +153,7 @@ class Frontier {
       this.urlsInFrontier += this.queuedNewlinks.length;
       this.queuedNewlinks = [];
     } catch (err) {
-      this.logger.unexpectedError(
-        `failed to append to to frontier file - append ${this.fileName}`,
-        err
-      );
+      this.logger.unexpectedError(`failed to append to to frontier file - append ${this.fileName}`, err);
     }
     this.currentlyReading = false;
     this.flushScheduled = false;
