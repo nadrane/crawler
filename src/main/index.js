@@ -67,5 +67,6 @@ function configureServerTermination() {
         worker.disconnect();
       }
     });
+    process.exit();
   });
 }
