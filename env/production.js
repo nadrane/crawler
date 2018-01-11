@@ -6,15 +6,15 @@ const s3 = new AWS.S3({
   }
 });
 
-const statsServerIp = new Promise((resolve, reject) => {
+const serverInfo = new Promise((resolve, reject) => {
   s3.getObject(
     {
       Bucket: "crawler-nick",
-      Key: "stats-server-credentials.json"
+      Key: "server-info.json"
     },
     (err, data) => {
       if (err) reject(err);
-      else resolve(JSON.parse(data.Body.toString()).IP_ADDRESS);
+      else resolve(JSON.parse(data.Body.toString()));
     }
   );
 });
@@ -34,7 +34,7 @@ const seedFilePromise = new Promise((resolve, reject) => {
 
 module.exports = {
   // TODO change to prod token
-  STATS_SERVER_IP: statsServerIp,
+  SERVER_INFO: serverInfo,
   SEED_FILE_PROMISE: seedFilePromise,
   FRONTIER_DIRECTORY: "/frontiers" // volume mounted in Docker
 };
