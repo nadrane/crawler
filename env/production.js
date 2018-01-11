@@ -23,11 +23,11 @@ const seedFilePromise = new Promise((resolve, reject) => {
   s3.getObject(
     {
       Bucket: "crawler-nick",
-      Key: "seed-domains.txt"
+      Key: "seed.json"
     },
     (err, data) => {
       if (err) reject(err);
-      else resolve(data.Body);
+      else resolve(JSON.parse(data.Body));
     }
   );
 });
