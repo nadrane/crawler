@@ -9,8 +9,6 @@ if (process.env.NODE_ENV === "production") {
   throw new Error("environment not defined");
 }
 
-Object.assign(env, require("./defaults"));
-
 env.isProd = function isProd() {
   return process.env.NODE_ENV === "production";
 };
@@ -19,4 +17,4 @@ env.isDev = function isDev() {
   return process.env.NODE_ENV === "development";
 };
 
-module.exports = env;
+module.exports = Object.assign({}, require("./defaults"), env);
