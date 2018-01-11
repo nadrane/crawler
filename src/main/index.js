@@ -58,10 +58,10 @@ function createChildren(logger, urlChunks) {
 
 function configureServerTermination() {
   onDeath(() => {
-    console.log(`${process.pid}: server terminated, killing children`);
-    if (!statServer.killed) {
+    if (isDev() && !statServer.killed) {
       statServer.kill();
     }
+    console.log(`${process.pid}: server terminated, killing children`);
     workers.forEach(worker => {
       if (worker.isConnected()) {
         worker.disconnect();
