@@ -52,7 +52,9 @@ function createChildren(logger, urlChunks) {
     const child = cluster.fork();
     workers.push(child);
     logger.spawningWorkerProcess(child.pid);
-    child.send(urlChunks[i]);
+    child.on("online", () => {
+      child.send(urlChunks[i]);
+    });
   }
 }
 
