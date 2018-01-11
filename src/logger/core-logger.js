@@ -105,7 +105,8 @@ class Logger {
       fromUrl,
       fromDomain,
       newUrl,
-      newDomain
+      newDomain,
+      domain: fromDomain // stats server needs the domain fields
     });
   }
 
@@ -162,6 +163,47 @@ class Logger {
     this.logger.info({
       event: "spawning worker process",
       processId
+    });
+  }
+
+  robotsEntered() {
+    this.logger.debug({
+      event: "robotsEntered"
+    });
+  }
+  robotsLeft() {
+    this.logger.debug({
+      event: "robotsLeft"
+    });
+  }
+  setEntered() {
+    this.logger.debug({
+      event: "setEntered"
+    });
+  }
+  setLeft() {
+    this.logger.debug({
+      event: "setleft"
+    });
+  }
+  checkEntered() {
+    this.logger.debug({
+      event: "checkEntered"
+    });
+  }
+  checkLeft() {
+    this.logger.debug({
+      event: "checkLeft"
+    });
+  }
+  requesterEntered() {
+    this.logger.debug({
+      event: "requesterEntered"
+    });
+  }
+  requesterLeft() {
+    this.logger.debug({
+      event: "requesterLeft"
     });
   }
 }
