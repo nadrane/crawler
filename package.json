@@ -6,7 +6,7 @@
   "scripts": {
     "prod": "cross-env NODE_ENV=production node --max-old-space-size=4096 src/index.js",
     "dev": "cross-env NODE_ENV=development node --max-old-space-size=2056 src/index.js",
-    "stat-prod": "cross-env NODE_ENV=production node statistics/startServer.js 0.0.0.1 80",
+    "stat-prod": "cross-env NODE_ENV=production node statistics/startServer.js 0.0.0.0 80",
     "debug": "cross-env NODE_ENV=development node --inspect src/index.js",
     "test-unit":
       "cross-env NODE_ENV=test ./node_modules/mocha/bin/mocha tests/unit-tests/**/*test.js -w --reporter spec",
