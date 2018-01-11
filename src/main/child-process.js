@@ -14,6 +14,7 @@ module.exports = async function initializeChildProcess(
   bloomFilterClient,
   maxConcurrency
 ) {
+  process.send("requesting seed file");
   const seedFile = new Promise(resolve => {
     process.on("message", data => {
       resolve(data);

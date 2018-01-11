@@ -17,7 +17,6 @@ const numberOfMachines = n || 1;
 const maxConcurrency = c || MAX_CONCURRENCY;
 
 let statServer;
-const workers = [];
 
 SERVER_INFO.then(async ({ statServerUrl, statServerPort, bloomFilterUrl }) => {
   const eventCoordinator = new Events();
@@ -31,7 +30,8 @@ SERVER_INFO.then(async ({ statServerUrl, statServerPort, bloomFilterUrl }) => {
     await bloomFilterClient.initializeBloomFilter();
     const seed = await SEED_FILE_PROMISE;
     console.log("seed file downloaded");
-    createChildren(logger, chunkByIndex(seed, numCPUs), bloomFilterClient);
+    createChildren(logger);
+    createSeedEvents(chunkByIndex(seed, numCPUs));
   } else {
     console.log("initializing child with pid", process.pid);
     initializeChildProcess(logger, eventCoordinator, bloomFilterClient, maxConcurrency);
@@ -47,13 +47,21 @@ function startStatServer(statServerUrl, statServerPort) {
   }
 }
 
-function createChildren(logger, urlChunks) {
+function createChildren(logger) {
   for (let i = 0; i < numCPUs; i++) {
     const child = cluster.fork();
-    workers.push(child);
     logger.spawningWorkerProcess(child.pid);
-    child.on("online", () => {
-      child.send(urlChunks[i]);
+  }
+}
+
+function createSeedEvents(urlChunks) {
+  for (const id in cluster.workers) {
+    const worker = cluster.workers[id];
+    worker.on("message", message => {
+      if (message === "requesting seed file") {
+        console.log("seed message recieved from ", id);
+        worker.send(urlChunks[id - 1]);
+      }
     });
   }
 }
@@ -64,11 +72,12 @@ function configureServerTermination() {
       statServer.kill();
     }
     console.log(`${process.pid}: server terminated, killing children`);
-    workers.forEach(worker => {
+    for (const id in cluster.workers) {
+      const worker = cluster.workers[id];
       if (worker.isConnected()) {
         worker.disconnect();
       }
-    });
+    }
     process.exit();
   });
 }
