@@ -18,7 +18,6 @@ module.exports = function makeDomainStream(seedData, eventCoordinator, storage, 
 class DomainReaderStream extends Readable {
   constructor(domains, concurrency, eventCoordinator) {
     super({ objectMode: true });
-    this.outstandingRequests = 0;
     this.concurrency = concurrency;
     this.buffer = [];
     this.domains = domains;
@@ -60,25 +59,24 @@ class DomainReaderStream extends Readable {
     this._getDomain();
   }
 
-  _getDomain() {
+  async _getDomain() {
     let requestsKickedOff = 0;
     while (requestsKickedOff++ < this.concurrency) {
       if (this.domains.countOpenFiles() >= this.concurrency) return;
-      this.domains
-        .getNextUrlToScrape()
-        .then(url => {
-          // Eventually there are no domains ready for scraping and "" is returned
-          if (!url) return;
-          if (this.backPressure) {
-            this.buffer.push(url);
-          } else if (!this.push(url)) {
-            this.backPressure = true;
-          }
-        })
-        .catch(err => {
-          this.outstandingRequests -= 1;
-          return this.emit("error", err);
-        });
+      let url;
+      try {
+        url = await this.domains.getNextUrlToScrape();
+      } catch (err) {
+        console.log("err", err);
+        // logger.domainStreamError(err);
+      }
+      // Eventually there are no domains ready for scraping and "" is returned
+      if (!url) return;
+      if (this.backPressure) {
+        this.buffer.push(url);
+      } else if (!this.push(url)) {
+        this.backPressure = true;
+      }
     }
   }
 }
