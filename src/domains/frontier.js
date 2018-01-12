@@ -34,6 +34,7 @@ class Frontier {
   constructor(seedDomain, logger, storage = fs) {
     this.domain = seedDomain;
     this.urlsInFrontier = 1;
+    this.currentUrlInFronter = 0;
     this.currentlyReading = false;
     this.queuedNewlinks = [];
     this.flushScheduled = false;
@@ -56,6 +57,15 @@ class Frontier {
     } catch (err) {
       this.logger.unexpectedError(`failed to initialize frontier for domain ${seedDomain}`, err);
     }
+
+    // this.scheduleCompaction();
+  }
+
+  scheduleCompaction() {
+    const threeHours = 1000 * 60 * 60 * 3;
+    setInterval(() => {
+      this._frontierCompaction();
+    }, threeHours);
   }
 
   readyForReading() {
@@ -67,52 +77,58 @@ class Frontier {
   }
 
   async getNextUrl() {
-    let buffer;
     if (!this.readyForReading()) return "";
-    // This is effectively a lock and must occur before the read begins
-    // Why the heck do we need locks in a single threaded environment?
-    // The answer is because IO happens across multiple threads in Node.
-    // Let me describe a scenario
-    // 1. suppose getNextUrl is called, and then we wait on readFileAsync
-    // This operation happens in an external thread in node and  a callback will
-    // eventually be placed on the event loop. This invocation of getNextUrl
-    // will be called C1.
-    // 2. getNextUrl is called a second time and also waits on readFileAsync.
-    // This invocation will be called C2. In this scenario, C1 and C2 are
-    // now both reading from the same file.
-    // 3. C1 returns from readFileAsync, yielding the last remaining url, and then
-    // waits on writeFileAsync
-    // 4. C2 returns from readFileAsync with the same url as C1 and also waits
-    // on writeFileAsync
-    // 5. C1 returns from writeFileAsync, completeing the removal of our url from the frontier.
-    // 6. C2 returns from writeFileAsync, effectively leaving the file
-    // unchanged (empty) since the allUrls would have been the same in the stack frames of both
-    // C1 and C2.
-    // END: urlsInFrontier is now set to -1, and we returned and scraped the same URL twice.
+
+    let nextUrl;
     this.currentlyReading = true;
+
     try {
       this.urlsInFrontier -= 1;
-      buffer = await this.storage.readFileAsync(this.fileName);
+      const buffer = await this.storage.readFileAsync(this.fileName);
+      nextUrl = buffer.toString().split("\n")[this.currentUrlInFronter];
+      this.currentUrlInFronter += 1;
     } catch (err) {
       this.urlsInFrontier += 1;
       this.logger.unexpectedError(
         `failed to read from frontier file - getNextUrl ${this.fileName}`,
         err
       );
-      this.currentlyReading = false;
-      return "";
     }
-    const allUrls = buffer.toString().split("\n");
-    const nextUrl = allUrls[0];
-    // This probably does not need to be awaited because the politness check
-    // would stop us from scraping the same domain twice in a short period of time.
-    try {
-      await this.storage.writeFileAsync(this.fileName, allUrls.slice(1).join("\n"));
-    } catch (err) {
-      this.logger.unexpectedError(`failed to write to frontier file - getNextUrl ${this.fileName}`, err);
-    }
+
     this.currentlyReading = false;
     return nextUrl;
+  }
+
+  async _frontierCompaction() {
+    if (!this.readyForReading()) return;
+
+    this.currentlyReading = true;
+    let allUrls;
+
+    try {
+      allUrls = await this.storage.readFileAsync(this.fileName);
+    } catch (err) {
+      this.logger.unexpectedError(
+        `compaction failed - failed to read frontier file ${this.fileName}`,
+        err
+      );
+    }
+
+    try {
+      await this.storage.writeFileAsync(
+        this.fileName,
+        allUrls.slice(this.currentUrlInFronter).join("\n")
+      );
+      this.urlsInFrontier = this.urlsInFrontier - this.currentUrlInFronter;
+      this.currentUrlInFronter = 0;
+    } catch (err) {
+      this.logger.unexpectedError(
+        `compaction failed - failed to write frontier file ${this.fileName}`,
+        err
+      );
+    }
+
+    this.currentlyReading = false;
   }
 
   append(newUrl) {
@@ -142,8 +158,6 @@ class Frontier {
       setTimeout(this.flushNewLinkQueue.bind(this), fiveSeconds);
       return;
     }
-
-    // Should never be true
 
     // This flag is not to protect against a race condition but rather
     // so that the crawler can keep tabs on the number of open files
