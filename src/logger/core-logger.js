@@ -5,7 +5,7 @@ const serializeError = require("serialize-error");
 
 class Logger {
   constructor(eventCoordinator, outputFile, logAdaptor) {
-    mkdirp.sync(path.dirname(outputFile)); //QUESTION: minor dependency but can't stub out without affecting global
+    mkdirp.sync(path.dirname(outputFile));
     this.logger = logAdaptor(outputFile);
     this.lastFiveUnexpected = [];
     this.eventCoordinator = eventCoordinator;
