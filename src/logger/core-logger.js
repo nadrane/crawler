@@ -2,10 +2,13 @@ const { getDomain } = require("tldjs");
 const mkdirp = require("mkdirp");
 const path = require("path");
 const serializeError = require("serialize-error");
+const Context = require('../Context');
+
 
 class Logger {
   constructor(eventCoordinator, outputFile, logAdaptor) {
-    mkdirp.sync(path.dirname(outputFile));
+    const Context = require('../Context');
+    Context.mkdirp(path.dirname(outputFile));
     this.logger = logAdaptor(outputFile);
     this.lastFiveUnexpected = [];
     this.eventCoordinator = eventCoordinator;

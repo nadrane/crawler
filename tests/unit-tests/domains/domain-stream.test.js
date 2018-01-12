@@ -23,7 +23,7 @@ describe("Domain Stream", () => {
     storage.appendFileAsync = sinon.spy();
   });
 
-  it("pauses the stream whent the 'stop' event is emitted", () => {
+  it("pauses the stream when the 'stop' event is emitted", () => {
     const eventCoordinator = new Events();
     const logger = makeLogger(eventCoordinator);
     const domainStream = makeDomainStream(seed, eventCoordinator, fs, logger, 1);

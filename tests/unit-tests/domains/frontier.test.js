@@ -8,40 +8,37 @@ const Events = require("events");
 
 describe("Frontier", () => {
   const storage = {};
+  let eventCoordinator, logger, frontier
+
   beforeEach(() => {
+    eventCoordinator = new Events();
+    logger = makeLogger(eventCoordinator);
+    frontier = new Frontier("www.google.com", storage);
+
     storage.writeFileSync = sinon.spy();
     storage.readFileAsync = sinon.spy();
     storage.writeFileAsync = sinon.spy();
     storage.appendFileAsync = sinon.spy();
   });
+
   describe("constructor", () => {
     it("sets the filename equal to the frontier directory plus the name of the domain", () => {
-      const eventCoordinator = new Events();
-      const logger = makeLogger(eventCoordinator);
-      const frontier = new Frontier("google.com", logger, storage);
       const expectedFilename = path.join(FRONTIER_DIRECTORY, "google.com.txt");
-
       expect(frontier.fileName).to.equal(expectedFilename);
     });
 
     it("when setting file names, it disregards the protocol, if included", () => {
-      const eventCoordinator = new Events();
-      const logger = makeLogger(eventCoordinator);
-      const frontier = new Frontier("http://google.com", logger, storage);
       const expectedFilename = path.join(FRONTIER_DIRECTORY, "google.com.txt");
-
       expect(frontier.fileName).to.equal(expectedFilename);
     });
   });
 
   describe("isEmpty", () => {
     it("should return false when the frontier is not empty", () => {
-      const frontier = new Frontier("www.google.com", storage);
       expect(frontier.isEmpty()).to.be.false;
     });
 
     it("should return true when the frontier is empty", () => {
-      const frontier = new Frontier("www.google.com", storage);
       frontier.urlsInFrontier = 0;
       expect(frontier.isEmpty()).to.be.true;
     });
@@ -49,12 +46,10 @@ describe("Frontier", () => {
 
   describe("readyForReading", () => {
     it("should be ready for reading upon creation", () => {
-      const frontier = new Frontier("www.google.com", storage);
       expect(frontier.readyForReading()).to.be.true;
     });
 
     it("should not be ready for reading when the frontier is empty", () => {
-      const frontier = new Frontier("www.google.com", storage);
       frontier.urlsInFrontier = 0;
       expect(frontier.readyForReading()).to.be.false;
     });
@@ -62,14 +57,12 @@ describe("Frontier", () => {
 
   describe("append", () => {
     it("queues up a link to add to the frontier", () => {
-      const frontier = new Frontier("www.google.com", storage);
       frontier.append("www.yahoo.com");
       expect(frontier.queuedNewlinks).lengthOf(1);
     });
 
     it("calls flushNewLinkQueue after one minute", () => {
       const clock = sinon.useFakeTimers();
-      const frontier = new Frontier("www.google.com", storage);
       const newLinkQueueSpy = sinon.spy(frontier, "flushNewLinkQueue");
       frontier.append("www.yahoo.com");
 

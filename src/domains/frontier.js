@@ -40,7 +40,7 @@ class Frontier {
     this.logger = logger;
 
     let domainWithProtocol;
-    if (seedDomain.startsWith("http://")) {
+    if (seedDomain.startsWith("http://"))
       domainWithProtocol = seedDomain;
       this.fileName = join(FRONTIER_DIRECTORY, `${seedDomain.split("http://")[1]}.txt`);
     } else {
