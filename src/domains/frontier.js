@@ -99,6 +99,7 @@ class Frontier {
         `failed to read from frontier file - getNextUrl ${this.fileName}`,
         err
       );
+      this.currentlyReading = false;
       return "";
     }
     const allUrls = buffer.toString().split("\n");
