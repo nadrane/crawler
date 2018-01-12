@@ -45,14 +45,13 @@ describe("Domains", () => {
 
     it("successfully loads a large seed file", () => {
       const eventCoordinator = new Events();
-      const seed = require("APP/seed-domains.json");
+      const seed = require("APP/seed").slice(0, 5000);
       const logger = makeLogger(eventCoordinator);
       const domains = new Domains(seed, eventCoordinator, storage, logger);
 
       const { domainTrackers } = domains;
       expect(domainTrackers.has("google.com")).to.be.true;
-      expect(domainTrackers.has("andaluspress.com")).to.be.true;
-      expect(domainTrackers.has("progressive.com")).to.be.true;
+      expect(domainTrackers.has("tokopedia.com")).to.be.true;
     });
   });
 

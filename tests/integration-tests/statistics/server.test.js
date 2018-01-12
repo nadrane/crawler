@@ -8,7 +8,13 @@ describe("Stats Server", () => {
       .get("/log")
       .expect(200)
       .then(res => {
-        expect(res.body).to.deep.equal({ RPM: [], currentRPM: 0, stats: {}, totalRequests: 0 });
+        expect(res.body).to.deep.equal({
+          RPM: [],
+          errors: [],
+          currentRPM: 0,
+          stats: {},
+          totalRequests: 0
+        });
       });
   });
 
@@ -52,6 +58,7 @@ describe("Stats Server", () => {
         return r.get("/log").then(res => {
           expect(res.body).to.deep.equal({
             RPM: [],
+            errors: [],
             currentRPM: 3,
             stats: statsExpectation,
             totalRequests: 3

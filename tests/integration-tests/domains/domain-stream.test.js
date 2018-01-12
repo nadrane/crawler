@@ -54,7 +54,7 @@ describe("domain stream", () => {
   it("handles backpressure appropriately", done => {
     const eventCoordinator = new Events();
     const logger = makeLogger(eventCoordinator);
-    const seed = require("APP/seed-domains-sans-subs");
+    const seed = require("APP/seed").slice(0, 1000);
     const domainStream = makeDomainStream(seed, eventCoordinator, fs, logger, 20);
 
     testAllUrlsReadFromStream(domainStream, seed, done);

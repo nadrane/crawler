@@ -34,8 +34,6 @@ describe("Domain Stream", () => {
   });
 
   it("resumes the stream whent the 'start' event is emitted", () => {
-    // Q: Should I just pass blank objects in if they aren't used?
-    //    or this? Or just stub them?
     const eventCoordinator = new Events();
     const logger = makeLogger(eventCoordinator);
     const domainStream = makeDomainStream(seed, eventCoordinator, fs, logger, 1);

@@ -2,10 +2,10 @@ const axios = require("axios");
 const { expect } = require("chai");
 const Events = require("events");
 const sinon = require("sinon");
-const streamify = require('stream-array');
+const streamify = require("stream-array");
 const TestStream = require("../../testStream");
 
-const sourceUrls = require("APP/seed-domains-sans-subs");
+const sourceUrls = require("APP/seed.json");
 const makeRobotsStream = require("APP/src/robots-parser");
 const makeLogger = require("APP/src/logger/");
 
