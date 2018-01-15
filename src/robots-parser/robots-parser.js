@@ -77,11 +77,7 @@ function handleHttpError(url, err, logger) {
       return approveAll;
       // I don't think I can ever get here because 3xx wouldn't reject...
     }
-    logger.robots.unexpectedError(err.response, "status not 2xx, 3xx, 4xx or 5xx", {
-      module: "robots-parser",
-      headers: err.headers,
-      url
-    });
+    logger.robots.unexpectedStatusCode(url);
     return approveNone;
 
     // The request was made but no response was received

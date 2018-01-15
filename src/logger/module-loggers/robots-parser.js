@@ -37,13 +37,25 @@ module.exports = logger => {
       });
     },
 
+    unexpectedStatusCode: url => {
+      const { domain, subdomain } = parse(url);
+      logger.error({
+        event: "unexpected status code",
+        codeModule,
+        url,
+        domain,
+        subdomain
+      });
+    },
+
     cacheHit: url => {
       const { domain, subdomain } = parse(url);
       logger.info({
         event: "cache hit",
         codeModule,
         url,
-        domain
+        domain,
+        subdomain
       });
     },
 
@@ -57,12 +69,14 @@ module.exports = logger => {
         subdomain
       });
     },
+
     streamEntered: () => {
       logger.debug({
         event: "stream entered",
         codeModule
       });
     },
+
     streamExited: () => {
       logger.debug({
         event: "stream exited",
