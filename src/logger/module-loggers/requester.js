@@ -1,4 +1,4 @@
-const { getDomain } = require("tldjs");
+const { parse } = require("tldjs");
 
 const codeModule = "requester";
 
@@ -19,39 +19,42 @@ module.exports = logger => {
     },
 
     badRequest: (url, config) => {
-      const domain = getDomain(url);
+      const { domain, subdomain } = parse(url);
       logger.error({
         event: "bad request",
         codeModule,
         url,
         domain,
+        subdomain,
         config
       });
     },
 
     requestSent: url => {
-      const domain = getDomain(url);
+      const { domain, subdomain } = parse(url);
       logger.info({
         event: "request sent",
         codeModule,
         url,
-        domain
+        domain,
+        subdomain
       });
     },
 
     responseReceived: (url, statusCode) => {
-      const domain = getDomain(url);
+      const { domain, subdomain } = parse(url);
       logger.info({
         event: "response success",
         codeModule,
         statusCode,
         url,
-        domain
+        domain,
+        subdomain
       });
     },
 
     responseError: (url, err, status, headers) => {
-      const domain = getDomain(url);
+      const { domain, subdomain } = parse(url);
       logger.info({
         event: "response error",
         codeModule,
@@ -59,66 +62,73 @@ module.exports = logger => {
         headers,
         err: err.message,
         url,
-        domain
+        domain,
+        subdomain
       });
     },
 
     noResponseRecieved: (err, url) => {
-      const domain = getDomain(url);
+      const { domain, subdomain } = parse(url);
       logger.info({
         err,
         event: "no response received",
         codeModule,
         url,
-        domain
+        domain,
+        subdomain
       });
     },
 
     requestTimeout: url => {
-      const domain = getDomain(url);
+      const { domain, subdomain } = parse(url);
       logger.info({
         event: "response timeout",
         codeModule,
         url,
-        domain
+        domain,
+        subdomain
       });
     },
 
     connectionReset: url => {
-      const domain = getDomain(url);
+      const { domain, subdomain } = parse(url);
       logger.info({
         event: "connection reset",
         codeModule,
         url,
-        domain
+        domain,
+        subdomain
       });
     },
 
     s3UploadStarted: url => {
-      const domain = getDomain(url);
+      const { domain, subdomain } = parse(url);
       logger.info({
         event: "s3 upload started",
+        codeModule,
         domain,
-        codeModule
+        subdomain
       });
     },
 
     s3UploadFinished: url => {
-      const domain = getDomain(url);
+      const { domain, subdomain } = parse(url);
       logger.info({
         event: "s3 upload finished",
+        codeModule,
         domain,
-        codeModule
+        subdomain
       });
     },
 
     s3UploadError: (url, message) => {
-      const domain = getDomain(url);
+      const { domain, subdomain } = parse(url);
       logger.error({
         event: "s3 upload error",
+        codeModule,
         url,
         domain,
-        codeModule,
+        subdomain,
         message
       });
     }
