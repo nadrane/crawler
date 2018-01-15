@@ -4,6 +4,7 @@ const Parser = require("../parser/");
 const sha1 = require("sha1");
 const throughConcurrent = require("../through-concurrent");
 
+AWS.config.httpOptions = { timeout: 10000 }; // attempt to resolve s3 uploads not finishing issue
 const s3 = new AWS.S3();
 const s3Stream = require("s3-upload-stream")(s3);
 
