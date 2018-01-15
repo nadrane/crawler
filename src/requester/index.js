@@ -49,7 +49,7 @@ module.exports = function createRequesterStream(logger, http, eventCoordinator, 
       });
       upload.on("error", err => {
         reject();
-        logger.requester.unexpectError(err, "s3 stream error");
+        logger.requester.s3UploadError(requestUrl, err.message);
       });
     });
     Promise.all([responseClosed, uploadFinished])

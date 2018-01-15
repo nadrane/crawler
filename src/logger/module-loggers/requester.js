@@ -110,6 +110,17 @@ module.exports = logger => {
         domain,
         codeModule
       });
+    },
+
+    s3UploadError: (url, message) => {
+      const domain = getDomain(url);
+      logger.error({
+        event: "s3 upload error",
+        url,
+        domain,
+        codeModule,
+        message
+      });
     }
   };
 };
