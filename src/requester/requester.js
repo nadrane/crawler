@@ -41,9 +41,7 @@ function failedRequest(logger, err, url) {
       logger.requester.noResponseRecieved(err, url);
     }
   } else {
-    logger.requester.unexpectedError(err, "bad request", {
-      config: err.config
-    });
+    logger.requester.badRequest(err.config);
   }
   return null;
 }

@@ -18,6 +18,17 @@ module.exports = logger => {
       });
     },
 
+    badRequest: (url, config) => {
+      const domain = getDomain(url);
+      logger.error({
+        event: "bad request",
+        codeModule,
+        url,
+        domain,
+        config
+      });
+    },
+
     requestSent: url => {
       const domain = getDomain(url);
       logger.info({
