@@ -4,7 +4,7 @@ const throughConcurrent = require("../through-concurrent");
 module.exports = function createRobotsStream(logger, http, concurrency) {
   const isAllowed = makeRobotParser(logger, http);
   return throughConcurrent(logger, "robots stream", concurrency, async function(url, enc, done) {
-    logger.robotsEntered();
+    logger.robots.streamEntered();
     try {
       if (await isAllowed(url)) {
         this.push(url);
@@ -12,7 +12,7 @@ module.exports = function createRobotsStream(logger, http, concurrency) {
     } catch (err) {
       logger.unexpectedError(err, "robots stream failure");
     }
-    logger.robotsLeft();
+    logger.robots.streamExited();
     done();
   });
 };

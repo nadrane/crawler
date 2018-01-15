@@ -10,16 +10,16 @@ const s3Stream = require("s3-upload-stream")(s3);
 module.exports = function createRequesterStream(logger, http, eventCoordinator, concurrency) {
   const crawlWithGetRequest = makeRequester(logger, http);
   return throughConcurrent(logger, "requester stream", concurrency, async (requestUrl, enc, done) => {
-    logger.requesterEntered();
+    logger.requester.streamEntered();
     let htmlStream;
     try {
       htmlStream = await crawlWithGetRequest(requestUrl);
     } catch (err) {
-      logger.unexpectError(err, "requester stream failure");
+      logger.requester.unexpectError(err, "requester stream failure");
     }
     // In case the request failed
     if (!htmlStream) {
-      logger.requesterLeft();
+      logger.requester.streamExited();
       done();
       return;
     }
@@ -35,7 +35,7 @@ module.exports = function createRequesterStream(logger, http, eventCoordinator, 
     const parserStream = new Parser(requestUrl, eventCoordinator, logger);
     htmlStream.pipe(parserStream);
 
-    logger.s3UploadStarted(requestUrl);
+    logger.requester.s3UploadStarted(requestUrl);
     const upload = s3Stream.upload({
       Bucket: "crawler-nick",
       Key: `sites/${sha1(requestUrl)}`
@@ -45,20 +45,20 @@ module.exports = function createRequesterStream(logger, http, eventCoordinator, 
     const uploadFinished = new Promise((resolve, reject) => {
       upload.on("uploaded", () => {
         resolve();
-        logger.s3UploadFinished(requestUrl);
+        logger.requester.s3UploadFinished(requestUrl);
       });
       upload.on("error", err => {
         reject();
-        logger.unexpectError(err, "s3 stream error");
+        logger.requester.unexpectError(err, "s3 stream error");
       });
     });
     Promise.all([responseClosed, uploadFinished])
       .then(() => {
-        logger.requesterLeft();
+        logger.requester.streamExited();
         done();
       })
       .catch(() => {
-        logger.requesterLeft();
+        logger.requester.streamExited();
         done();
       });
   });

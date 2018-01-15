@@ -2,11 +2,8 @@ const { Readable } = require("stream");
 const Domains = require("./domains");
 
 module.exports = function makeDomainStream(seedData, eventCoordinator, storage, logger, concurrency) {
-  const domainStream = new DomainReaderStream(
-    new Domains(seedData, eventCoordinator, storage, logger),
-    concurrency,
-    eventCoordinator
-  );
+  const domains = new Domains(seedData, eventCoordinator, storage, logger);
+  const domainStream = new DomainReaderStream(logger, domains, eventCoordinator, concurrency);
 
   domainStream.on("error", err => {
     logger.unexpectedError(err, "domain stream");
@@ -16,7 +13,7 @@ module.exports = function makeDomainStream(seedData, eventCoordinator, storage, 
 };
 
 class DomainReaderStream extends Readable {
-  constructor(domains, concurrency, eventCoordinator) {
+  constructor(logger, domains, eventCoordinator, concurrency) {
     super({ objectMode: true });
     this.concurrency = concurrency;
     this.buffer = [];
@@ -24,11 +21,13 @@ class DomainReaderStream extends Readable {
     this.backPressure = false;
     eventCoordinator.on("stop", () => {
       if (!this.isPaused()) {
+        logger.domains.crawlerStopped();
         this.pause();
       }
     });
     eventCoordinator.on("start", () => {
       if (this.isPaused()) {
+        logger.domains.crawlerResumed();
         this.resume();
       }
     });

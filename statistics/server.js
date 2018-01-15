@@ -23,30 +23,43 @@ setInterval(() => {
 
 app.post("/log", (req, res) => {
   req.pipe(ndjson.parse()).on("data", line => {
-    const { event, domain, hostname, err } = line;
+    const { event, domain, hostname, codeModule, err } = line;
+
     if (err) {
       errors.push(err);
     }
-    if (!stats.hasOwnProperty(hostname)) {
+    if (hostname && !stats.hasOwnProperty(hostname)) {
       stats[hostname] = {};
       stats[hostname].totalEvents = 0;
     }
-    if (!stats[hostname].hasOwnProperty(event)) {
-      stats[hostname][event] = 0;
+
+    if (codeModule && !stats[hostname].hasOwnProperty(codeModule)) {
+      stats[hostname][codeModule] = {};
+      stats[hostname][codeModule].totalEvents = 0;
     }
 
-    if (!stats.hasOwnProperty(domain)) {
+    if (event && codeModule && !stats[hostname][codeModule].hasOwnProperty(event)) {
+      stats[hostname][codeModule][event] = 0;
+    }
+
+    if (domain && !stats.hasOwnProperty(domain)) {
       stats[domain] = {};
       stats[domain].totalEvents = 0;
     }
-    if (!stats[domain].hasOwnProperty(event)) {
+    if (event && domain && !stats[domain].hasOwnProperty(event)) {
       stats[domain][event] = 0;
     }
-    stats[domain][event] += 1;
-    stats[domain].totalEvents += 1;
 
-    stats[hostname][event] += 1;
-    stats[hostname].totalEvents += 1;
+    if (domain) {
+      stats[domain][event] += 1;
+      stats[domain].totalEvents += 1;
+    }
+
+    if (codeModule) {
+      stats[hostname][codeModule][event] += 1;
+      stats[hostname][codeModule].totalEvents += 1;
+      stats[hostname].totalEvents += 1;
+    }
 
     if (event === "request sent") {
       totalRequests += 1;

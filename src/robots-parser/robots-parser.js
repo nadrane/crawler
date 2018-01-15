@@ -29,10 +29,10 @@ async function isAllowed(cache, logger, http, url) {
   const robotsTxtUrl = makeRobotsTxtUrl(protocol, port, hostname);
 
   if (cache.peek(makeCacheKey(protocol, port, hostname))) {
-    logger.robotsCacheHit(robotsTxtUrl);
+    logger.robots.cacheHit(robotsTxtUrl);
     allowed = cache.get(makeCacheKey(protocol, port, hostname));
   } else {
-    logger.robotsCacheMiss(robotsTxtUrl);
+    logger.robots.cacheMiss(robotsTxtUrl);
     // IDEA Maybe it would be better to cache the robotsTxt file itself as
     // opposed to this function. Maybe explore later
     allowed = await getAndParseRobotsTxt(robotsTxtUrl, http, logger);
@@ -43,7 +43,7 @@ async function isAllowed(cache, logger, http, url) {
 
 async function getAndParseRobotsTxt(robotsTxtUrl, http, logger) {
   let robotsResponse;
-  logger.robotsRequestSent(robotsTxtUrl);
+  logger.robots.requestSent(robotsTxtUrl);
   try {
     robotsResponse = await http({
       url: robotsTxtUrl,
@@ -77,7 +77,7 @@ function handleHttpError(url, err, logger) {
       return approveAll;
       // I don't think I can ever get here because 3xx wouldn't reject...
     }
-    logger.unexpectedError(err.response, "status not 2xx, 3xx, 4xx or 5xx", {
+    logger.robots.unexpectedError(err.response, "status not 2xx, 3xx, 4xx or 5xx", {
       module: "robots-parser",
       headers: err.headers,
       url
@@ -87,17 +87,16 @@ function handleHttpError(url, err, logger) {
     // The request was made but no response was received
   } else if (err.request) {
     if (err.code === "ECONNABORTED") {
-      logger.robotsRequestTimeout(url);
+      logger.robots.requestTimeout(url);
     } else {
-      logger.noRobotsResponseReceived(err.response, {
-        module: "robots-parser",
+      logger.robots.noResponseReceived(err.response, {
         url
       });
     }
     return approveNone;
     // Something happened in setting up the request that triggered an Error
   }
-  logger.unexpectedError(err, "bad robots request", {
+  logger.robots.unexpectedError(err, "bad robots request", {
     module: "robots-parser",
     config: err.config
   });
@@ -107,7 +106,7 @@ function handleHttpError(url, err, logger) {
 module.exports = function makeRobotsValidator(
   logger,
   http,
-  domainsPerServer = 5000,
+  domainsPerServer = 1000,
   maxCacheAge = 1000 * 60 * 60
 ) {
   const cache = LRU({

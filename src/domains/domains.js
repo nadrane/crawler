@@ -5,11 +5,12 @@ class Domains {
   constructor(seedData, eventCoordinator, storage, logger) {
     this.domainTrackers = new Map();
     this.storage = storage;
+    this.logger = logger;
     this.seedDomains(seedData, logger);
     this.domainGenerator = this._nextDomain();
     eventCoordinator.on("new link", ({ fromUrl, newUrl }) => {
       this.appendNewUrl(newUrl);
-      logger.addingToFrontier(fromUrl, newUrl);
+      logger.domains.addingToFrontier(fromUrl, newUrl);
     });
   }
 
@@ -59,13 +60,17 @@ class Domains {
     return domain.value;
   }
 
-  getNextUrlToScrape() {
+  async getNextUrlToScrape() {
+    this.logger.domains.fetchingUrl();
     const domain = this.getDomainToScrape();
     if (!domain) {
+      this.logger.domains.noReadyDomains();
       return Promise.resolve("");
     }
     const domainTracker = this.domainTrackers.get(domain);
-    return domainTracker.getNextUrl();
+    const nextUrl = domainTracker.getNextUrl();
+    this.logger.domains.urlFetched(domain);
+    return nextUrl;
   }
 }
 
