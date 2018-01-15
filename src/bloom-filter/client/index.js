@@ -44,14 +44,13 @@ module.exports = function(logger, host) {
   };
 
   const initializeBloomFilter = async function() {
-    await client.drop();
+    await drop();
     let tries = 0;
     let success = false;
     while (tries < 5 && !success) {
       try {
         console.log("attempting BF create");
-        await client.create();
-        success = true;
+        success = await create();
       } catch (err) {
         console.log("BF create failed");
         tries += 1;
