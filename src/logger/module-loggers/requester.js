@@ -53,24 +53,24 @@ module.exports = logger => {
       });
     },
 
-    responseError: (url, err, status, headers) => {
+    responseError: (url, errMessage, status, headers) => {
       const { domain, subdomain } = parse(url);
       logger.info({
         event: "response error",
         codeModule,
         status,
         headers,
-        err: err.message,
+        errMessage,
         url,
         domain,
         subdomain
       });
     },
 
-    noResponseRecieved: (err, url) => {
+    noResponseRecieved: (errMessage, url) => {
       const { domain, subdomain } = parse(url);
       logger.info({
-        err,
+        errMessage,
         event: "no response received",
         codeModule,
         url,

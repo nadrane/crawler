@@ -26,9 +26,9 @@ async function crawlWithGetRequest(logger, http, url) {
 function failedRequest(logger, err, url) {
   // The request was made and the server responded with a status code
   // that falls out of the range of 2xx
+  const { headers, status, message } = err.response;
   if (err.response) {
-    const { headers, status } = err.response;
-    logger.requester.responseError(url, err, status, headers);
+    logger.requester.responseError(url, message, status, headers);
     // No response received
   } else if (err.request) {
     // do not retry if connection reset
@@ -38,7 +38,7 @@ function failedRequest(logger, err, url) {
     } else if (err.code === "ECONNABORTED") {
       logger.requester.requestTimeout(url);
     } else {
-      logger.requester.noResponseRecieved(err, url);
+      logger.requester.noResponseRecieved(message, url);
     }
   } else {
     logger.requester.badRequest(err.config);
