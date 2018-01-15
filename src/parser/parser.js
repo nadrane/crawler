@@ -21,7 +21,7 @@ class HtmlTolinkStream extends Transform {
           }
         },
         onerror: err => {
-          logger.parserError(err, url);
+          logger.parser.parsingError(err, url);
         }
       },
       { decodeEntities: true }
@@ -59,7 +59,7 @@ class HtmlTolinkStream extends Transform {
 module.exports = function makeParserStream(url, eventCoordinator, logger) {
   const stream = new HtmlTolinkStream(url, eventCoordinator, logger);
   stream.on("error", err => {
-    logger.unexpectError(err, "parser stream error");
+    logger.parser.unexpectError(err, "stream error");
   });
   return stream;
 };
