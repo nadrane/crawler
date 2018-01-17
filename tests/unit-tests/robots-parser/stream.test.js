@@ -34,6 +34,6 @@ describe("robots-parser", () => {
         });
       });
       return endPromise;
-    });
+    }).timeout(2500);
   });
 });
