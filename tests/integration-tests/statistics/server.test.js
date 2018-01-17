@@ -1,10 +1,10 @@
 const { expect } = require("chai");
-const server = require("APP/statistics/server");
+const makeServer = require("APP/statistics/server");
 const request = require("supertest");
 
 describe("Stats Server", () => {
   it("initially responds with default stats", () => {
-    return request(server)
+    return request(makeServer())
       .get("/log")
       .expect(200)
       .then(res => {
@@ -19,7 +19,7 @@ describe("Stats Server", () => {
   });
 
   it("only records hostname level stats if no domain is provided", () => {
-    const r = request(server);
+    const r = request(makeServer());
     const logs = [
       { hostname: 1, codeModule: "requester", event: "request sent" },
       { hostname: 2, codeModule: "requester", event: "request sent" },
@@ -59,7 +59,7 @@ describe("Stats Server", () => {
       });
   });
   it("only records domain level stats if a domain is provided", () => {
-    const r = request(server);
+    const r = request(makeServer());
     const logs = [
       { domain: "google.com", subdomain: "www", event: "request sent" },
       { domain: "google.com", subdomain: "www", event: "request sent" },
@@ -102,7 +102,6 @@ describe("Stats Server", () => {
       .expect(200)
       .then(() => {
         return r.get("/log").then(res => {
-          console.dir(res.body, { depth: 5 });
           expect(res.body).to.deep.equal({
             RPM: [],
             errors: [],
