@@ -18,7 +18,8 @@ const bunyanFactory = logStream => outputFile => {
 
   const bunyanLogger = new Bunyan({
     name: "crawler",
-    streams
+    streams,
+    serializers: Bunyan.stdSerializers
   });
 
   if (!isTest()) {

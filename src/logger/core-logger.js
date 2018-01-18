@@ -1,7 +1,5 @@
-const { getDomain } = require("tldjs");
 const mkdirp = require("mkdirp");
 const path = require("path");
-const serializeError = require("serialize-error");
 
 const makeDomainsLogger = require("./module-loggers/domains");
 const makeBloomFilterLogger = require("./module-loggers/bloom-filter");
@@ -44,8 +42,7 @@ class Logger {
   }
 
   unexpectedError(err, event, data, codeModule) {
-    const jsonError = serializeError(err);
-    this.logger.error({ err: jsonError, codeModule, event, data });
+    this.logger.error({ err, codeModule, event, data });
     this.trackUnexpectedErrors();
   }
 
