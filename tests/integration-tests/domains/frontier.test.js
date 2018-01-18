@@ -1,12 +1,20 @@
+const Events = require("events");
+const { readFileSync } = require("fs");
+const path = require("path");
+const sinon = require("sinon");
+
 const { expect } = require("chai");
 const { promisify } = require("util");
-const path = require("path");
 const rimraf = promisify(require("rimraf"));
-const Frontier = require("APP/src/domains/frontier");
-const { FRONTIER_DIRECTORY } = require("APP/env/");
-const { readFileSync } = require("fs");
 
-describe("Frontier", () => {
+const { FRONTIER_DIRECTORY } = require("APP/env/");
+const Frontier = require("APP/src/domains/frontier");
+const makeLogger = require("APP/src/logger/");
+
+describe.only("Frontier", () => {
+  const eventCoordinator = new Events();
+  const logger = makeLogger(eventCoordinator);
+  sinon.stub(logger);
   beforeEach(async () => {
     await rimraf(`${FRONTIER_DIRECTORY}/*`);
   });
@@ -16,21 +24,21 @@ describe("Frontier", () => {
 
   describe("constructor", () => {
     it("creates a frontier file with the expected url", () => {
-      const frontier = new Frontier("google.com");
+      const frontier = new Frontier("google.com", logger);
 
-      const expectedFilePath = path.join(FRONTIER_DIRECTORY, "google.com.txt");
+      const expectedFilePath = path.join(FRONTIER_DIRECTORY, "google.com", "frontier.txt");
       expect(readFileSync(expectedFilePath).toString()).to.equal("http://google.com\n");
     });
   });
   describe("flushNewLinkQueue", () => {
     it("adds the new link queue to the frontier", async () => {
-      const frontier = new Frontier("google.com");
+      const frontier = new Frontier("google.com", logger);
       frontier.append("www.google.com/search");
       frontier.append("google.com/link1");
       frontier.append("www.google.com/link2");
       await frontier.flushNewLinkQueue();
 
-      const expectedFilePath = path.join(FRONTIER_DIRECTORY, "google.com.txt");
+      const expectedFilePath = path.join(FRONTIER_DIRECTORY, "google.com", "frontier.txt");
       expect(readFileSync(expectedFilePath).toString()).to.equal(
         "http://google.com\nwww.google.com/search\ngoogle.com/link1\nwww.google.com/link2\n"
       );

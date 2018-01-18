@@ -71,7 +71,7 @@ class Frontier {
     }
     if ((frontierExists && !fronterIndexExists) || (fronterIndexExists && !frontierExists)) {
       const error = new Error("cannot have frontier or frontier-index without the other");
-      this.logger.frontier.corruptFileConfiguration(error, seedDomain);
+      this.logger.frontier.frontierFilesCorrupt(error, seedDomain);
     }
 
     try {
@@ -95,7 +95,7 @@ class Frontier {
         this.storage.writeFileSync(this.filePaths.frontierIndex, 0);
       }
     } catch (err) {
-      this.logger.failedToReadFrontier(err, seedDomain);
+      this.logger.frontier.failedToReadFrontier(err, seedDomain);
     }
   }
 
@@ -127,10 +127,7 @@ class Frontier {
       this.frontierIndex += 1;
     } catch (err) {
       this.uncrawledUrlsInFrontier += 1;
-      this.logger.unexpectedError(
-        `failed to read from frontier file - getNextUrl ${this.fileName}`,
-        err
-      );
+      this.logger.frontier.readUrlFailed(err, this.seedDomain);
     }
 
     this._flushFrontierIndex();
@@ -187,11 +184,11 @@ class Frontier {
     // to avoid exceeding unix file open limits
     this.currentlyReading = true;
     try {
-      await this.storage.appendFileAsync(this.fileName, `${linksToAppend}\n`);
+      await this.storage.appendFileAsync(this.filePaths.frontier, `${linksToAppend}\n`);
       this.uncrawledUrlsInFrontier += this.queuedNewlinks.length;
       this.queuedNewlinks = [];
     } catch (err) {
-      this.logger.unexpectedError(`failed to append to to frontier file - append ${this.fileName}`, err);
+      this.logger.frontier.appendUrlFailed(err, this.seedDomain);
     }
     this.currentlyReading = false;
     this.flushScheduled = false;

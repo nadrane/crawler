@@ -5,22 +5,34 @@ module.exports = logger => {
     frontierExistsCheckFailed: (err, domain) => {
       logger.fatal({
         err,
+        event: "frontier exists check failed",
         domain,
         codeModule
       });
     },
 
-    corruptFileConfiguration: (err, domain) => {
+    frontierFilesCorrupt: (err, domain) => {
       logger.fatal({
         err,
+        event: "frontier files corrupt",
         domain,
         codeModule
       });
     },
 
-    corruptFileConfiguration: (err, domain) => {
+    appendUrlFailed: (err, domain) => {
       logger.fatal({
         err,
+        event: "append url failed",
+        domain,
+        codeModule
+      });
+    },
+
+    readUrlFailed: (err, domain) => {
+      logger.fatal({
+        err,
+        event: "read url failed",
         domain,
         codeModule
       });
@@ -29,6 +41,16 @@ module.exports = logger => {
     frontierIndexWriteFailure: (err, domain) => {
       logger.fatal({
         err,
+        event: "frontier index write failed",
+        domain,
+        codeModule
+      });
+    },
+
+    failedToReadFrontier: (err, domain) => {
+      logger.fatal({
+        err,
+        event: "failed to read frontier",
         domain,
         codeModule
       });
