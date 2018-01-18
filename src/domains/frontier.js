@@ -188,7 +188,6 @@ class Frontier {
       this.uncrawledUrlsInFrontier += this.queuedNewlinks.length;
       this.queuedNewlinks = [];
     } catch (err) {
-      console.log("err", err);
       this.logger.frontier.appendUrlFailed(err, this.seedDomain);
     }
     this.currentlyReading = false;
