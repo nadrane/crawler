@@ -6,5 +6,6 @@ module.exports = {
   DOMAIN_REQUEST_TIME_INTERVAL: 2 * 60 * 1000,
   MAX_CONCURRENCY: 10,
   BLOOM_FILTER_NAME: "crawler",
-  MACHINE_INDEX: Promise.resolve(0)
+  MACHINE_INDEX: Promise.resolve(0),
+  ROBOTS_CACHE_SIZE: 1000
 };

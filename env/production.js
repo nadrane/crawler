@@ -42,6 +42,7 @@ const seedFilePromise = new Promise((resolve, reject) => {
 
 module.exports = {
   // TODO change to prod token
+  ROBOTS_CACHE_SIZE: 10000,
   MACHINE_INDEX: machineIndex,
   SERVER_INFO: serverInfo,
   SEED_FILE_PROMISE: seedFilePromise,
