@@ -47,7 +47,6 @@ describe("Stats Server", () => {
       .expect(200)
       .then(() => {
         return r.get("/log").then(res => {
-          console.dir(res.body, { depth: 5 });
           expect(res.body).to.deep.equal({
             RPM: [],
             errors: [],
