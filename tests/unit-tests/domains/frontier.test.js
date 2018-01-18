@@ -8,13 +8,12 @@ const Events = require("events");
 
 describe("Frontier", () => {
   const eventCoordinator = new Events();
-  const logger = makeLogger(eventCoordinator);
-  let storage;
+  let logger;
   let frontier;
-
-  sinon.stub(logger);
+  let storage;
 
   beforeEach(() => {
+    logger = makeLogger(eventCoordinator);
     storage = {
       writeFileAsync: sinon.stub().returns(Promise.resolve()),
       writeFileSync: sinon.spy(),
@@ -248,11 +247,14 @@ describe("Frontier", () => {
     });
 
     it("does not change the state of the frontier if the append fails", async () => {
-      frontier.currentlyReading = false;
+      logger.frontier.appendUrlFailed = sinon.spy();
       storage.appendFileAsync = sinon.stub().returns(Promise.reject());
+      frontier.currentlyReading = false;
+      frontier.flushScheduled = true;
 
       await frontier.flushNewLinkQueue();
 
+      expect(logger.frontier.appendUrlFailed.calledOnce).to.be.true;
       expect(storage.appendFileAsync.calledOnce).to.be.true;
       expect(frontier.uncrawledUrlsInFrontier).to.equal(1);
       expect(frontier.flushScheduled).to.be.false;
@@ -289,13 +291,17 @@ describe("Frontier", () => {
 
     it("currentlyReading is false after reading throws an error", async () => {
       storage.readFileAsync = sinon.stub().returns(Promise.reject());
+      logger.frontier.readUrlFailed = sinon.spy();
 
       await frontier.getNextUrl();
+
+      expect(logger.frontier.readUrlFailed.calledOnce).to.be.true;
       expect(frontier.currentlyReading).to.be.false;
     });
 
     it("does not change the number of urls in the frontier if the read fails", async () => {
       storage.readFileAsync = sinon.stub().returns(Promise.reject());
+      logger.frontier.readUrlFailed = sinon.spy();
 
       expect(frontier.uncrawledUrlsInFrontier).to.equal(1);
       await frontier.getNextUrl();
