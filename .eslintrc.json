@@ -13,6 +13,8 @@
     "no-use-before-define": [0],
     "import/no-extraneous-dependencies": [0],
     "guard-for-in": [0],
-    "one-var-declaration-per-line": [0]
+    "one-var-declaration-per-line": [0],
+    "no-console": [0],
+    "no-unused-expressions": [0]
   }
 }
