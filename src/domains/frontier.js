@@ -67,10 +67,11 @@ class Frontier {
       frontierExists = this.storage.existsSync(this.filePaths.frontier);
       fronterIndexExists = this.storage.existsSync(this.filePaths.frontierIndex);
     } catch (err) {
-      this.logger.frontier.cannotReadFrontier();
+      this.logger.frontier.frontierExistsCheckFailed(err);
     }
     if ((frontierExists && !fronterIndexExists) || (fronterIndexExists && !frontierExists)) {
-      this.logger.frontier.corruptFileConfiguration();
+      const error = new Error("cannot have frontier or frontier-index without the other");
+      this.logger.frontier.corruptFileConfiguration(error, seedDomain);
     }
 
     try {
@@ -86,14 +87,15 @@ class Frontier {
         );
         this.uncrawledUrlsInFrontier = frontierSize - this.frontierIndex;
         if (this.uncrawledUrlsInFrontier < 0) {
-          this.logger.frontier.initilizationError("urls uncrawled cannot be less than 0");
+          const error = new Error("urls uncrawled cannot be less than 0");
+          this.logger.frontier.corruptFileConfiguration(error, this.seedDomain);
         }
       } else {
         this.storage.writeFileSync(this.filePaths.frontier, `${domainWithProtocol}\n`);
         this.storage.writeFileSync(this.filePaths.frontierIndex, 0);
       }
     } catch (err) {
-      this.logger.failedToReadFrontier(seedDomain, err);
+      this.logger.failedToReadFrontier(err, seedDomain);
     }
   }
 

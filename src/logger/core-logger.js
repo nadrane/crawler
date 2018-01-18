@@ -7,6 +7,7 @@ const makeDomainsLogger = require("./module-loggers/domains");
 const makeBloomFilterLogger = require("./module-loggers/bloom-filter");
 const makeRobotsLogger = require("./module-loggers/robots-parser");
 const makeRequesterLogger = require("./module-loggers/requester");
+const makeFrontierLogger = require("./module-loggers/frontier");
 
 class Logger {
   constructor(eventCoordinator, outputFile, makeLogAdaptor) {
@@ -20,6 +21,7 @@ class Logger {
     this.bloomFilter = this._addUnexpectedError(makeBloomFilterLogger(logAdaptor), "bloom filter");
     this.robots = this._addUnexpectedError(makeRobotsLogger(logAdaptor), "robots");
     this.requester = this._addUnexpectedError(makeRequesterLogger(logAdaptor), "requester");
+    this.frontier = this._addUnexpectedError(makeFrontierLogger(logAdaptor), "frontier");
   }
 
   _addUnexpectedError(moduleLogger, codeModule) {

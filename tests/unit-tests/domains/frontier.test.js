@@ -6,7 +6,7 @@ const { FRONTIER_DIRECTORY } = require("APP/env/");
 const makeLogger = require("APP/src/logger/");
 const Events = require("events");
 
-describe.only("Frontier", () => {
+describe("Frontier", () => {
   const eventCoordinator = new Events();
   const logger = makeLogger(eventCoordinator);
   let storage;
@@ -16,6 +16,7 @@ describe.only("Frontier", () => {
 
   beforeEach(() => {
     storage = {
+      writeFileAsync: sinon.stub().returns(Promise.resolve()),
       writeFileSync: sinon.spy(),
       readFileSync: sinon.stub().returns(Buffer.from("")),
       existsSync: () => false
