@@ -7,14 +7,24 @@ const { chunkByIndex } = require("../arrayUtilities");
 const makeBloomFilterClient = require("../bloom-filter/client");
 const makeLogger = require("../logger/");
 const numCPUs = require("os").cpus().length;
-const { MAX_CONCURRENCY, SEED_FILE_PROMISE, SERVER_INFO, isDev } = require("../../env/");
+const { promisify } = require("util");
+const rimraf = promisify(require("rimraf"));
+
+const {
+  MAX_CONCURRENCY,
+  SEED_FILE_PROMISE,
+  SERVER_INFO,
+  isDev,
+  FRONTIER_DIRECTORY
+} = require("../../env/");
 const onDeath = require("death");
 
-const { n, c, o } = argv; // number of machines | maximum file descriptors open | output file name
+const { n, c, o, r } = argv; // number of machines | maximum file descriptors open | output file name | reset frontier
 const numberOfMachines = n || 1;
+const resetFrontier = r || false;
 const maxConcurrency = c || MAX_CONCURRENCY;
-const workers = [];
 
+const workers = [];
 let statServer;
 
 SERVER_INFO.then(async ({ statServerUrl, statServerPort, bloomFilterUrl }) => {
@@ -23,6 +33,9 @@ SERVER_INFO.then(async ({ statServerUrl, statServerPort, bloomFilterUrl }) => {
   const bloomFilterClient = makeBloomFilterClient(logger, bloomFilterUrl);
   configureProcessErrorHandling(logger);
   configureServerTermination();
+  if (resetFrontier) {
+    await deleteFrontier();
+  }
   startStatServer(statServerUrl, statServerPort);
   await bloomFilterClient.initializeBloomFilter();
   const seed = await SEED_FILE_PROMISE;
@@ -30,6 +43,11 @@ SERVER_INFO.then(async ({ statServerUrl, statServerPort, bloomFilterUrl }) => {
   const urlChunks = chunkByIndex(seed, numCPUs);
   createChildren(urlChunks, logger);
 });
+
+function deleteFrontier() {
+  console.log("deleting frontier directory", FRONTIER_DIRECTORY);
+  return rimraf(FRONTIER_DIRECTORY);
+}
 
 function startStatServer(statServerUrl, statServerPort) {
   if (isDev()) {
