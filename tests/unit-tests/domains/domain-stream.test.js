@@ -16,6 +16,9 @@ const seed = [
 
 describe("Domain Stream", () => {
   const storage = {};
+  const eventCoordinator = new Events();
+  const logger = makeLogger(eventCoordinator);
+
   beforeEach(() => {
     storage.writeFileSync = sinon.spy();
     storage.readFileAsync = sinon.spy();
@@ -24,8 +27,6 @@ describe("Domain Stream", () => {
   });
 
   it("pauses the stream whent the 'stop' event is emitted", () => {
-    const eventCoordinator = new Events();
-    const logger = makeLogger(eventCoordinator);
     const domainStream = makeDomainStream(seed, eventCoordinator, fs, logger, 1);
 
     expect(domainStream.isPaused()).to.be.false;
@@ -34,8 +35,6 @@ describe("Domain Stream", () => {
   });
 
   it("resumes the stream whent the 'start' event is emitted", () => {
-    const eventCoordinator = new Events();
-    const logger = makeLogger(eventCoordinator);
     const domainStream = makeDomainStream(seed, eventCoordinator, fs, logger, 1);
 
     domainStream.pause();
