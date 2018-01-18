@@ -1,4 +1,5 @@
 const Bunyan = require("bunyan");
+const { isTest } = require("APP/env/");
 
 const bunyanFactory = logStream => outputFile => {
   const streams = [
@@ -8,7 +9,7 @@ const bunyanFactory = logStream => outputFile => {
     }
   ];
 
-  if (outputFile) {
+  if (!isTest() && outputFile) {
     streams.push({
       level: "info",
       path: outputFile
@@ -20,11 +21,13 @@ const bunyanFactory = logStream => outputFile => {
     streams
   });
 
-  bunyanLogger.addStream({
-    name: "stats server",
-    stream: logStream,
-    level: "debug"
-  });
+  if (!isTest()) {
+    bunyanLogger.addStream({
+      name: "stats server",
+      stream: logStream,
+      level: "debug"
+    });
+  }
 
   return bunyanLogger;
 };
