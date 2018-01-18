@@ -122,7 +122,7 @@ class Frontier {
 
     try {
       this.uncrawledUrlsInFrontier -= 1;
-      const buffer = await this.storage.readFileAsync(this.fileName);
+      const buffer = await this.storage.readFileAsync(this.filePaths.frontier);
       nextUrl = buffer.toString().split("\n")[this.frontierIndex];
       this.frontierIndex += 1;
     } catch (err) {
@@ -188,6 +188,7 @@ class Frontier {
       this.uncrawledUrlsInFrontier += this.queuedNewlinks.length;
       this.queuedNewlinks = [];
     } catch (err) {
+      console.log("err", err);
       this.logger.frontier.appendUrlFailed(err, this.seedDomain);
     }
     this.currentlyReading = false;

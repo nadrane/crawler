@@ -19,6 +19,7 @@ describe("Frontier", () => {
       writeFileAsync: sinon.stub().returns(Promise.resolve()),
       writeFileSync: sinon.spy(),
       readFileSync: sinon.stub().returns(Buffer.from("")),
+      appendFileAsync: sinon.spy(),
       existsSync: () => false
     };
     frontier = new Frontier("google.com", logger, storage);
@@ -236,7 +237,7 @@ describe("Frontier", () => {
       expect(storage.appendFileAsync.calledOnce).to.be.true;
       expect(
         storage.appendFileAsync.calledWithExactly(
-          frontier.fileName,
+          frontier.filePaths.frontier,
           "www.microsoft.com\nwww.yahoo.com\n"
         )
       ).to.be.true;
