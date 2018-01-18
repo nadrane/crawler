@@ -17,4 +17,8 @@ env.isDev = function isDev() {
   return process.env.NODE_ENV === "development";
 };
 
+env.isTest = function isTest() {
+  return process.env.NODE_ENV === "test";
+};
+
 module.exports = Object.assign({}, require("./defaults"), env);
