@@ -1,7 +1,6 @@
 const Events = require("events");
 const { readFileSync } = require("fs");
 const path = require("path");
-const sinon = require("sinon");
 
 const { expect } = require("chai");
 const { promisify } = require("util");
@@ -11,10 +10,10 @@ const { FRONTIER_DIRECTORY } = require("APP/env/");
 const Frontier = require("APP/src/domains/frontier");
 const makeLogger = require("APP/src/logger/");
 
-describe.only("Frontier", () => {
+describe("Frontier", () => {
   const eventCoordinator = new Events();
   const logger = makeLogger(eventCoordinator);
-  sinon.stub(logger);
+
   beforeEach(async () => {
     await rimraf(`${FRONTIER_DIRECTORY}/*`);
   });
