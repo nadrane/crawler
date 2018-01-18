@@ -33,32 +33,68 @@ const { FRONTIER_DIRECTORY } = require("APP/env/");
 class Frontier {
   constructor(seedDomain, logger, storage = fs) {
     this.domain = seedDomain;
-    this.urlsInFrontier = 1;
-    this.currentUrlInFronter = 0;
+    this.uncrawledUrlsInFrontier = 1;
+    this.frontierIndex = 0;
     this.currentlyReading = false;
     this.queuedNewlinks = [];
     this.flushScheduled = false;
     this.storage = storage;
     this.logger = logger;
+    this.filePaths = { root: "", frontier: "", frontierIndex: "" };
 
-    mkdirp.sync(FRONTIER_DIRECTORY);
+    this._setfilePaths(seedDomain);
+    this._initializeFrontierFiles(seedDomain);
+  }
 
-    let domainWithProtocol;
+  _setfilePaths(seedDomain) {
     if (seedDomain.startsWith("http://")) {
-      domainWithProtocol = seedDomain;
-      this.fileName = join(FRONTIER_DIRECTORY, `${seedDomain.split("http://")[1]}.txt`);
+      const domain = seedDomain.split("http://")[1];
+      this.filePaths.root = join(FRONTIER_DIRECTORY, domain);
     } else {
-      domainWithProtocol = `http://${seedDomain}`;
-      this.fileName = join(FRONTIER_DIRECTORY, `${seedDomain}.txt`);
+      this.filePaths.root = join(FRONTIER_DIRECTORY, seedDomain);
+    }
+    this.filePaths.frontier = join(this.filePaths.root, "frontier.txt");
+    this.filePaths.frontierIndex = join(this.filePaths.root, "frontier-index.txt");
+  }
+
+  _initializeFrontierFiles(seedDomain) {
+    const domainWithProtocol = seedDomain.startsWith("http://") ? seedDomain : `http://${seedDomain}`;
+    mkdirp.sync(this.filePaths.root);
+
+    let frontierExists;
+    let fronterIndexExists;
+    try {
+      frontierExists = this.storage.existsSync(this.filePaths.frontier);
+      fronterIndexExists = this.storage.existsSync(this.filePaths.frontierIndex);
+    } catch (err) {
+      this.logger.frontier.cannotReadFrontier();
+    }
+    if ((frontierExists && !fronterIndexExists) || (fronterIndexExists && !frontierExists)) {
+      this.logger.frontier.corruptFileConfiguration();
     }
 
     try {
-      storage.writeFileSync(this.fileName, `${domainWithProtocol}\n`);
+      if (frontierExists && fronterIndexExists) {
+        const frontierSize = this.storage
+          .readFileSync(this.filePaths.frontier)
+          .toString()
+          .split("\n")
+          .filter(url => url).length;
+        this.frontierIndex = parseInt(
+          this.storage.readFileSync(this.filePaths.frontierIndex).toString(),
+          10
+        );
+        this.uncrawledUrlsInFrontier = frontierSize - this.frontierIndex;
+        if (this.uncrawledUrlsInFrontier < 0) {
+          this.logger.frontier.initilizationError("urls uncrawled cannot be less than 0");
+        }
+      } else {
+        this.storage.writeFileSync(this.filePaths.frontier, `${domainWithProtocol}\n`);
+        this.storage.writeFileSync(this.filePaths.frontierIndex, 0);
+      }
     } catch (err) {
-      this.logger.unexpectedError(`failed to initialize frontier for domain ${seedDomain}`, err);
+      this.logger.failedToReadFrontier(seedDomain, err);
     }
-
-    // this.scheduleCompaction();
   }
 
   scheduleCompaction() {
@@ -73,7 +109,7 @@ class Frontier {
   }
 
   isEmpty() {
-    return this.urlsInFrontier === 0;
+    return this.uncrawledUrlsInFrontier === 0;
   }
 
   async getNextUrl() {
@@ -83,49 +119,34 @@ class Frontier {
     this.currentlyReading = true;
 
     try {
-      this.urlsInFrontier -= 1;
+      this.uncrawledUrlsInFrontier -= 1;
       const buffer = await this.storage.readFileAsync(this.fileName);
-      nextUrl = buffer.toString().split("\n")[this.currentUrlInFronter];
-      this.currentUrlInFronter += 1;
+      nextUrl = buffer.toString().split("\n")[this.frontierIndex];
+      this.frontierIndex += 1;
     } catch (err) {
-      this.urlsInFrontier += 1;
+      this.uncrawledUrlsInFrontier += 1;
       this.logger.unexpectedError(
         `failed to read from frontier file - getNextUrl ${this.fileName}`,
         err
       );
     }
 
+    this._flushFrontierIndex();
+
     this.currentlyReading = false;
     return nextUrl;
   }
 
-  async _frontierCompaction() {
-    if (!this.readyForReading()) return;
+  async _flushFrontierIndex() {
+    //Not about race conditions but about keeping track of file descriptors open
+    if (!this.currentlyReading) return;
 
     this.currentlyReading = true;
-    let allUrls;
 
     try {
-      allUrls = await this.storage.readFileAsync(this.fileName);
+      await this.storage.writeFileAsync(this.filePaths.frontierIndex, this.frontierIndex);
     } catch (err) {
-      this.logger.unexpectedError(
-        `compaction failed - failed to read frontier file ${this.fileName}`,
-        err
-      );
-    }
-
-    try {
-      await this.storage.writeFileAsync(
-        this.fileName,
-        allUrls.slice(this.currentUrlInFronter).join("\n")
-      );
-      this.urlsInFrontier = this.urlsInFrontier - this.currentUrlInFronter;
-      this.currentUrlInFronter = 0;
-    } catch (err) {
-      this.logger.unexpectedError(
-        `compaction failed - failed to write frontier file ${this.fileName}`,
-        err
-      );
+      this.logger.frontier.frontierIndexWriteFailure(err, this.domain);
     }
 
     this.currentlyReading = false;
@@ -165,7 +186,7 @@ class Frontier {
     this.currentlyReading = true;
     try {
       await this.storage.appendFileAsync(this.fileName, `${linksToAppend}\n`);
-      this.urlsInFrontier += this.queuedNewlinks.length;
+      this.uncrawledUrlsInFrontier += this.queuedNewlinks.length;
       this.queuedNewlinks = [];
     } catch (err) {
       this.logger.unexpectedError(`failed to append to to frontier file - append ${this.fileName}`, err);

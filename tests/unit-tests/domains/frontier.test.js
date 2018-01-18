@@ -6,34 +6,119 @@ const { FRONTIER_DIRECTORY } = require("APP/env/");
 const makeLogger = require("APP/src/logger/");
 const Events = require("events");
 
-describe("Frontier", () => {
-  const storage = {
-    writeFileSync: () => Promise.resolve()
-  };
-  let eventCoordinator;
-  let logger;
+describe.only("Frontier", () => {
+  const eventCoordinator = new Events();
+  const logger = makeLogger(eventCoordinator);
+  let storage;
   let frontier;
 
-  beforeEach(() => {
-    eventCoordinator = new Events();
-    logger = makeLogger(eventCoordinator);
-    frontier = new Frontier("google.com", logger, storage);
+  sinon.stub(logger);
 
-    sinon.stub(logger);
+  beforeEach(() => {
+    storage = {
+      writeFileSync: sinon.spy(),
+      readFileSync: sinon.stub().returns(Buffer.from("")),
+      existsSync: () => false
+    };
+    frontier = new Frontier("google.com", logger, storage);
   });
 
   describe("constructor", () => {
-    it("sets the filename equal to the frontier directory plus the name of the domain", () => {
-      const expectedFilename = path.join(FRONTIER_DIRECTORY, "google.com.txt");
+    it("sets the filepaths equal to the frontier directory plus the name of the domain", () => {
+      frontier = new Frontier("google.com", logger, storage);
+      const expectedFrontierPath = path.join(FRONTIER_DIRECTORY, "google.com", "frontier.txt");
+      const expectedFrontierIndexPath = path.join(
+        FRONTIER_DIRECTORY,
+        "google.com",
+        "frontier-index.txt"
+      );
 
-      expect(frontier.fileName).to.equal(expectedFilename);
+      expect(frontier.filePaths.frontier).to.equal(expectedFrontierPath);
+      expect(frontier.filePaths.frontierIndex).to.equal(expectedFrontierIndexPath);
     });
 
     it("when setting file names, it disregards the protocol, if included", () => {
       frontier = new Frontier("http://google.com", logger, storage);
-      const expectedFilename = path.join(FRONTIER_DIRECTORY, "google.com.txt");
+      const expectedFrontierPath = path.join(FRONTIER_DIRECTORY, "google.com", "frontier.txt");
+      const expectedFrontierIndexPath = path.join(
+        FRONTIER_DIRECTORY,
+        "google.com",
+        "frontier-index.txt"
+      );
 
-      expect(frontier.fileName).to.equal(expectedFilename);
+      expect(frontier.filePaths.frontier).to.equal(expectedFrontierPath);
+      expect(frontier.filePaths.frontierIndex).to.equal(expectedFrontierIndexPath);
+    });
+
+    describe("during file initilization", () => {
+      describe("when the frontier file does not exist", () => {
+        beforeEach(() => {
+          storage.existsSync = () => false;
+        });
+        afterEach(() => {
+          storage.existsSync = undefined;
+        });
+        describe("when a protocol is included", () => {
+          it("writes the seed domain to the frontier if the domain includes a protocol", () => {
+            frontier = new Frontier("http://google.com", logger, storage);
+            expect(
+              storage.writeFileSync.calledWithExactly(frontier.filePaths.frontier, "http://google.com\n")
+            ).to.be.true;
+          });
+
+          it("writes 0 to the frontier-index file", () => {
+            frontier = new Frontier("http://google.com", logger, storage);
+            expect(storage.writeFileSync.calledWithExactly(frontier.filePaths.frontierIndex, 0)).to.be
+              .true;
+          });
+        });
+        describe("when a protocol is not incldued", () => {
+          it("writes the seed domain to the frontier file", () => {
+            frontier = new Frontier("google.com", logger, storage);
+            expect(
+              storage.writeFileSync.calledWithExactly(frontier.filePaths.frontier, "http://google.com\n")
+            ).to.be.true;
+          });
+
+          it("writes an 0 to the frontier-index file", () => {
+            frontier = new Frontier("google.com", logger, storage);
+            expect(storage.writeFileSync.calledWithExactly(frontier.filePaths.frontierIndex, 0)).to.be
+              .true;
+          });
+        });
+      });
+
+      describe("when the frontier file does exist", () => {
+        beforeEach(() => {
+          storage.existsSync = () => true;
+        });
+        afterEach(() => {
+          storage.existsSync = undefined;
+        });
+        it("initializes the frontier and frontierIndex with the contents of the frontier and frontier-index files", () => {
+          storage.readFileSync = sinon.stub();
+          storage.readFileSync
+            .onFirstCall()
+            .returns(Buffer.from("google.com\ngoogle.com/search\ngoogle.com/link1\n"));
+          storage.readFileSync.onSecondCall().returns(Buffer.from("0"));
+
+          frontier = new Frontier("google.com", logger, storage);
+          expect(frontier.uncrawledUrlsInFrontier).to.equal(3);
+          expect(frontier.frontierIndex).to.equal(0);
+        });
+
+        it("does not count scraped urls when calculating frontier.urlsInFrontier", () => {
+          storage.readFileSync = sinon.stub();
+          storage.readFileSync
+            .onFirstCall()
+            .returns(Buffer.from("google.com\ngoogle.com/search\ngoogle.com/link1\n"));
+          storage.readFileSync.onSecondCall().returns(Buffer.from("2"));
+
+          frontier = new Frontier("google.com", logger, storage);
+          expect(frontier.uncrawledUrlsInFrontier).to.equal(1);
+          expect(frontier.frontierIndex).to.equal(2);
+        });
+      });
     });
   });
 
@@ -43,7 +128,7 @@ describe("Frontier", () => {
     });
 
     it("should return true when the frontier is empty", () => {
-      frontier.urlsInFrontier = 0;
+      frontier.uncrawledUrlsInFrontier = 0;
       expect(frontier.isEmpty()).to.be.true;
     });
   });
@@ -54,15 +139,15 @@ describe("Frontier", () => {
     });
 
     it("should not be ready for reading when the frontier is empty", () => {
-      frontier.urlsInFrontier = 0;
+      frontier.uncrawledUrlsInFrontier = 0;
       expect(frontier.readyForReading()).to.be.false;
     });
 
-    it("should not be ready for reading when the currently reading flag is set", () => {
+    it("should not be ready for reading when the currently reading flag is set, regardless of the size of the frontier", () => {
       frontier.currentlyReading = true;
       expect(frontier.readyForReading()).to.be.false;
 
-      frontier.urlsInFrontier = 10;
+      frontier.uncrawledUrlsInFrontier = 10;
       expect(frontier.readyForReading()).to.be.false;
     });
   });
@@ -154,7 +239,7 @@ describe("Frontier", () => {
           "www.microsoft.com\nwww.yahoo.com\n"
         )
       ).to.be.true;
-      expect(frontier.urlsInFrontier).to.equal(3);
+      expect(frontier.uncrawledUrlsInFrontier).to.equal(3);
       expect(frontier.flushScheduled).to.be.false;
       expect(frontier.currentlyReading).to.be.false;
       expect(frontier.queuedNewlinks).to.be.empty;
@@ -167,7 +252,7 @@ describe("Frontier", () => {
       await frontier.flushNewLinkQueue();
 
       expect(storage.appendFileAsync.calledOnce).to.be.true;
-      expect(frontier.urlsInFrontier).to.equal(1);
+      expect(frontier.uncrawledUrlsInFrontier).to.equal(1);
       expect(frontier.flushScheduled).to.be.false;
       expect(frontier.currentlyReading).to.be.false;
       expect(frontier.queuedNewlinks).to.deep.equal(["www.microsoft.com", "www.yahoo.com"]);
@@ -178,18 +263,18 @@ describe("Frontier", () => {
     it("returns the frontier urls in order, never repeating itself", async () => {
       const frontierUrls = "www.bing.com\nwww.bing.com/link1\nwww.bing.com/link2";
       storage.readFileAsync = sinon.stub().returns(frontierUrls);
-      frontier.urlsInFrontier = 3;
+      frontier.uncrawledUrlsInFrontier = 3;
 
       expect(await frontier.getNextUrl()).to.equal("www.bing.com");
-      expect(frontier.urlsInFrontier).to.equal(2);
+      expect(frontier.uncrawledUrlsInFrontier).to.equal(2);
       expect(await frontier.getNextUrl()).to.equal("www.bing.com/link1");
-      expect(frontier.urlsInFrontier).to.equal(1);
+      expect(frontier.uncrawledUrlsInFrontier).to.equal(1);
       expect(await frontier.getNextUrl()).to.equal("www.bing.com/link2");
-      expect(frontier.urlsInFrontier).to.equal(0);
+      expect(frontier.uncrawledUrlsInFrontier).to.equal(0);
     });
 
     it("returns an empty string if the frontier is empty", async () => {
-      frontier.urlsInFrontier = 0;
+      frontier.uncrawledUrlsInFrontier = 0;
       expect(await frontier.getNextUrl()).to.equal("");
     });
 
@@ -210,9 +295,9 @@ describe("Frontier", () => {
     it("does not change the number of urls in the frontier if the read fails", async () => {
       storage.readFileAsync = sinon.stub().returns(Promise.reject());
 
-      expect(frontier.urlsInFrontier).to.equal(1);
+      expect(frontier.uncrawledUrlsInFrontier).to.equal(1);
       await frontier.getNextUrl();
-      expect(frontier.urlsInFrontier).to.equal(1);
+      expect(frontier.uncrawledUrlsInFrontier).to.equal(1);
     });
   });
 });
