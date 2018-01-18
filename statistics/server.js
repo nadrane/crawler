@@ -1,37 +1,29 @@
 const express = require("express");
-const bodyParser = require("body-parser");
 const ndjson = require("ndjson");
 
 module.exports = function makeServer() {
   const app = express();
-  app.use(bodyParser.json());
-
   const stats = {};
   const errors = [];
-  const requestsPerMinuteLog = [];
+  const requestsPerMinute = {};
   let totalRequests = 0;
-
-  setInterval(() => {
-    if (requestsPerMinuteLog.length === 0) {
-      requestsPerMinuteLog.push(totalRequests);
-    } else {
-      requestsPerMinuteLog.push(
-        totalRequests - requestsPerMinuteLog.reduce((accum, next) => accum + next, 0)
-      );
-    }
-  }, 1000 * 60);
+  let totalEvents = 0;
 
   app.post("/log", (req, res) => {
-    req.pipe(ndjson.parse()).on("data", line => {
-      const { event, domain, subdomain, codeModule, err } = line;
-      const machine = line.hostname;
+    req
+      .pipe(ndjson.parse())
+      .on("data", line => {
+        const { event, domain, subdomain, codeModule, err, time } = line;
+        const machine = line.hostname;
 
-      trackErrors(err);
-      trackMachineLevelEvents(machine, codeModule, event);
-      trackDomainLevelEvents(domain, subdomain, event);
-      trackSystemLevelEvents(event);
-    });
-    res.sendStatus(200);
+        trackErrors(err);
+        trackMachineLevelEvents(machine, codeModule, event);
+        trackDomainLevelEvents(domain, subdomain, event);
+        trackSystemLevelEvents(codeModule, event, time);
+      })
+      .on("end", () => {
+        res.sendStatus(200);
+      });
   });
 
   function trackErrors(err) {
@@ -97,28 +89,34 @@ module.exports = function makeServer() {
     stats[domain][event] += 1;
   }
 
-  function trackSystemLevelEvents(event) {
-    if (!event) return;
+  function trackSystemLevelEvents(codeModule, event, time) {
+    totalEvents += 1;
 
-    if (event === "request sent") {
+    if (codeModule === "requester" && event === "request sent") {
       totalRequests += 1;
+
+      const options = { day: "numeric", hour: "numeric", minute: "numeric" };
+      const timestamp = new Date(time).toLocaleDateString("en-US", options);
+      if (requestsPerMinute.hasOwnProperty(timestamp)) {
+        requestsPerMinute[timestamp] += 1;
+      } else {
+        requestsPerMinute[timestamp] = 1;
+      }
     }
   }
 
   app.get("/log", (req, res) => {
     res.send({
       errors,
-      currentRPM: requestsPerMinuteLog.length
-        ? requestsPerMinuteLog[requestsPerMinuteLog.length - 1]
-        : totalRequests,
-      RPM: requestsPerMinuteLog,
+      RPM: requestsPerMinute,
       totalRequests,
+      totalEvents,
       stats
     });
   });
   app.use((err, req, res, next) => {
     res.status(500);
-    res.send(err);
+    res.send({ message: err.message, stack: err.stack });
   });
 
   return app;

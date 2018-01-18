@@ -1,19 +1,24 @@
+const path = require("path");
+const { promisify } = require("util");
+const readFileAsync = promisify(require("fs").readFile);
+
 const { expect } = require("chai");
-const makeServer = require("APP/statistics/server");
 const request = require("supertest");
 
-describe("Stats Server", () => {
+const makeServer = require("APP/statistics/server");
+
+describe.only("Stats Server", () => {
   it("initially responds with default stats", () => {
     return request(makeServer())
       .get("/log")
       .expect(200)
       .then(res => {
         expect(res.body).to.deep.equal({
-          RPM: [],
+          RPM: {},
           errors: [],
-          currentRPM: 0,
           stats: {},
-          totalRequests: 0
+          totalRequests: 0,
+          totalEvents: 0
         });
       });
   });
@@ -24,7 +29,7 @@ describe("Stats Server", () => {
       { hostname: 1, codeModule: "requester", event: "request sent" },
       { hostname: 2, codeModule: "requester", event: "request sent" },
       { hostname: 1, codeModule: "requester", event: "request sent" },
-      { hostname: 1, codeModule: "robots", event: "robots sent" }
+      { hostname: 1, codeModule: "robots", event: "request sent" }
     ]
       .map(JSON.stringify)
       .join("\n");
@@ -38,7 +43,8 @@ describe("Stats Server", () => {
       2: {
         totalEvents: 1,
         requester: { totalEvents: 1, "request sent": 1 }
-      }
+      },
+      totalEvents: 4
     };
 
     return r
@@ -50,7 +56,6 @@ describe("Stats Server", () => {
           expect(res.body).to.deep.equal({
             RPM: [],
             errors: [],
-            currentRPM: 3,
             stats: statsExpectation,
             totalRequests: 3
           });
@@ -69,6 +74,7 @@ describe("Stats Server", () => {
       .join("\n");
 
     const statsExpectation = {
+      totalEvents: 4,
       "google.com": {
         "request sent": 3,
         subdomains: {
@@ -104,10 +110,29 @@ describe("Stats Server", () => {
           expect(res.body).to.deep.equal({
             RPM: [],
             errors: [],
-            currentRPM: 3,
             stats: statsExpectation,
             totalRequests: 3
           });
+        });
+      });
+  });
+
+  it("correctly processes large log file", async () => {
+    const r = request(makeServer());
+    let logs = await readFileAsync(path.join(__dirname, "sample-large-log.txt"));
+    logs = logs
+      .toString()
+      .split("\n")
+      .filter(line => line)
+      .join("\n");
+
+    return r
+      .post("/log")
+      .send(logs)
+      .expect(200)
+      .then(() => {
+        return r.get("/log").then(res => {
+          expect(res.body.totalEvents).to.equal(5000);
         });
       });
   });
