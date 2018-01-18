@@ -1,6 +1,5 @@
 const Events = require("events");
 const fs = require("fs");
-const sinon = require("sinon");
 const { promisify } = require("util");
 const rimraf = promisify(require("rimraf"));
 
@@ -31,13 +30,10 @@ function testAllUrlsReadFromStream(stream, seed, done) {
 }
 
 describe("domain stream", () => {
-  let eventCoordinator;
-  let logger;
-  let http;
+  const eventCoordinator = new Events();
+  const logger = makeLogger(eventCoordinator);
+
   beforeEach(async () => {
-    eventCoordinator = new Events();
-    http = { post: sinon.stub().returns(Promise.resolve()) };
-    logger = makeLogger(eventCoordinator, http);
     await rimraf(`${FRONTIER_DIRECTORY}/*`);
   });
   afterEach(async () => {
