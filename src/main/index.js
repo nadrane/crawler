@@ -14,18 +14,26 @@ const {
   MAX_CONCURRENCY,
   SEED_FILE_PROMISE,
   SERVER_INFO,
+  MACHINE_INDEX,
   isDev,
+  isProd,
   FRONTIER_DIRECTORY
 } = require("../../env/");
 const onDeath = require("death");
 
-const { n, c, o, r } = argv; // number of machines | maximum file descriptors open | output file name | reset frontier
-const numberOfMachines = n || 1;
+const { c, o, r } = argv; // maximum file descriptors open | output file name | reset frontier
 const resetFrontier = r || false;
 const maxConcurrency = c || MAX_CONCURRENCY;
 
 const workers = [];
 let statServer;
+
+let numberOfMachines;
+if (isProd()) {
+  numberOfMachines = 20;
+} else {
+  numberOfMachines = 1;
+}
 
 SERVER_INFO.then(async ({ statServerUrl, statServerPort, bloomFilterUrl }) => {
   const eventCoordinator = new Events();
@@ -38,9 +46,11 @@ SERVER_INFO.then(async ({ statServerUrl, statServerPort, bloomFilterUrl }) => {
   }
   startStatServer(statServerUrl, statServerPort);
   await bloomFilterClient.initializeBloomFilter();
+  const machineIndex = await MACHINE_INDEX;
   const seed = await SEED_FILE_PROMISE;
   console.log("seed file downloaded");
-  const urlChunks = chunkByIndex(seed, numCPUs);
+  const thisMachinesSeed = chunkByIndex(seed, numberOfMachines)[machineIndex];
+  const urlChunks = chunkByIndex(thisMachinesSeed, numCPUs);
   createChildren(urlChunks, logger);
 });
 
