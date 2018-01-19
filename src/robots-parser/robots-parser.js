@@ -1,7 +1,7 @@
 const { URL } = require("url");
 const robotsParser = require("robots-parser");
 const LRU = require("lru-cache");
-const { USER_AGENT } = require("APP/env/");
+const { USER_AGENT, ROBOTS_CACHE_SIZE } = require("APP/env/");
 
 const makeRobotsTxtUrl = (protocol, port, hostname) =>
   port ? `${protocol}//${hostname}:${port}/robots.txt` : `${protocol}//${hostname}/robots.txt`;
@@ -102,7 +102,7 @@ function handleHttpError(url, err, logger) {
 module.exports = function makeRobotsValidator(
   logger,
   http,
-  domainsPerServer = 1000,
+  domainsPerServer = ROBOTS_CACHE_SIZE,
   maxCacheAge = 1000 * 60 * 60
 ) {
   const cache = LRU({
