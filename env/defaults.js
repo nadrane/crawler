@@ -7,5 +7,6 @@ module.exports = {
   MAX_CONCURRENCY: 10,
   BLOOM_FILTER_NAME: "crawler",
   MACHINE_INDEX: Promise.resolve(0),
-  ROBOTS_CACHE_SIZE: 1000
+  ROBOTS_CACHE_SIZE: 1000,
+  LOG_STREAM_BUFFER_SIZE: 5000
 };

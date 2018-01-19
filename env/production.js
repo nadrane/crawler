@@ -47,5 +47,6 @@ module.exports = {
   MACHINE_INDEX: machineIndex,
   SERVER_INFO: serverInfo,
   SEED_FILE_PROMISE: seedFilePromise,
-  FRONTIER_DIRECTORY: "/frontiers" // volume mounted in Docker
+  FRONTIER_DIRECTORY: "/frontiers", // volume mounted in Docker,
+  LOG_STREAM_BUFFER_SIZE: 5000
 };

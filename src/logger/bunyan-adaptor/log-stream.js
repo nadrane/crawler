@@ -1,7 +1,8 @@
 const { Writable } = require("stream");
+const { LOG_STREAM_BUFFER_SIZE } = require("../../../env/");
 
 class LogStream extends Writable {
-  constructor(url, http, bufferSize = 5000) {
+  constructor(url, http, bufferSize = LOG_STREAM_BUFFER_SIZE) {
     super({ objectMode: true });
     this.buffer = [];
     this.url = url;
@@ -28,7 +29,6 @@ class LogStream extends Writable {
       .catch(err => {
         err.config.data = "";
         console.log("error posting", err);
-        //just ignore the error and don't reset the buffer
         callback();
       });
   }

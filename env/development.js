@@ -17,5 +17,6 @@ module.exports = {
     resolve(require("APP/seed.json").slice(0, 5000)); // First 25,000 entries for dev environemnt
   }),
   FRONTIER_DIRECTORY: path.resolve(__dirname, "../frontiers"),
-  DOMAIN_REQUEST_TIME_INTERVAL: 20 * 1000
+  DOMAIN_REQUEST_TIME_INTERVAL: 20 * 1000,
+  LOG_STREAM_BUFFER_SIZE: 50
 };
