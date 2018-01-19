@@ -41,7 +41,7 @@ function failedRequest(logger, err, url) {
       logger.requester.noResponseRecieved(err.message, url);
     }
   } else {
-    logger.requester.badRequest(err.config);
+    logger.requester.badRequest(url, err.config);
   }
   return null;
 }
