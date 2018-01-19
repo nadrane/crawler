@@ -35,7 +35,7 @@ const seedFilePromise = new Promise((resolve, reject) => {
     },
     (err, data) => {
       if (err) reject(err);
-      else resolve(JSON.parse(data.Body));
+      else resolve(JSON.parse(data.Body).slice(500000));
     }
   );
 });
