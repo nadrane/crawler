@@ -3,7 +3,9 @@ const ndjson = require("ndjson");
 
 module.exports = function makeServer() {
   const app = express();
-  const stats = {};
+  const stats = {
+    machines: {}
+  };
   const errors = [];
   const requestsPerMinute = {};
   let totalRequests = 0;
@@ -16,10 +18,13 @@ module.exports = function makeServer() {
         const { event, domain, subdomain, codeModule, err, time } = line;
         const machine = line.hostname;
 
+        const options = { day: "numeric", hour: "numeric", minute: "numeric" };
+        const timestamp = new Date(time).toLocaleDateString("en-US", options);
+
         trackErrors(err);
-        trackMachineLevelEvents(machine, codeModule, event);
+        trackMachineLevelEvents(machine, codeModule, event, timestamp);
         trackDomainLevelEvents(domain, subdomain, event);
-        trackSystemLevelEvents(codeModule, event, time);
+        trackSystemLevelEvents(codeModule, event, timestamp);
       })
       .on("end", () => {
         res.sendStatus(200);
@@ -32,28 +37,34 @@ module.exports = function makeServer() {
     errors.push(err);
   }
 
-  function trackMachineLevelEvents(machine, codeModule, event) {
-    if (!machine || !codeModule || !event) {
+  function trackMachineLevelEvents(machine, codeModule, event, timestamp) {
+    if (!machine || !codeModule || !event || !timestamp) {
       return;
     }
 
-    if (!stats.hasOwnProperty(machine)) {
-      stats[machine] = {};
-      stats[machine].totalEvents = 0;
+    if (!stats.machines.hasOwnProperty(machine)) {
+      stats.machines[machine] = {};
+      stats.machines[machine].totalEvents = 0;
     }
 
-    if (!stats[machine].hasOwnProperty(codeModule)) {
-      stats[machine][codeModule] = {};
-      stats[machine][codeModule].totalEvents = 0;
+    if (!stats.machines[machine].hasOwnProperty(timestamp)) {
+      stats.machines[machine][timestamp] = {};
+      stats.machines[machine][timestamp].totalEvents = 0;
     }
 
-    if (!stats[machine][codeModule].hasOwnProperty(event)) {
-      stats[machine][codeModule][event] = 0;
+    if (!stats.machines[machine][timestamp].hasOwnProperty(codeModule)) {
+      stats.machines[machine][timestamp][codeModule] = {};
+      stats.machines[machine][timestamp][codeModule].totalEvents = 0;
     }
 
-    stats[machine][codeModule][event] += 1;
-    stats[machine][codeModule].totalEvents += 1;
-    stats[machine].totalEvents += 1;
+    if (!stats.machines[machine][timestamp][codeModule].hasOwnProperty(event)) {
+      stats.machines[machine][timestamp][codeModule][event] = 0;
+    }
+
+    stats.machines[machine].totalEvents += 1;
+    stats.machines[machine][timestamp].totalEvents += 1;
+    stats.machines[machine][timestamp][codeModule].totalEvents += 1;
+    stats.machines[machine][timestamp][codeModule][event] += 1;
   }
 
   function trackDomainLevelEvents(domain, subdomain, event) {
@@ -89,14 +100,12 @@ module.exports = function makeServer() {
     stats[domain][event] += 1;
   }
 
-  function trackSystemLevelEvents(codeModule, event, time) {
+  function trackSystemLevelEvents(codeModule, event, timestamp) {
     totalEvents += 1;
 
     if (codeModule === "requester" && event === "request sent") {
       totalRequests += 1;
 
-      const options = { day: "numeric", hour: "numeric", minute: "numeric" };
-      const timestamp = new Date(time).toLocaleDateString("en-US", options);
       if (requestsPerMinute.hasOwnProperty(timestamp)) {
         requestsPerMinute[timestamp] += 1;
       } else {
@@ -104,6 +113,20 @@ module.exports = function makeServer() {
       }
     }
   }
+
+  app.get("/system", (req, res) => {
+    res.send({
+      errors,
+      RPM: requestsPerMinute,
+      totalRequests
+    });
+  });
+
+  app.get("/machine", (req, res) => {
+    res.send({
+      machines: stats.machines
+    });
+  });
 
   app.get("/log", (req, res) => {
     res.send({
