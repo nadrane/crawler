@@ -9,7 +9,7 @@ const s3 = new AWS.S3({
 
 const machineIndex = axios
   .get("http://169.254.169.254/latest/meta-data/ami-launch-index")
-  .then(res => res.body)
+  .then(res => res.data)
   .catch(err => {
     throw err;
   });
@@ -42,7 +42,8 @@ const seedFilePromise = new Promise((resolve, reject) => {
 
 module.exports = {
   // TODO change to prod token
-  ROBOTS_CACHE_SIZE: 10000,
+  ROBOTS_CACHE_SIZE: 40000,
+  MAX_CONCURRENCY: 30,
   MACHINE_INDEX: machineIndex,
   SERVER_INFO: serverInfo,
   SEED_FILE_PROMISE: seedFilePromise,
