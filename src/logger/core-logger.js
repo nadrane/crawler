@@ -3,7 +3,7 @@ const path = require("path");
 
 const makeDomainsLogger = require("./module-loggers/domains");
 const makeBloomFilterLogger = require("./module-loggers/bloom-filter");
-const makeRobotsLogger = require("./module-loggers/robots-parser");
+const makeRobotsLogger = require("./module-loggers/robots");
 const makeRequesterLogger = require("./module-loggers/requester");
 const makeFrontierLogger = require("./module-loggers/frontier");
 

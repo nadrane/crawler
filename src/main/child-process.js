@@ -23,8 +23,17 @@ function initializeChildProcess(seedData, logger, http, storage, bloomFilterClie
   const domainStream = makeDomainStream(seedData, eventCoorindator, storage, logger, maxConcurrency);
   const bloomFilterCheckStream = makeBloomFilterCheckStream(bloomFilterClient, logger, maxConcurrency);
   const bloomFilterSetStream = makeBloomFilterSetStream(bloomFilterClient, logger, maxConcurrency);
-  const robotsStream = makeRobotsStream(logger, axios, maxConcurrency);
-  const requestStream = makeRequestStream(logger, axios, eventCoorindator, maxConcurrency);
+  const robotsStream = makeRobotsStream(
+    logger,
+    responseTimeTrackingHttp(logger, "robots"),
+    maxConcurrency
+  );
+  const requestStream = makeRequestStream(
+    logger,
+    responseTimeTrackingHttp(logger, "requester"),
+    eventCoorindator,
+    maxConcurrency
+  );
 
   domainStream
     .pipe(bloomFilterCheckStream)
@@ -43,6 +52,21 @@ if (require.main === module) {
     const bloomFilterClient = makeBloomFilterClient(logger, bloomFilterUrl);
     initializeChildProcess(seedData, logger, axios, fs, bloomFilterClient, maxConcurrency);
   });
+}
+
+function responseTimeTrackingHttp(logger, codeModule) {
+  const trackingHttp = axios.create();
+  trackingHttp.interceptors.request.use(config => {
+    return Object.assign({ startTime: Date.now() }, config);
+  });
+
+  trackingHttp.interceptors.response.use(response => {
+    const { startTime } = response.config;
+    const responseDuration = Date.now() - startTime;
+    logger[codeModule].trackResponseTime(response.url, responseDuration);
+    return response;
+  });
+  return trackingHttp;
 }
 
 module.exports = initializeChildProcess;

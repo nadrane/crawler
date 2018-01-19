@@ -1,6 +1,6 @@
 const { parse } = require("tldjs");
 
-const codeModule = "robots parser";
+const codeModule = "robots";
 
 module.exports = logger => {
   return {
@@ -81,6 +81,18 @@ module.exports = logger => {
       logger.debug({
         event: "stream exited",
         codeModule
+      });
+    },
+
+    trackResponseTime: (url, responseTime) => {
+      const { domain, subdomain } = parse(url);
+      logger.info({
+        event: "track response time",
+        codeModule,
+        url,
+        domain,
+        subdomain,
+        responseTime
       });
     }
   };

@@ -4,13 +4,14 @@ const fs = require("fs");
 
 module.exports = function makeServer() {
   const app = express();
-
   const machines = {};
   const system = {
     requestsPerMinute: {},
     totalEvents: 0,
     totalRequests: 0,
-    errors: []
+    errors: [],
+    requestResponseTimes: {},
+    robotsResponseTimes: {}
   };
   const domains = {};
 
@@ -18,21 +19,18 @@ module.exports = function makeServer() {
     req
       .pipe(ndjson.parse())
       .on("data", line => {
-        const { event, domain, subdomain, codeModule, err, time } = line;
-        const machine = line.hostname;
-
         const options = {
           timeZone: "America/Chicago",
           day: "numeric",
           hour: "numeric",
           minute: "numeric"
         };
-        const timestamp = new Date(time).toLocaleDateString("en-US", options);
+        line.timestamp = new Date(line.time).toLocaleDateString("en-US", options);
 
-        trackErrors(err);
-        trackMachineLevelEvents(machine, codeModule, event, timestamp);
-        trackDomainLevelEvents(domain, subdomain, event);
-        trackSystemLevelEvents(codeModule, event, timestamp);
+        trackErrors(line.err);
+        trackMachineLevelEvents(line);
+        trackDomainLevelEvents(line);
+        trackSystemLevelEvents(line);
       })
       .on("end", () => {
         res.sendStatus(200);
@@ -45,7 +43,10 @@ module.exports = function makeServer() {
     system.errors.push(err);
   }
 
-  function trackMachineLevelEvents(machine, codeModule, event, timestamp) {
+  function trackMachineLevelEvents(line) {
+    const { codeModule, event, timestamp } = line;
+    const machine = line.hostname;
+
     if (!machine || !codeModule || !event || !timestamp) {
       return;
     }
@@ -75,7 +76,10 @@ module.exports = function makeServer() {
     machines[machine][timestamp][codeModule][event] += 1;
   }
 
-  function trackDomainLevelEvents(domain, subdomain, event) {
+  function trackDomainLevelEvents(line) {
+    const { domain, event } = line;
+    let { subdomain } = line;
+
     if (!domain || !event) {
       return;
     }
@@ -108,9 +112,9 @@ module.exports = function makeServer() {
     domains[domain][event] += 1;
   }
 
-  function trackSystemLevelEvents(codeModule, event, timestamp) {
+  function trackSystemLevelEvents(line) {
     system.totalEvents += 1;
-
+    const { codeModule, event, timestamp } = line;
     if (codeModule === "requester" && event === "request sent") {
       system.totalRequests += 1;
 
@@ -118,6 +122,22 @@ module.exports = function makeServer() {
         system.requestsPerMinute[timestamp] += 1;
       } else {
         system.requestsPerMinute[timestamp] = 1;
+      }
+    }
+
+    if (event === "track response time") {
+      if (codeModule === "requester") {
+        if (system.requestResponseTimes.hasOwnProperty(timestamp)) {
+          system.requestResponseTimes[timestamp].push(line.responseTime);
+        } else {
+          system.requestResponseTimes[timestamp] = [line.responseTime];
+        }
+      } else if (codeModule === "robots") {
+        if (system.robotsResponseTimes.hasOwnProperty(timestamp)) {
+          system.robotsResponseTimes[timestamp].push(line.responseTime);
+        } else {
+          system.robotsResponseTimes[timestamp] = [line.responseTime];
+        }
       }
     }
   }

@@ -131,6 +131,18 @@ module.exports = logger => {
         subdomain,
         message
       });
+    },
+
+    trackResponseTime: (url, responseTime) => {
+      const { domain, subdomain } = parse(url);
+      logger.info({
+        event: "track response time",
+        codeModule,
+        url,
+        domain,
+        subdomain,
+        responseTime
+      });
     }
   };
 };
