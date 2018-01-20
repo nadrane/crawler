@@ -1,6 +1,11 @@
+const path = require("path");
 const express = require("express");
 const ndjson = require("ndjson");
-const fs = require("fs");
+const { promisify } = require("util");
+const { LOGGING_DIR } = require("../env");
+const writeFile = promisify(require("fs").writeFile);
+const mkdirp = promisify(require("mkdirp"));
+const dateFormat = require("dateformat");
 
 module.exports = function makeServer() {
   const app = express();
@@ -19,13 +24,7 @@ module.exports = function makeServer() {
     req
       .pipe(ndjson.parse())
       .on("data", line => {
-        const options = {
-          timeZone: "America/Chicago",
-          day: "numeric",
-          hour: "numeric",
-          minute: "numeric"
-        };
-        line.timestamp = new Date(line.time).toLocaleDateString("en-US", options);
+        line.timestamp = dateFormat(new Date(line.time), "ddd dd h:M");
 
         trackErrors(line.err);
         trackMachineLevelEvents(line);
@@ -158,15 +157,18 @@ module.exports = function makeServer() {
     res.send(system.errors);
   });
 
-  app.post("/log/save", (req, res) => {
-    fs.writeFile(
-      `logs/${Date.now().toLocaleString()}`,
-      JSON.stringify({
-        system,
-        machines,
-        domains
-      })
-    );
+  app.post("/log/save", async (req, res) => {
+    const saveDirectory = path.join(LOGGING_DIR, "stats");
+    mkdirp(saveDirectory).then(_ => {
+      return writeFile(
+        path.join(saveDirectory, dateFormat(Date.now(), "ddd dd h:M")),
+        JSON.stringify({
+          system,
+          machines,
+          domains
+        })
+      );
+    });
     res.sendStatus(202);
   });
 
