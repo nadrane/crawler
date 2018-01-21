@@ -24,8 +24,7 @@ module.exports = function makeServer() {
     req
       .pipe(ndjson.parse())
       .on("data", line => {
-        line.timestamp = dateFormat(new Date(line.time), "ddd dd h:M");
-
+        line.timestamp = stripSecondsFromTime(line.time);
         trackErrors(line.err);
         trackMachineLevelEvents(line);
         trackDomainLevelEvents(line);
@@ -35,6 +34,13 @@ module.exports = function makeServer() {
         res.sendStatus(200);
       });
   });
+
+  function stripSecondsFromTime(time) {
+    const milliseconds = new Date(time).getTime();
+
+    // Remove any trailing seconds and milliseconds, effectively reducing accuracy
+    return milliseconds - Math.floor(milliseconds % (60 * 1000));
+  }
 
   function trackErrors(err) {
     if (!err) return;
