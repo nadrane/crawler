@@ -4,20 +4,21 @@ const mkdirp = require("mkdirp");
 const { createWriteStream } = require("fs");
 const { LOGGING_DIR } = require("../env/");
 
-const statsPath = path.join(LOGGING_DIR, "stats");
-const statsFile = path.join(statsPath, Date.now());
-mkdirp(statsPath);
 
 module.exports = function makeServer() {
+  const logFile = path.join(LOGGING_DIR, Date.now().toString());
+  mkdirp(LOGGING_DIR);
   const app = express();
 
   app.post("/log", (req, res) => {
-    req.pipe(createWriteStream(statsFile));
-
-    res.sendStatus(202);
+    req.pipe(createWriteStream(logFile, { flags: "a" }));
+    req.on("end", () => {
+      res.send({ logFile: logFile });
+    });
   });
 
   app.use((err, req, res, next) => {
+    console.log("errdsfdsf");
     res.status(500);
     res.send({ message: err.message, stack: err.stack });
   });
