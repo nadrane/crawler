@@ -41,10 +41,29 @@ describe("Logger", () => {
     }
     logger.end("log8");
     logger.on("finish", () => {
-      expect(http.post.firstCall.calledWithExactly(fakeUrl, ["log1", "log2", "log3"].join("\n"))).to.be.true;
-      expect(http.post.secondCall.calledWithExactly(fakeUrl, ["log4", "log5", "log6"].join("\n"))).to.be.true;
+      expect(http.post.firstCall.calledWithExactly(fakeUrl, ["log1", "log2", "log3"].join("\n"))).to.be
+        .true;
+      expect(http.post.secondCall.calledWithExactly(fakeUrl, ["log4", "log5", "log6"].join("\n"))).to.be
+        .true;
       expect(http.post.thirdCall.calledWithExactly(fakeUrl, ["log7", "log8"].join("\n"))).to.be.true;
       done();
     });
+  });
+  it.only("will flush the buffer to the server after one minute", () => {
+    const clock = sinon.useFakeTimers();
+    const http = { post: sinon.stub().returns(Promise.resolve()) };
+    const fakeUrl = "fakeUrl4";
+    const logger = new LogStream(fakeUrl, http, 3);
+
+    logger.write("log1");
+    logger.write("log2");
+    clock.tick(59999);
+    expect(http.post.called).to.be.false;
+    clock.tick(1);
+    expect(http.post.calledOnce).to.be.true;
+    console.log(http.post);
+    expect(http.post.calledWithExactly(fakeUrl, ["log1", "log2"].join("\n"))).to.be.true;
+
+    clock.restore();
   });
 });

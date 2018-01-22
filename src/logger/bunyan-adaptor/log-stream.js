@@ -8,6 +8,9 @@ class LogStream extends Writable {
     this.url = url;
     this.http = http;
     this.bufferSize = bufferSize;
+
+    const oneMinute = 1000 * 60;
+    this.flushEventually = setInterval(this._makeRequest.bind(this), oneMinute);
   }
 
   _write(log, encoding, callback) {
@@ -20,6 +23,7 @@ class LogStream extends Writable {
   }
 
   _makeRequest(callback) {
+    clearInterval(this.flushEventually);
     this.http
       .post(this.url, this.buffer.join("\n"))
       .then(() => {
@@ -30,6 +34,10 @@ class LogStream extends Writable {
         err.config.data = "";
         console.log("error posting", err);
         callback();
+      })
+      .then(() => {
+        const oneMinute = 1000 * 60;
+        this.flushEventually = setInterval(this._makeRequest.bind(this), oneMinute);
       });
   }
 
