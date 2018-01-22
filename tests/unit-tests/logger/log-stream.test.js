@@ -49,7 +49,7 @@ describe("Logger", () => {
       done();
     });
   });
-  it.only("will flush the buffer to the server after one minute", () => {
+  it("will flush the buffer to the server after one minute", () => {
     const clock = sinon.useFakeTimers();
     const http = { post: sinon.stub().returns(Promise.resolve()) };
     const fakeUrl = "fakeUrl4";
