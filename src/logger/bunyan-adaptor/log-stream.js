@@ -16,24 +16,23 @@ class LogStream extends Writable {
   _write(log, encoding, callback) {
     this.buffer.push(log);
     if (this.buffer.length >= this.bufferSize) {
-      this._makeRequest(callback);
+      this._makeRequest().then(() => {
+        callback();
+      });
     } else {
       callback();
     }
   }
 
-  _makeRequest(callback) {
+  _makeRequest() {
     clearInterval(this.flushEventually);
-    this.http
+    return this.http
       .post(this.url, this.buffer.join("\n"))
       .then(() => {
         this.buffer = [];
-        callback();
       })
       .catch(err => {
-        err.config.data = "";
         console.log("error posting", err);
-        callback();
       })
       .then(() => {
         const oneMinute = 1000 * 60;

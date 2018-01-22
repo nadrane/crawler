@@ -8,7 +8,7 @@ const rimraf = promisify(require("rimraf"));
 const { LOGGING_DIR } = require("APP/env");
 const makeServer = require("APP/statistics/server");
 
-describe.only("Stats Server", () => {
+describe("Stats Server", () => {
   beforeEach(() => {
     return rimraf(LOGGING_DIR);
   });

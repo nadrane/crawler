@@ -61,7 +61,6 @@ describe("Logger", () => {
     expect(http.post.called).to.be.false;
     clock.tick(1);
     expect(http.post.calledOnce).to.be.true;
-    console.log(http.post);
     expect(http.post.calledWithExactly(fakeUrl, ["log1", "log2"].join("\n"))).to.be.true;
 
     clock.restore();
