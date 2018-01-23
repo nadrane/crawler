@@ -141,7 +141,7 @@ module.exports = logger => {
         url,
         domain,
         subdomain,
-        responseTime
+        data: responseTime
       });
     }
   };
