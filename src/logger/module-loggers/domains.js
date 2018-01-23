@@ -7,7 +7,9 @@ module.exports = logger => {
     addingToFrontier: (fromUrl, newUrl) => {
       const newDomain = getDomain(newUrl);
       const { domain, subdomain } = parse(fromUrl);
-      logger.info({
+      // This happens sooo often, relegate it to trace level
+      // to not pollute logs
+      logger.trace({
         event: "new link",
         codeModule,
         fromUrl,
