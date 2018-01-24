@@ -27,7 +27,7 @@ class LogStream extends Writable {
   _makeRequest() {
     clearInterval(this.flushEventually);
     return this.http
-      .post(this.url, this.buffer.join("\n"))
+      .post(this.url, this.buffer.join(""))
       .then(() => {
         this.buffer = [];
       })
