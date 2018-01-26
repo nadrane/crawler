@@ -4,16 +4,17 @@ const mkdirp = require("mkdirp");
 const { createWriteStream } = require("fs");
 const { LOGGING_DIR } = require("../env/");
 
-
 module.exports = function makeServer() {
   const logFile = path.join(LOGGING_DIR, Date.now().toString());
   mkdirp(LOGGING_DIR);
   const app = express();
 
   app.post("/log", (req, res) => {
-    req.pipe(createWriteStream(logFile, { flags: "a" }));
+    req.pipe(createWriteStream(logFile, { flags: "a" })).on("error", err => {
+      console.log(err);
+    });
     req.on("end", () => {
-      res.send({ logFile: logFile });
+      res.send({ logFile });
     });
   });
 
