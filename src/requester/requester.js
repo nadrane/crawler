@@ -1,4 +1,4 @@
-const { USER_AGENT } = require("APP/env");
+const { USER_AGENT, GET_REQUEST_TIMEOUT } = require("APP/env");
 
 module.exports = function makeRequester(logger, http) {
   return crawlWithGetRequest.bind(null, logger, http);
@@ -11,7 +11,7 @@ async function crawlWithGetRequest(logger, http, url) {
     response = await http({
       url,
       responseType: "stream",
-      timeout: 5000,
+      timeout: GET_REQUEST_TIMEOUT,
       headers: {
         userAgent: USER_AGENT
       }

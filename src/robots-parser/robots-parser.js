@@ -1,7 +1,7 @@
 const { URL } = require("url");
 const robotsParser = require("robots-parser");
 const LRU = require("lru-cache");
-const { USER_AGENT, ROBOTS_CACHE_SIZE } = require("APP/env/");
+const { USER_AGENT, ROBOTS_CACHE_SIZE, ROBOTS_REQUEST_TIMEOUT } = require("APP/env/");
 
 const makeRobotsTxtUrl = (protocol, port, hostname) =>
   port ? `${protocol}//${hostname}:${port}/robots.txt` : `${protocol}//${hostname}/robots.txt`;
@@ -47,7 +47,7 @@ async function getAndParseRobotsTxt(robotsTxtUrl, http, logger) {
   try {
     robotsResponse = await http({
       url: robotsTxtUrl,
-      timeout: 2000,
+      timeout: ROBOTS_REQUEST_TIMEOUT,
       maxRedirects: 5
     });
   } catch (err) {
