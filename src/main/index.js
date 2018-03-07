@@ -44,19 +44,32 @@ SERVER_INFO.then(async ({ statServerUrl, statServerPort, bloomFilterUrl }) => {
   if (resetFrontier) {
     await deleteFrontier();
   }
+  try {
+    await bloomFilterClient.initializeBloomFilter();
+  } catch (err) {
+    console.log("bloom filter initialization failed.");
+    process.exit(1);
+  }
   startStatServer(statServerUrl, statServerPort);
-  await bloomFilterClient.initializeBloomFilter();
   const machineIndex = await MACHINE_INDEX;
+  console.log("awaiting seed");
   const seed = await SEED_FILE_PROMISE;
   console.log("seed file downloaded");
   const thisMachinesSeed = chunkByIndex(seed, numberOfMachines)[machineIndex];
   const urlChunks = chunkByIndex(thisMachinesSeed, numCPUs);
+  console.log("url chunks", urlChunks);
   createChildren(urlChunks, logger);
 });
 
-function deleteFrontier() {
+async function deleteFrontier() {
   console.log("deleting frontier directory", FRONTIER_DIRECTORY);
-  return rimraf(FRONTIER_DIRECTORY);
+  try {
+    await rimraf(FRONTIER_DIRECTORY);
+  } catch (err) {
+    console.err(err);
+    console.log("failed to delete frontier");
+    process.exit(1);
+  }
 }
 
 function startStatServer(statServerUrl, statServerPort) {

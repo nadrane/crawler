@@ -2,7 +2,7 @@ const bloomd = require("bloomd");
 const { BLOOM_FILTER_NAME } = require("APP/env/");
 
 module.exports = function(logger, host) {
-  const client = bloomd.createClient({ host });
+  const client = bloomd.createClient({ host, debug: true, maxConnectionAttempts: 10 });
   client.on("error", err => {
     logger.unexpectedError(err, "bloom filter");
   });
@@ -44,7 +44,16 @@ module.exports = function(logger, host) {
   };
 
   const initializeBloomFilter = async function() {
-    await drop();
+    try {
+      console.log("dropping bf");
+      await drop();
+    } catch (err) {
+      console.log(
+        "failed to drop existing bloom filter. Connection likely failed. Make sure your bloom filter is running"
+      );
+      console.error(err);
+      throw err;
+    }
     let tries = 0;
     let success = false;
     while (tries < 5 && !success) {
@@ -58,7 +67,7 @@ module.exports = function(logger, host) {
       await sleep(1000);
     }
     if (!success) {
-      throw new Error("failed to initialize bloom filter");
+      throw new Error("failed to initialize bloom filter. Make sure your bloom filter is running");
     } else {
       console.log("BF created");
     }
