@@ -1,20 +1,21 @@
 {
-  "name": "crawler",
+  "name": "crawler-analyzer",
   "version": "1.0.0",
-  "description": "",
+  "description":
+    "The goal of this project is to build a distributed, decentralized crawler to scrape 1 billion web pages using a couple hundred dollars  of commodity AWS hardware. The trick is using AWS spot instances, which allow compute on-demand with Amazon's idle resources. When demand is low, these spot instances can cost anywhere from 10-60% of their original price.",
   "main": "index.js",
   "scripts": {
     "prod": "cross-env NODE_ENV=production node --max-old-space-size=4096 src/index.js",
     "dev": "cross-env NODE_ENV=development node --max-old-space-size=2056 src/index.js",
     "stat-prod": "cross-env NODE_ENV=production node statistics/startServer.js 0.0.0.0 80",
-    "debug": "cross-env NODE_ENV=development node --inspect src/index.js",
+    "debug": "cross-env NODE_ENV=development node --inspect-brk src/index.js",
     "test-unit":
       "cross-env NODE_ENV=test ./node_modules/mocha/bin/mocha tests/unit-tests/**/*test.js -w --reporter spec",
     "test-integration":
       "cross-env NODE_ENV=test ./node_modules/mocha/bin/mocha tests/integration-tests/**/*test.js -w --reporter spec",
     "test":
       "cross-env NODE_ENV=test ./node_modules/mocha/bin/mocha tests/**/*test.js -w --reporter spec",
-    "lint": "./node_modules/.bin/eslint .",
+    "lint": "eslint .",
     "profile": "cross-env NODE_ENV=development node --prof src/index.js",
     "postinstall":
       "node -e \"var s='../',d='node_modules/APP',fs=require('fs');fs.exists(d,function(e){e||fs.symlinkSync(s,d,'dir')});\""
@@ -57,5 +58,16 @@
     "stream-array": "^1.1.2",
     "string-to-stream": "^1.1.0",
     "supertest": "^3.0.0"
-  }
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nadrane/crawler.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nadrane/crawler/issues"
+  },
+  "homepage": "https://github.com/nadrane/crawler#readme"
 }
