@@ -2,7 +2,7 @@ const bloomd = require("bloomd");
 const { BLOOM_FILTER_NAME } = require("APP/env/");
 
 module.exports = function(logger, host) {
-  const client = bloomd.createClient({ host, debug: true, maxConnectionAttempts: 10 });
+  const client = bloomd.createClient({ host, maxConnectionAttempts: 10 });
   client.on("error", err => {
     logger.unexpectedError(err, "bloom filter");
   });
