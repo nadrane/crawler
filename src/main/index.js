@@ -52,12 +52,10 @@ SERVER_INFO.then(async ({ statServerUrl, statServerPort, bloomFilterUrl }) => {
   }
   startStatServer(statServerUrl, statServerPort);
   const machineIndex = await MACHINE_INDEX;
-  console.log("awaiting seed");
   const seed = await SEED_FILE_PROMISE;
   console.log("seed file downloaded");
   const thisMachinesSeed = chunkByIndex(seed, numberOfMachines)[machineIndex];
   const urlChunks = chunkByIndex(thisMachinesSeed, numCPUs);
-  console.log("url chunks", urlChunks);
   createChildren(urlChunks, logger);
 });
 
