@@ -14,6 +14,17 @@ const { SERVER_INFO } = require("../../env/");
 
 const eventCoorindator = new Events();
 
+// Only run if forked from main process
+if (require.main === module) {
+  SERVER_INFO.then(({ statServerUrl, statServerPort, bloomFilterUrl }) => {
+    const seedData = process.argv.slice(2)[0].split(",");
+    const maxConcurrency = process.argv.slice(2)[1];
+    const logger = makeLogger(eventCoorindator, axios, { statServerUrl, statServerPort });
+    const bloomFilterClient = makeBloomFilterClient(logger, bloomFilterUrl);
+    initializeChildProcess(seedData, logger, axios, fs, bloomFilterClient, maxConcurrency);
+  });
+}
+
 function initializeChildProcess(seedData, logger, http, storage, bloomFilterClient, maxConcurrency) {
   configureProcessErrorHandling(logger);
   process.on("disconnect", () => {
@@ -36,22 +47,11 @@ function initializeChildProcess(seedData, logger, http, storage, bloomFilterClie
   );
 
   domainStream
-    .pipe(bloomFilterCheckStream)
-    .pipe(robotsStream)
-    .pipe(bloomFilterSetStream) // notice we mark it visited before visiting. If we the request fails, it fails for good
+    // .pipe(bloomFilterCheckStream)
+    // .pipe(robotsStream)
+    // .pipe(bloomFilterSetStream) // notice we mark it visited before visiting. If we the request fails, it fails for good
     .pipe(requestStream)
     .pipe(process.stdout);
-}
-
-// Only run if forked from main process
-if (require.main === module) {
-  SERVER_INFO.then(({ statServerUrl, statServerPort, bloomFilterUrl }) => {
-    const seedData = process.argv.slice(2)[0].split(",");
-    const maxConcurrency = process.argv.slice(2)[1];
-    const logger = makeLogger(eventCoorindator, axios, { statServerUrl, statServerPort });
-    const bloomFilterClient = makeBloomFilterClient(logger, bloomFilterUrl);
-    initializeChildProcess(seedData, logger, axios, fs, bloomFilterClient, maxConcurrency);
-  });
 }
 
 function responseTimeTrackingHttp(logger, codeModule) {
