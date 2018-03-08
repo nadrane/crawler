@@ -12,9 +12,9 @@ module.exports = {
     statServerPort: 8082,
     bloomFilterUrl: "127.0.0.1"
   }),
-  MAX_CONCURRENCY: 10,
+  MAX_CONCURRENCY: 50,
   SEED_FILE_PROMISE: new Promise(resolve => {
-    resolve(require("APP/seed.json").slice(0, 5000)); // First 25,000 entries for dev environemnt
+    resolve(require("APP/seed.json").slice(0, 25000)); // First 25,000 entries for dev environemnt
   }),
   FRONTIER_DIRECTORY: path.resolve(__dirname, "../frontiers"),
   DOMAIN_REQUEST_TIME_INTERVAL: 20 * 1000,
