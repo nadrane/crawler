@@ -19,7 +19,7 @@ module.exports = function makeServer() {
   });
 
   app.use((err, req, res, next) => {
-    console.log("errdsfdsf");
+    console.log("stat server error");
     res.status(500);
     res.send({ message: err.message, stack: err.stack });
   });
