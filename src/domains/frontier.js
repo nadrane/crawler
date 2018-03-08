@@ -58,7 +58,9 @@ class Frontier {
   }
 
   _initializeFrontierFiles(seedDomain) {
-    const domainWithProtocol = seedDomain.startsWith("http://") ? seedDomain : `http://${seedDomain}`;
+    const domainWithProtocol = seedDomain.startsWith("http://")
+      ? seedDomain
+      : `http://${seedDomain}`;
     mkdirp.sync(this.filePaths.root);
 
     let frontierExists;
@@ -72,6 +74,7 @@ class Frontier {
     if ((frontierExists && !fronterIndexExists) || (fronterIndexExists && !frontierExists)) {
       const error = new Error("cannot have frontier or frontier-index without the other");
       this.logger.frontier.frontierFilesCorrupt(error, seedDomain);
+      process.exit(1);
     }
 
     try {
@@ -88,7 +91,8 @@ class Frontier {
         this.uncrawledUrlsInFrontier = frontierSize - this.frontierIndex;
         if (this.uncrawledUrlsInFrontier < 0) {
           const error = new Error("urls uncrawled cannot be less than 0");
-          this.logger.frontier.corruptFileConfiguration(error, this.seedDomain);
+          this.logger.frontier.frontierFilesCorrupt(error, this.seedDomain);
+          process.exit(1);
         }
       } else {
         this.storage.writeFileSync(this.filePaths.frontier, `${domainWithProtocol}\n`);
@@ -137,7 +141,7 @@ class Frontier {
   }
 
   async _flushFrontierIndex() {
-    //Not about race conditions but about keeping track of file descriptors open
+    // Not about race conditions but about keeping track of file descriptors open
     if (!this.currentlyReading) return;
 
     this.currentlyReading = true;
