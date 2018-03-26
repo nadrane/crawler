@@ -1,12 +1,22 @@
 const path = require("path");
 const express = require("express");
 const mkdirp = require("mkdirp");
-const { createWriteStream } = require("fs");
-const { LOGGING_DIR } = require("../env/");
+const { createWriteStream, writeFileSync } = require("fs");
+const os = require("os");
+const env = require("../env/");
+
+const { LOGGING_DIR } = env;
 
 module.exports = function makeServer() {
   const logFile = path.join(LOGGING_DIR, Date.now().toString());
   mkdirp(LOGGING_DIR);
+  try {
+    writeFileSync(logFile, `${JSON.stringify(Object.assign({ hostname: os.hostname() }, env))}\n`);
+  } catch (err) {
+    console.error("failed to start stat server - could not initialize log file");
+    throw err;
+  }
+
   const app = express();
 
   app.post("/log", (req, res) => {
