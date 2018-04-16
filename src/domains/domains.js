@@ -2,75 +2,41 @@ const DomainTracker = require("./domain-tracker");
 const { getDomain } = require("tldjs");
 
 class Domains {
-  constructor(seedData, eventCoordinator, storage, logger) {
-    this.domainTrackers = new Map();
-    this.storage = storage;
+  constructor(seedData, logger) {
+    this.domainTrackers = [];
     this.logger = logger;
-    this.seedDomains(seedData, logger);
-    this.domainGenerator = this._nextDomain();
-    eventCoordinator.on("new link", ({ fromUrl, newUrl }) => {
-      this.appendNewUrl(newUrl);
-      logger.domains.addingToFrontier(fromUrl, newUrl);
-    });
+    this.seedDomains(seedData);
+    // eventCoordinator.on("new link", ({ fromUrl, newUrl }) => {
+    //   this.appendNewUrl(newUrl);
+    //   logger.domains.addingToFrontier(fromUrl, newUrl);
+    // });
   }
 
-  seedDomains(seedData, logger) {
+  seedDomains(seedData) {
     seedData.forEach(domain => {
       const domainWithoutSubdomains = getDomain(domain);
       if (!domainWithoutSubdomains) return;
-      this.domainTrackers.set(
-        domainWithoutSubdomains,
-        new DomainTracker(domainWithoutSubdomains, logger, this.storage)
-      );
+
+      this.domainTrackers.push(new DomainTracker(domainWithoutSubdomains));
     });
   }
 
-  appendNewUrl(url) {
-    const domain = getDomain(url);
-    const domainTracker = this.domainTrackers.get(domain);
-    // Only track a specific subset of domains on each server.
-    // If a link is found to an unseeded domain, ignore it
-    if (!domainTracker) return;
-
-    domainTracker.appendNewUrl(url);
+  domainsAvailable() {
+    return this.domainTrackers[0].politeToScrape();
   }
 
-  countOpenFiles() {
-    let filesOpen = 0;
-    for (const domainTracker of this.domainTrackers.values()) {
-      filesOpen += domainTracker.currentlyReading() ? 1 : 0;
-    }
-    return filesOpen;
-  }
-
-  *_nextDomain() {
-    for (const [domain, domainTracker] of this.domainTrackers) {
-      if (domainTracker.readyToScrape()) {
-        yield domain;
-      }
-    }
-  }
-
-  getDomainToScrape() {
-    let domain = this.domainGenerator.next();
-    if (domain.done) {
-      this.domainGenerator = this._nextDomain();
-      domain = this.domainGenerator.next();
-    }
-    return domain.value;
-  }
-
-  async getNextUrlToScrape() {
-    this.logger.domains.fetchingUrl();
-    const domain = this.getDomainToScrape();
-    if (!domain) {
+  getNextDomainToScrape() {
+    const domainTracker = this.domainTrackers[0];
+    if (!domainTracker.politeToScrape()) {
       this.logger.domains.noReadyDomains();
-      return Promise.resolve("");
+      return null;
     }
-    const domainTracker = this.domainTrackers.get(domain);
-    const nextUrl = domainTracker.getNextUrl();
-    this.logger.domains.urlFetched(domain);
-    return nextUrl;
+
+    this.domainTrackers.push(this.domainTrackers.shift());
+
+    const nextDomain = domainTracker.domain;
+    this.logger.domains.domainFetched(nextDomain);
+    return nextDomain;
   }
 }
 

@@ -1,7 +1,7 @@
 const path = require("path");
 const sinon = require("sinon");
 const { expect } = require("chai");
-const Frontier = require("APP/src/domains/frontier");
+const Frontier = require("APP/src/frontiers/frontier")
 const { FRONTIER_DIRECTORY } = require("APP/env/");
 const makeLogger = require("APP/src/logger/");
 const Events = require("events");

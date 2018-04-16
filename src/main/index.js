@@ -9,6 +9,7 @@ const makeLogger = require("../logger/");
 const numCPUs = require("os").cpus().length;
 const { promisify } = require("util");
 const rimraf = promisify(require("rimraf"));
+const posix = require("posix");
 
 const {
   MAX_CONCURRENCY,
@@ -35,9 +36,16 @@ if (isProd()) {
   numberOfMachines = 1;
 }
 
+process.title = "crawler - parent";
+posix.setrlimit("nofile", { soft: 10000 });
+
 SERVER_INFO.then(async ({ statServerUrl, statServerPort, bloomFilterUrl }) => {
   const eventCoordinator = new Events();
-  const logger = makeLogger(eventCoordinator, axios, { statServerUrl, statServerPort, outputFile: o });
+  const logger = makeLogger(eventCoordinator, axios, {
+    statServerUrl,
+    statServerPort,
+    outputFile: o
+  });
   const bloomFilterClient = makeBloomFilterClient(logger, bloomFilterUrl);
   configureProcessErrorHandling(logger);
   configureServerTermination();

@@ -1,59 +1,65 @@
-const { parse, getDomain } = require("tldjs");
+// const { parse, getDomain } = require("tldjs");
 
 const codeModule = "domains";
 
-module.exports = logger => {
-  return {
-    addingToFrontier: (fromUrl, newUrl) => {
-      const newDomain = getDomain(newUrl);
-      const { domain, subdomain } = parse(fromUrl);
-      // This happens sooo often, relegate it to trace level
-      // to not pollute logs
-      logger.trace({
-        event: "new link",
-        codeModule,
-        fromUrl,
-        newUrl,
-        newDomain,
-        domain,
-        subdomain
-      });
-    },
+module.exports = logger => ({
+  // addingToFrontier: (fromUrl, newUrl) => {
+  //   const newDomain = getDomain(newUrl);
+  //   const { domain, subdomain } = parse(fromUrl);
+  //   // This happens sooo often, relegate it to trace level
+  //   // to not pollute logs
+  //   logger.trace({
+  //     event: "new link",
+  //     codeModule,
+  //     fromUrl,
+  //     newUrl,
+  //     newDomain,
+  //     domain,
+  //     subdomain
+  //   });
+  // },
 
-    fetchingUrl: () => {
-      logger.debug({
-        event: "fetching url",
-        codeModule
-      });
-    },
+  // fetchingUrl: () => {
+  //   logger.debug({
+  //     event: "fetching url",
+  //     codeModule
+  //   });
+  // },
 
-    noReadyDomains: () => {
-      logger.debug({
-        event: "no ready domains",
-        codeModule
-      });
-    },
+  domainFetched: domain => {
+    logger.debug({
+      event: "domain fetched",
+      codeModule,
+      domain
+    });
+  },
 
-    urlFetched: url => {
-      logger.debug({
-        event: "url fetched",
-        codeModule,
-        url
-      });
-    },
+  noReadyDomains: () => {
+    logger.debug({
+      event: "no ready domains",
+      codeModule
+    });
+  },
 
-    crawlerStopped: () => {
-      logger.info({
-        event: "crawler stopped",
-        codeModule
-      });
-    },
+  // urlFetched: url => {
+  //   logger.debug({
+  //     event: "url fetched",
+  //     codeModule,
+  //     url
+  //   });
+  // },
 
-    crawlerResumed: () => {
-      logger.info({
-        event: "crawler resumed",
-        codeModule
-      });
-    }
-  };
-};
+  crawlerStopped: () => {
+    logger.info({
+      event: "crawler stopped",
+      codeModule
+    });
+  },
+
+  crawlerResumed: () => {
+    logger.info({
+      event: "crawler resumed",
+      codeModule
+    });
+  }
+});
