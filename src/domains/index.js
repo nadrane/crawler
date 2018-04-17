@@ -32,6 +32,7 @@ class DomainReaderStream extends Readable {
   }
 
   reset() {
+    this.timeout = null;
     if (this.domains.domainsAvailable()) {
       this._read();
     } else {
@@ -39,17 +40,18 @@ class DomainReaderStream extends Readable {
     }
   }
 
-  _read() {
-    if (this.isPaused()) {
-      console.log("domain stream paused");
+  _destroy(err, cb) {
+    if (this.timeout) {
       clearTimeout(this.timeout);
-      return;
     }
+    super._destroy(err, cb);
+  }
 
+  _read() {
     const nextDomain = this.domains.getNextDomainToScrape();
     if (nextDomain) {
       this.push(nextDomain);
-    } else {
+    } else if (!this.timeout) {
       this.timeout = setTimeout(this.reset.bind(this), 1000);
     }
   }

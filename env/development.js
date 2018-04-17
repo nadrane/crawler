@@ -13,10 +13,14 @@ module.exports = {
     bloomFilterUrl: "127.0.0.1"
   }),
   MAX_CONCURRENCY: 50,
+  // SEED_FILE_PROMISE: new Promise(resolve => {
+  //   resolve(require("APP/seed.json").slice(0, 25000)); // First 25,000 entries for dev environemnt
+  // }),
   SEED_FILE_PROMISE: new Promise(resolve => {
-    resolve(require("APP/seed.json").slice(0, 25000)); // First 25,000 entries for dev environemnt
+    resolve(["books.toscrape.com"]);
   }),
   FRONTIER_DIRECTORY: path.resolve(__dirname, "../frontiers"),
-  DOMAIN_REQUEST_TIME_INTERVAL: 20 * 1000,
-  LOG_STREAM_BUFFER_SIZE: 50
+  DOMAIN_REQUEST_TIME_INTERVAL: 0 * 1000,
+  LOG_STREAM_BUFFER_SIZE: 50,
+  APPEND_FLUSH_TIME: 0
 };

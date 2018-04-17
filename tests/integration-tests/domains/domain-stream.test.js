@@ -16,14 +16,14 @@ function testAllUrlsReadFromStream(stream, seed, done) {
       }
 
       if (urlsRead === numberOfUrls && seed.length !== 0) {
-        console.log("pausing");
-        stream.pause();
+        console.log("destroying");
+        stream.destroy();
         done(new Error("Not every url was streamed"));
         return;
       }
       if (urlsRead === numberOfUrls && seed.length === 0) {
-        console.log("pausing");
-        stream.pause();
+        console.log("destroying");
+        stream.destroy();
         done();
         return;
       }
@@ -58,23 +58,25 @@ describe("domain stream", () => {
     testAllUrlsReadFromStream(domainStream, seed, done);
   });
 
-  it("runs indefinitely if given the chance", done => {
+  it("runs indefinitely if given the chance", () => {
     const seed = require("APP/seed").slice(0, 10);
     const domainStream = makeDomainStream(seed, eventCoordinator, logger);
 
     const urls = [];
-    domainStream.on("readable", () => {
-      let url = domainStream.read();
+    return new Promise((resolve, reject) => {
+      setTimeout(reject, 3000);
+      domainStream.on("readable", () => {
+        let url = domainStream.read();
 
-      while (url) {
-        urls.push(url);
-        if (urls.length > 20) {
-          domainStream.pause();
-          done();
-          return;
+        while (urls.length < 21 && url !== null) {
+          urls.push(url);
+          url = domainStream.read();
         }
-        url = domainStream.read();
-      }
+        if (urls.length >= 21) {
+          domainStream.destroy();
+          resolve();
+        }
+      });
     });
   }).timeout(3000);
 });

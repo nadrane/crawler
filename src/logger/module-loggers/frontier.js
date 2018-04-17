@@ -1,6 +1,32 @@
-const codeModule = "frontier";
+const { parse, getDomain } = require("tldjs");
+
+const codeModule = "frontiers";
 
 module.exports = logger => ({
+  appendingUrl: (fromUrl, newUrl) => {
+    const newDomain = getDomain(newUrl);
+    const { domain, subdomain } = parse(fromUrl);
+    // This happens sooo often, relegate it to trace level
+    // to not pollute logs
+    logger.trace({
+      event: "new link",
+      codeModule,
+      fromUrl,
+      newUrl,
+      newDomain,
+      domain,
+      subdomain
+    });
+  },
+
+  indexFlushedWithoutLock: filePaths => {
+    logger.fatal({
+      event: "index flushed without lock",
+      codeModule,
+      filePaths
+    });
+  },
+
   frontierExistsCheckFailed: (err, domain) => {
     logger.fatal({
       err,

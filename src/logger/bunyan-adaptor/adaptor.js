@@ -11,7 +11,7 @@ const bunyanFactory = logStream => outputFile => {
 
   if (!isTest() && outputFile) {
     streams.push({
-      level: "info",
+      level: "trace",
       path: outputFile
     });
   }

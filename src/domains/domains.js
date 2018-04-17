@@ -6,10 +6,6 @@ class Domains {
     this.domainTrackers = [];
     this.logger = logger;
     this.seedDomains(seedData);
-    // eventCoordinator.on("new link", ({ fromUrl, newUrl }) => {
-    //   this.appendNewUrl(newUrl);
-    //   logger.domains.addingToFrontier(fromUrl, newUrl);
-    // });
   }
 
   seedDomains(seedData) {

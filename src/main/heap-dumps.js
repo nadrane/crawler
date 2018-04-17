@@ -9,6 +9,6 @@ module.exports = function configureHeapDumps() {
     mkdirp(debugDir);
     setInterval(() => {
       heapdump.writeSnapshot(path.join(debugDir, `${Date.now()}.heapsnapshot`));
-    }, 10 * 1000);
+    }, 60 * 5 * 1000);
   }
 };

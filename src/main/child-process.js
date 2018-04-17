@@ -17,10 +17,10 @@ const eventCoordinator = new Events();
 
 // Only run if forked from main process
 if (require.main === module) {
-  SERVER_INFO.then(({ statServerUrl, statServerPort, bloomFilterUrl }) => {
+  SERVER_INFO.then(async ({ statServerUrl, statServerPort, bloomFilterUrl }) => {
     const seedData = process.argv.slice(2)[0].split(",");
     const maxConcurrency = process.argv.slice(2)[1];
-    const logger = makeLogger(eventCoordinator, axios, { statServerUrl, statServerPort });
+    const logger = await makeLogger(eventCoordinator, axios, { statServerUrl, statServerPort });
     const bloomFilterClient = makeBloomFilterClient(logger, bloomFilterUrl);
     initializeChildProcess(seedData, logger, axios, fs, bloomFilterClient, maxConcurrency);
   });
@@ -35,14 +35,19 @@ function initializeChildProcess(
   maxConcurrency
 ) {
   process.title = "crawler - child";
-
   configureProcessErrorHandling(logger);
   process.on("disconnect", () => {
     console.log(process.pid, "disconnected");
   });
 
   const domainStream = makeDomainStream(seedData, eventCoordinator, logger, maxConcurrency);
-  const domainToUrlStream = makeDomainToUrlStream(seedData, logger, storage, maxConcurrency);
+  const domainToUrlStream = makeDomainToUrlStream(
+    seedData,
+    logger,
+    eventCoordinator,
+    storage,
+    maxConcurrency
+  );
   // const bloomFilterCheckStream = makeBloomFilterCheckStream(
   //   bloomFilterClient,
   //   logger,
@@ -54,20 +59,20 @@ function initializeChildProcess(
   //   responseTimeTrackingHttp(logger, "robots"),
   //   maxConcurrency
   // );
-  // const requestStream = makeRequestStream(
-  //   logger,
-  //   responseTimeTrackingHttp(logger, "requester"),
-  //   eventCoordinator,
-  //   maxConcurrency
-  // );
+  const requestStream = makeRequestStream(
+    logger,
+    responseTimeTrackingHttp(logger, "requester"),
+    eventCoordinator,
+    maxConcurrency
+  );
 
   domainStream
     .pipe(domainToUrlStream)
     // .pipe(bloomFilterCheckStream)
     // .pipe(robotsStream)
     // .pipe(bloomFilterSetStream) // notice we mark it visited before visiting. If we the request fails, it fails for good
-    // .pipe(requestStream)
-    .pipe(process.stdout);
+    .pipe(requestStream);
+  // .pipe(process.stdout);
 }
 
 function responseTimeTrackingHttp(logger, codeModule) {
