@@ -22,5 +22,5 @@ module.exports = {
   FRONTIER_DIRECTORY: path.resolve(__dirname, "../frontiers"),
   DOMAIN_REQUEST_TIME_INTERVAL: 0 * 1000,
   LOG_STREAM_BUFFER_SIZE: 50,
-  APPEND_FLUSH_TIME: 0
+  APPEND_FLUSH_TIME: 2000 // Not possible to set this below 2000 milliseconds
 };
