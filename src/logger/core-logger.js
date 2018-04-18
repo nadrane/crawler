@@ -19,7 +19,7 @@ class Logger {
     this.bloomFilter = this._addUnexpectedError(makeBloomFilterLogger(logAdaptor), "bloom filter");
     this.robots = this._addUnexpectedError(makeRobotsLogger(logAdaptor), "robots");
     this.requester = this._addUnexpectedError(makeRequesterLogger(logAdaptor), "requester");
-    this.frontier = this._addUnexpectedError(makeFrontierLogger(logAdaptor), "frontier");
+    this.frontiers = this._addUnexpectedError(makeFrontierLogger(logAdaptor), "frontiers");
   }
 
   _addUnexpectedError(moduleLogger, codeModule) {
@@ -42,7 +42,12 @@ class Logger {
   }
 
   unexpectedError(err, event, data, codeModule) {
-    this.logger.error({ err, codeModule, event, data });
+    this.logger.error({
+      err,
+      codeModule,
+      event,
+      data
+    });
     this.trackUnexpectedErrors();
   }
 

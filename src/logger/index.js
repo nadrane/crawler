@@ -16,7 +16,6 @@ module.exports = async function createLogger(
   if (!eventCoordinator) throw new Error("event coordinator expected");
   outputFile = outputFile || path.join(LOGGING_DIR, "logs.txt");
   await rimraf(outputFile);
-  console.log("deleting ", outputFile);
   if (!statServerUrl.startsWith("http://")) {
     statServerUrl = `http://${statServerUrl}`;
   }

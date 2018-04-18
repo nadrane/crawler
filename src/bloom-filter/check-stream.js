@@ -11,9 +11,9 @@ module.exports = function createBFCheckStream(client, logger, concurrency) {
     }
     if (!urlHasBeenVisied) {
       this.push(url);
-      logger.bloomFilter.newLink();
+      logger.bloomFilter.newLink(url);
     } else {
-      logger.bloomFilter.visitedLink();
+      logger.bloomFilter.visitedLink(url);
     }
     done();
   });
