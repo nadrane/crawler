@@ -68,7 +68,6 @@ SERVER_INFO.then(async ({ statServerUrl, statServerPort, bloomFilterUrl }) => {
 });
 
 async function deleteFrontier() {
-  console.log("deleting frontier directory", FRONTIER_DIRECTORY);
   try {
     await rimraf(FRONTIER_DIRECTORY);
   } catch (err) {
