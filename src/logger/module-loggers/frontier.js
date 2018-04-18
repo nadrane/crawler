@@ -3,6 +3,17 @@ const { parse, getDomain } = require("tldjs");
 const codeModule = "frontiers";
 
 module.exports = logger => ({
+  retrievedNextUrl: url => {
+    const { domain, subdomain } = parse(url);
+    logger.debug({
+      event: "retrieved next url",
+      codeModule,
+      url,
+      domain,
+      subdomain
+    });
+  },
+
   appendingUrl: (fromUrl, newUrl) => {
     const newDomain = getDomain(newUrl);
     const { domain, subdomain } = parse(fromUrl);

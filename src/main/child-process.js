@@ -1,6 +1,7 @@
 const axios = require("axios");
 const fs = require("fs");
 const Events = require("events");
+const through2 = require("through2");
 
 const configureProcessErrorHandling = require("./error-handling");
 const makeDomainStream = require("../domains/");
@@ -48,12 +49,12 @@ function initializeChildProcess(
     storage,
     maxConcurrency
   );
-  // const bloomFilterCheckStream = makeBloomFilterCheckStream(
-  //   bloomFilterClient,
-  //   logger,
-  //   maxConcurrency
-  // );
-  // const bloomFilterSetStream = makeBloomFilterSetStream(bloomFilterClient, logger, maxConcurrency);
+  const bloomFilterCheckStream = makeBloomFilterCheckStream(
+    bloomFilterClient,
+    logger,
+    maxConcurrency
+  );
+  const bloomFilterSetStream = makeBloomFilterSetStream(bloomFilterClient, logger, maxConcurrency);
   // const robotsStream = makeRobotsStream(
   //   logger,
   //   responseTimeTrackingHttp(logger, "robots"),
@@ -68,11 +69,19 @@ function initializeChildProcess(
 
   domainStream
     .pipe(domainToUrlStream)
-    // .pipe(bloomFilterCheckStream)
     // .pipe(robotsStream)
-    // .pipe(bloomFilterSetStream) // notice we mark it visited before visiting. If we the request fails, it fails for good
-    .pipe(requestStream);
-  // .pipe(process.stdout);
+    .pipe(requestStream)
+    .pipe(bloomFilterCheckStream)
+    .pipe(bloomFilterSetStream) // notice we mark it visited before visiting. We will only try to visit each url 1 time
+    .pipe(through2.obj(function(url, enc, cb) {
+      eventCoordinator.emit("new link", {
+        newUrl: url,
+        fromUrl: ""
+      });
+      this.push(`${url}\n`);
+      cb();
+    }))
+    .pipe(fs.createWriteStream("/dev/null"));
 }
 
 function responseTimeTrackingHttp(logger, codeModule) {

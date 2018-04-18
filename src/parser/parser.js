@@ -4,7 +4,7 @@ const { URL } = require("url");
 
 class HtmlTolinkStream extends Transform {
   constructor(url, eventCoordinator, logger) {
-    super();
+    super({ objectMode: true });
     this.originalUrl = url;
     this.backPressure = false;
 
@@ -15,10 +15,7 @@ class HtmlTolinkStream extends Transform {
           if (!href) return;
           if (this._tagContainsValidUrl(name, href)) {
             const parsedUrl = new URL(href, this.originalUrl);
-            eventCoordinator.emit("new link", {
-              fromUrl: this.originalUrl,
-              newUrl: parsedUrl.toString()
-            });
+            this.push(parsedUrl.toString());
           }
         },
         onerror: err => {
@@ -60,7 +57,7 @@ class HtmlTolinkStream extends Transform {
 module.exports = function makeParserStream(url, eventCoordinator, logger) {
   const stream = new HtmlTolinkStream(url, eventCoordinator, logger);
   stream.on("error", err => {
-    logger.parser.unexpectError(err, "stream error");
+    logger.parser.unexpectedError(err, "stream error");
   });
   return stream;
 };

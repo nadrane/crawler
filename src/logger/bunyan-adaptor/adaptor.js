@@ -4,14 +4,14 @@ const { isTest } = require("APP/env/");
 const bunyanFactory = logStream => outputFile => {
   const streams = [
     {
-      level: "error",
+      level: "fatal",
       stream: process.stdout
     }
   ];
 
   if (!isTest() && outputFile) {
     streams.push({
-      level: "trace",
+      level: "debug",
       path: outputFile
     });
   }

@@ -90,8 +90,8 @@ function startStatServer(statServerUrl, statServerPort) {
 function createChildren(urlChunks, logger) {
   for (let i = 0; i < 1; i++) {
     const child = fork("./src/main/child-process", [urlChunks[i], maxConcurrency]);
-    workers.push(child);
     logger.spawningWorkerProcess(child.pid);
+    workers.push(child);
   }
 }
 
