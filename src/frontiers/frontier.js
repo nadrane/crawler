@@ -22,8 +22,6 @@ the frontier was indexed by domain. Simple enough, I can just create a separate 
 file for every domain.
 */
 
-let n = 0;
-
 const bluebird = require("bluebird");
 const fs = require("fs");
 const mkdirp = require("mkdirp");
@@ -39,7 +37,7 @@ class Frontier {
     this.uncrawledUrlsInFrontier = 1;
     this.frontierIndex = 0;
     this.currentlyReading = false;
-    this.queuedNewlinks = [];
+    this.queuedNewlinks = new Set();
     this.flushScheduled = false;
     this.storage = storage;
     this.logger = logger;
@@ -47,7 +45,6 @@ class Frontier {
 
     this._setfilePaths(seedDomain);
     this._initializeFrontierFiles(seedDomain);
-    console.log("initializing index to ", this.frontierIndex);
   }
 
   appendNewUrl(url) {
@@ -131,12 +128,6 @@ class Frontier {
   isEmpty() {
     // Less than should never happen
     // console.log("urls left ", this.uncrawledUrlsInFrontier, this.frontierIndex);
-    if (this.uncrawledUrlsInFrontier <= 0) {
-      n++;
-      if (n % 0 === 100) {
-        console.log("frontier empty ", this.uncrawledUrlsInFrontier);
-      }
-    }
     return this.uncrawledUrlsInFrontier <= 0;
   }
 
@@ -169,7 +160,7 @@ class Frontier {
     if (nextUrl === undefined) {
       process.exit();
     }
-    this.logger.frontier.retrievedNextUrl(nextUrl);
+    this.logger.frontiers.retrievedNextUrl(nextUrl);
     return nextUrl;
   }
 
@@ -190,7 +181,7 @@ class Frontier {
   }
 
   append(newUrl) {
-    this.queuedNewlinks.push(newUrl);
+    this.queuedNewlinks.add(newUrl);
 
     // Often times we find many new links back to back on the same page
     // Queue them all at once
@@ -205,8 +196,8 @@ class Frontier {
       return;
     }
 
-    const linksToAppend = this.queuedNewlinks.join("\n");
-    const numberToAppend = this.queuedNewlinks.length;
+    const linksToAppend = [...this.queuedNewlinks.values()].join("\n");
+    const numberToAppend = this.queuedNewlinks.size;
     if (!linksToAppend) {
       this.flushScheduled = false;
       return;
@@ -221,14 +212,14 @@ class Frontier {
     this.currentlyReading = true;
     try {
       console.log(
-        `link queue flushed with ${this.queuedNewlinks.length}`,
+        `link queue flushed with ${this.queuedNewlinks.size}`,
         this.uncrawledUrlsInFrontier
       );
-      this.queuedNewlinks = [];
+      this.queuedNewlinks = new Set();
       await this.storage.appendFileAsync(this.filePaths.frontier, `${linksToAppend}\n`);
       this.uncrawledUrlsInFrontier += numberToAppend;
     } catch (err) {
-      // TODO figure out how to handle this error
+      this.queuedNewlinks = new Set(linksToAppend.split("\n"));
       this.logger.frontiers.appendUrlFailed(err, this.seedDomain);
     }
     this.currentlyReading = false;
