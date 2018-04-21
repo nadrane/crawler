@@ -13,42 +13,33 @@ class LogStream extends Writable {
     this.flushEventually = setInterval(this._makeRequest.bind(this), oneMinute);
   }
 
-  _write(log, encoding, callback) {
+  async _write(log, encoding, callback) {
+    console.log("adding ", log);
     this.buffer.push(log);
     if (this.buffer.length >= this.bufferSize) {
-      this._makeRequest().then(() => {
-        callback();
-      });
-    } else {
-      callback();
+      await this._makeRequest();
     }
+    callback();
   }
 
-  _makeRequest() {
+  async _final(callback) {
+    await this._makeRequest();
+    callback();
+  }
+
+  async _makeRequest() {
     clearInterval(this.flushEventually);
-    return this.http
-      .post(this.url, this.buffer.join(""))
-      .then(() => {
-        this.buffer = [];
-      })
-      .catch(err => {
-        console.log("error posting", err);
-      })
-      .then(() => {
-        const oneMinute = 1000 * 60;
-        this.flushEventually = setInterval(this._makeRequest.bind(this), oneMinute);
-      });
-  }
 
-  _final(callback) {
-    this.http
-      .post(this.url, this.buffer.join("\n"))
-      .then(() => {
-        callback();
-      })
-      .catch(err => {
-        callback();
-      });
+    try {
+      this.buffer = [];
+      await this.http.post(this.url, this.buffer.join(""));
+      this.buffer = [];
+    } catch (err) {
+      // remember that the buffer can be modified while the HTTP request is being made
+      console.log("error posting", err);
+    }
+    const oneMinute = 1000 * 60;
+    this.flushEventually = setInterval(this._makeRequest.bind(this), oneMinute);
   }
 }
 
