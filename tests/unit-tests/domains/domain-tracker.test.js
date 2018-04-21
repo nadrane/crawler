@@ -14,7 +14,7 @@ describe("Domain Tracker", () => {
     clock.restore();
   });
 
-  describe.only("politeToScrape", () => {
+  describe("politeToScrape", () => {
     it("should be polite to scrape upon creation", () => {
       const domainTracker = new DomainTracker("google.com");
       expect(domainTracker.politeToScrape()).to.be.true;
