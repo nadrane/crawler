@@ -16,6 +16,7 @@ class DomainReaderStream extends Readable {
     super({ objectMode: true });
     this.domains = new Domains(seedData, logger);
     this.timeout = null;
+    this.pause();
 
     eventCoordinator.on("stop", () => {
       if (!this.isPaused()) {
