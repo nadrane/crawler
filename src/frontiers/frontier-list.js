@@ -15,7 +15,7 @@ class FrontierList {
 
       // Whitelist urls to only existing domains
       if (frontier) {
-        logger.frontier.appendingUrl(fromUrl, newUrl);
+        logger.frontiers.appendingUrl(fromUrl, newUrl);
         frontier.append(newUrl);
       }
     });
