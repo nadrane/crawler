@@ -39,10 +39,14 @@ if (isProd()) {
 process.title = "crawler - parent";
 posix.setrlimit("nofile", { soft: 10000 });
 
-SERVER_INFO.then(async ({ statServerUrl, statServerPort, bloomFilterUrl }) => {
+SERVER_INFO.then(async ({ statServerHost, statServerPort, bloomFilterUrl }) => {
   const eventCoordinator = new Events();
-  const logger = await makeLogger(eventCoordinator, axios, {
-    statServerUrl,
+  eventCoordinator.on("error", err => {
+    logger.unexpectedError(err);
+  });
+
+  const logger = makeLogger(axios, {
+    statServerHost,
     statServerPort,
     outputFile: o
   });
@@ -58,7 +62,7 @@ SERVER_INFO.then(async ({ statServerUrl, statServerPort, bloomFilterUrl }) => {
     console.log("bloom filter initialization failed.");
     process.exit(1);
   }
-  startStatServer(statServerUrl, statServerPort);
+  startStatServer(statServerHost, statServerPort);
   const machineIndex = await MACHINE_INDEX;
   const seed = await SEED_FILE_PROMISE;
   console.log("seed file downloaded");
@@ -77,10 +81,10 @@ async function deleteFrontier() {
   }
 }
 
-function startStatServer(statServerUrl, statServerPort) {
+function startStatServer(statServerHost, statServerPort) {
   if (isDev()) {
     console.log("starting stat server");
-    statServer = fork("./statistics/startServer", [statServerUrl, statServerPort], {
+    statServer = fork("./statistics/startServer", [statServerHost, statServerPort], {
       env: { NODE_ENV: process.env.NODE_ENV }
     });
   }
