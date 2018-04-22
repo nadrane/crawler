@@ -8,7 +8,7 @@ AWS.config.loadFromPath(path.join(__dirname, "..", "aws-credentials.json"));
 
 module.exports = {
   SERVER_INFO: Promise.resolve({
-    statServerUrl: "localhost",
+    statServerHost: "localhost",
     statServerPort: 8082,
     bloomFilterUrl: "127.0.0.1"
   }),

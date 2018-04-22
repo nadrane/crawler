@@ -9,8 +9,8 @@ if (process.env.NODE_ENV === "production") {
   throw new Error("environment not defined");
 }
 
-if (env.APPEND_FLUSH_TIME < 5000) {
-  env.APPEND_FLUSH_TIME = 5000;
+if (env.APPEND_FLUSH_TIME < 2000) {
+  env.APPEND_FLUSH_TIME = 2000;
 }
 
 env.isProd = function isProd() {
