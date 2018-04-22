@@ -2,12 +2,11 @@ const sinon = require("sinon");
 const { expect } = require("chai");
 const makeRobotsValidator = require("APP/src/robots-parser/robots-parser");
 const makeLogger = require("APP/src/logger/");
-const Events = require("events");
 
 describe("robots-parser", () => {
   describe("isAllowed", () => {
     it("allows all urls when the robots.txt approves everything", async () => {
-      const logger = makeLogger(new Events());
+      const logger = makeLogger();
       const http = sinon.stub().returns(Promise.resolve({ data: "User-agent: *\nDisallow:" }));
       const isAllowed = makeRobotsValidator(logger, http);
 
@@ -17,7 +16,7 @@ describe("robots-parser", () => {
     });
 
     it("works when some urls contain a port and others don't, even if the ports are nonstandard", async () => {
-      const logger = makeLogger(new Events());
+      const logger = makeLogger();
       const http = sinon.stub().returns(Promise.resolve({ data: "User-agent: *\nDisallow:" }));
       const isAllowed = makeRobotsValidator(logger, http);
 
@@ -27,7 +26,7 @@ describe("robots-parser", () => {
     });
 
     it("approves nothing if the robots url returns 5xx", async () => {
-      const logger = makeLogger(new Events());
+      const logger = makeLogger();
       const robotsError = new Error();
       robotsError.response = { status: 500 };
       const http = sinon.stub().returns(Promise.reject(robotsError));
@@ -39,7 +38,7 @@ describe("robots-parser", () => {
     });
 
     it("approves everything if the robots url returns 4xx", async () => {
-      const logger = makeLogger(new Events());
+      const logger = makeLogger();
       const robotsError = new Error();
       robotsError.response = { status: 400 };
       const http = sinon.stub().returns(Promise.reject(robotsError));
@@ -51,7 +50,7 @@ describe("robots-parser", () => {
     });
 
     it("approves nothing if there was no response for the robots file from the server", async () => {
-      const logger = makeLogger(new Events());
+      const logger = makeLogger();
 
       const robotsError = new Error();
       robotsError.config = {

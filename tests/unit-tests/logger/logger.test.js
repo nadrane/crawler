@@ -6,7 +6,7 @@ const Logger = require("APP/src/logger");
 describe("Logger", () => {
   it("should create the logger without error", () => {
     const logger = Logger(new Events(), axios, {
-      statServerUrl: "fake url",
+      statServerHost: "fake url",
       statServerPort: 80,
       outputFile: "fake file.txt"
     });

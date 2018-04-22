@@ -10,7 +10,7 @@ const makeLogger = require("APP/src/logger/");
 
 describe("domain->frontier streams", () => {
   const eventCoordinator = new Events();
-  const logger = makeLogger(eventCoordinator);
+  const logger = makeLogger();
 
   beforeEach(() => rimraf(`${FRONTIER_DIRECTORY}/*`));
   afterEach(() => rimraf(`${FRONTIER_DIRECTORY}/*`));

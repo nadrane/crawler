@@ -2,8 +2,6 @@ const { expect } = require("chai");
 const makeDomainStream = require("APP/src/domains");
 const makeLogger = require("APP/src/logger/");
 const Events = require("events");
-const sinon = require("sinon");
-const fs = require("fs");
 
 const seed = [
   "google.com",
@@ -15,30 +13,54 @@ const seed = [
 ];
 
 describe("Domain Stream", () => {
-  const storage = {};
+  const logger = makeLogger();
   const eventCoordinator = new Events();
-  const logger = makeLogger(eventCoordinator);
 
-  beforeEach(() => {
-    storage.writeFileSync = sinon.spy();
-    storage.readFileAsync = sinon.spy();
-    storage.writeFileAsync = sinon.spy();
-    storage.appendFileAsync = sinon.spy();
+  it("begins paused", () => {
+    const domainStream = makeDomainStream(seed, eventCoordinator, logger);
+    expect(domainStream.isPaused()).to.be.true;
   });
 
   it("pauses the stream whent the 'stop' event is emitted", () => {
-    const domainStream = makeDomainStream(seed, eventCoordinator, fs, logger, 1);
+    const domainStream = makeDomainStream(seed, eventCoordinator, logger);
+    domainStream.emit("start");
 
-    expect(domainStream.isPaused()).to.be.false;
     eventCoordinator.emit("stop");
     expect(domainStream.isPaused()).to.be.true;
   });
 
   it("resumes the stream whent the 'start' event is emitted", () => {
-    const domainStream = makeDomainStream(seed, eventCoordinator, fs, logger, 1);
-
-    domainStream.pause();
+    const domainStream = makeDomainStream(seed, eventCoordinator, logger);
     eventCoordinator.emit("start");
+
     expect(domainStream.isPaused()).to.be.false;
+  });
+
+  it("streams a list of domains to writables", done => {
+    const domainStream = makeDomainStream(seed, eventCoordinator, logger);
+    eventCoordinator.emit("start");
+    const streamedDomains = [];
+
+    domainStream.on("data", domains => {
+      streamedDomains.push(domains);
+      if (streamedDomains.length === 6) {
+        expect(streamedDomains).to.deep.equal(seed);
+        done();
+      }
+    });
+  });
+
+  // @TODO use sinon here. it will just speed up the test
+  it("restarts from the beginning of the domain list 1 second after depleting", done => {
+    const domainStream = makeDomainStream(seed, eventCoordinator, logger);
+    eventCoordinator.emit("start");
+    const streamedDomains = [];
+
+    domainStream.on("data", domains => {
+      streamedDomains.push(domains);
+      if (streamedDomains.length === 12) {
+        done();
+      }
+    });
   });
 });

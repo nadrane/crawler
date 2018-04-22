@@ -6,8 +6,7 @@ const Events = require("events");
 describe("Bloom Filter", () => {
   describe("client", () => {
     it("is possible to create a client", () => {
-      const eventCoordinator = new Events();
-      const logger = makeLogger(eventCoordinator);
+      const logger = makeLogger();
       const client = makeBFloomFilterClient(logger, "127.0.0.1");
 
       expect(client).to.haveOwnProperty("set");

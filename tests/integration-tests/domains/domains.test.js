@@ -1,12 +1,9 @@
-const Events = require("events");
-
 const { expect } = require("chai");
 const Domains = require("APP/src/domains/domains");
 const makeLogger = require("APP/src/logger/");
 
 describe("Domains", () => {
-  const eventCoordinator = new Events();
-  const logger = makeLogger(eventCoordinator);
+  const logger = makeLogger();
 
   describe("getNextUrlToScrape", async () => {
     it("returns a sequence of different urls", async () => {

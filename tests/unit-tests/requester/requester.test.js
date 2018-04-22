@@ -2,14 +2,13 @@ const sinon = require("sinon");
 const { expect } = require("chai");
 const makeRequester = require("APP/src/requester/requester");
 const makeLogger = require("APP/src/logger/");
-const Events = require("events");
 const streamify = require("string-to-stream");
 const TestStream = require("../../testStream");
 
 describe("requester", () => {
   describe("crawlWithGETRequest", () => {
     it("returns a stream of html given a url", async () => {
-      const logger = makeLogger(new Events());
+      const logger = makeLogger();
       sinon.stub(logger);
       const http = sinon
         .stub()
@@ -27,7 +26,7 @@ describe("requester", () => {
       });
     });
     it("returns null if there is an error", async () => {
-      const logger = makeLogger(new Events());
+      const logger = makeLogger();
       sinon.stub(logger);
       const requestError = new Error("Failed to make request");
       requestError.request = {};

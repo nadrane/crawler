@@ -1,6 +1,5 @@
 const axios = require("axios");
 const { expect } = require("chai");
-const Events = require("events");
 const sinon = require("sinon");
 const streamify = require("stream-array");
 const TestStream = require("../../testStream");
@@ -12,7 +11,7 @@ const makeLogger = require("APP/src/logger/");
 describe.skip("robots-parser", () => {
   describe("stream", () => {
     it("returns responses", async () => {
-      const logger = makeLogger(new Events());
+      const logger = makeLogger();
       logger.unexpectedError = sinon.stub().returns(new Error("unexpected error!"));
 
       const sourceStream = streamify(sourceUrls.map(url => `http://${url}`));

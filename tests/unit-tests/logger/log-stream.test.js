@@ -2,7 +2,7 @@ const sinon = require("sinon");
 const { expect } = require("chai");
 const LogStream = require("APP/src/logger/bunyan-adaptor/log-stream");
 
-describe.only("Logger", () => {
+describe("Logger", () => {
   it("should post the logs to the provided url", () => {
     const http = { post: sinon.stub().returns(Promise.resolve()) };
     const fakeUrl = "fakeUrl";

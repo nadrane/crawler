@@ -7,9 +7,8 @@ const makeBloomFilterClient = require("APP/src/bloom-filter/client/");
 
 describe("Crawler works with a concurrency of 1", () => {
   it.skip("runs", () => {
-    const eventCoorindator = new Events();
     const http = sinon.stub().returns(Promise.resolve());
-    const logger = makeLogger(eventCoorindator, http);
+    const logger = makeLogger();
     const loggerStub = sinon.stub(logger);
 
     const bloomFilterClient = makeBloomFilterClient(logger);

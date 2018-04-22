@@ -35,7 +35,7 @@ function testAllUrlsReadFromStream(stream, seed, done) {
 
 describe("domain stream", () => {
   const eventCoordinator = new Events();
-  const logger = makeLogger(eventCoordinator);
+  const logger = makeLogger();
 
   it("returns all of the domains from the domain seed", done => {
     const seed = [
