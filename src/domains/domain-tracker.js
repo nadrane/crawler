@@ -3,7 +3,7 @@ const { DOMAIN_REQUEST_TIME_INTERVAL } = require("APP/env");
 class DomainTracker {
   constructor(domain) {
     this._domain = domain;
-    this.lastScraped = 0; // A really early time so it will definitely be scrapped.
+    this.lastScraped = -Infinity; // A really early time so it will definitely be scrapped.
   }
 
   get domain() {
