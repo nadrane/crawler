@@ -31,7 +31,6 @@ class LogStream extends Writable {
     clearInterval(this.flushEventually);
 
     try {
-      this.buffer = [];
       await this.http.post(this.url, this.buffer.join(""));
       this.buffer = [];
     } catch (err) {

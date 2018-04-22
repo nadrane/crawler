@@ -1,24 +1,35 @@
 const path = require("path");
 const Logger = require("./core-logger");
-const bunyanWithHTTPStream = require("./bunyan-adaptor");
+const makeBunyanLogger = require("./bunyan-adaptor");
 const { LOGGING_DIR } = require("APP/env/");
 const { promisify } = require("util");
 const rimraf = promisify(require("rimraf"));
+const mkdirp = require("mkdirp");
 
-module.exports = async function createLogger(
-  eventCoordinator,
+module.exports = function createLogger(
   http,
-  { statServerUrl, statServerPort, outputFile } = {
-    statServerUrl: "localhost",
-    statServerPort: "8080"
+  { statServerHost, statServerPort, outputFile } = {
+    statServerHost: "",
+    statServerPort: "",
+    outputFile: ""
   }
 ) {
-  if (!eventCoordinator) throw new Error("event coordinator expected");
-  outputFile = outputFile || path.join(LOGGING_DIR, "logs.txt");
-  await rimraf(outputFile);
-  if (!statServerUrl.startsWith("http://")) {
-    statServerUrl = `http://${statServerUrl}`;
+  outputFile = outputFile || LOGGING_DIR ? path.join(LOGGING_DIR, "logs.txt") : "";
+
+  if (outputFile) {
+    mkdirp.sync(path.dirname(outputFile));
+    rimraf.sync(outputFile);
   }
-  const bunyanHTTPStream = bunyanWithHTTPStream(`${statServerUrl}:${statServerPort}/log`, http);
-  return new Logger(eventCoordinator, outputFile, bunyanHTTPStream);
+
+  if (statServerHost && !statServerHost.startsWith("http://")) {
+    statServerHost = `http://${statServerHost}`;
+  }
+
+  const bunyanLogger = makeBunyanLogger({
+    http,
+    outputFile,
+    url: `${statServerHost}:${statServerPort}`
+  });
+
+  return new Logger(bunyanLogger);
 };

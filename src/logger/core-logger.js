@@ -1,6 +1,3 @@
-const mkdirp = require("mkdirp");
-const path = require("path");
-
 const makeDomainsLogger = require("./module-loggers/domains");
 const makeBloomFilterLogger = require("./module-loggers/bloom-filter");
 const makeRobotsLogger = require("./module-loggers/robots");
@@ -8,18 +5,15 @@ const makeRequesterLogger = require("./module-loggers/requester");
 const makeFrontierLogger = require("./module-loggers/frontier");
 
 class Logger {
-  constructor(eventCoordinator, outputFile, makeLogAdaptor) {
-    mkdirp.sync(path.dirname(outputFile));
-    const logAdaptor = makeLogAdaptor(outputFile);
+  constructor(logAdaptor) {
+    this.logger = logAdaptor;
     this.lastFiveUnexpected = [];
-    this.eventCoordinator = eventCoordinator;
-    this.logger = makeLogAdaptor(outputFile);
 
-    this.domains = this._addUnexpectedError(makeDomainsLogger(logAdaptor), "domains");
-    this.bloomFilter = this._addUnexpectedError(makeBloomFilterLogger(logAdaptor), "bloom filter");
-    this.robots = this._addUnexpectedError(makeRobotsLogger(logAdaptor), "robots");
-    this.requester = this._addUnexpectedError(makeRequesterLogger(logAdaptor), "requester");
-    this.frontiers = this._addUnexpectedError(makeFrontierLogger(logAdaptor), "frontiers");
+    this.domains = this._addUnexpectedError(makeDomainsLogger(this.logger), "domains");
+    this.bloomFilter = this._addUnexpectedError(makeBloomFilterLogger(this.logger), "bloom filter");
+    this.robots = this._addUnexpectedError(makeRobotsLogger(this.logger), "robots");
+    this.requester = this._addUnexpectedError(makeRequesterLogger(this.logger), "requester");
+    this.frontiers = this._addUnexpectedError(makeFrontierLogger(this.logger), "frontiers");
   }
 
   _addUnexpectedError(moduleLogger, codeModule) {
