@@ -15,6 +15,7 @@ class HtmlTolinkStream extends Transform {
           if (!href) return;
           if (this._tagContainsValidUrl(name, href)) {
             const parsedUrl = new URL(href, this.originalUrl);
+            parsedUrl.hash = "";
             this.push(parsedUrl.toString());
           }
         },
