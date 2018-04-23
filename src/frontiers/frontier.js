@@ -27,20 +27,22 @@ const fs = require("fs");
 const mkdirp = require("mkdirp");
 bluebird.promisifyAll(require("fs"));
 const { getDomain } = require("tldjs");
-
+const Events = require("events");
 const { join } = require("path");
+
 const { FRONTIER_DIRECTORY, APPEND_FLUSH_TIME } = require("APP/env/");
 
 class Frontier {
-  constructor(seedDomain, logger, storage = fs) {
+  constructor(seedDomain, logger, eventCoordinator = new Events(), storage = fs) {
     this.domain = seedDomain;
     this.uncrawledUrlsInFrontier = 1;
     this.frontierIndex = 0;
     this.currentlyReading = false;
     this.queuedNewlinks = new Set();
     this.flushScheduled = false;
-    this.storage = storage;
     this.logger = logger;
+    this.storage = storage;
+    this.eventCoordinator = eventCoordinator;
     this.filePaths = { root: "", frontier: "", frontierIndex: "" };
 
     this._setfilePaths(seedDomain);
@@ -196,9 +198,7 @@ class Frontier {
       return;
     }
 
-    const linksToAppend = [...this.queuedNewlinks.values()].join("\n");
-    const numberToAppend = this.queuedNewlinks.size;
-    if (!linksToAppend) {
+    if (!this.queuedNewlinks.size) {
       this.flushScheduled = false;
       return;
     }
@@ -209,21 +209,30 @@ class Frontier {
       return;
     }
 
+    const copyOfAppendedLinks = [...this.queuedNewlinks.values()];
+    const numberToAppend = this.queuedNewlinks.size;
+    this.queuedNewlinks = new Set();
     this.currentlyReading = true;
+
     try {
       console.log(
         `link queue flushed with ${this.queuedNewlinks.size}`,
         this.uncrawledUrlsInFrontier
       );
-      this.queuedNewlinks = new Set();
-      await this.storage.appendFileAsync(this.filePaths.frontier, `${linksToAppend}\n`);
+
+      await this.storage.appendFileAsync(
+        this.filePaths.frontier,
+        `${copyOfAppendedLinks.join("\n")}\n`
+      );
       this.uncrawledUrlsInFrontier += numberToAppend;
     } catch (err) {
-      this.queuedNewlinks = new Set(linksToAppend.split("\n"));
+      // Some links might have been added to queuedNewLinks during the course of the async file write
+      this.queuedNewlinks = new Set([...copyOfAppendedLinks, ...this.queuedNewlinks]);
       this.logger.frontiers.appendUrlFailed(err, this.seedDomain);
     }
     this.currentlyReading = false;
     this.flushScheduled = false;
+    this.eventCoordinator.emit("flushedLinkQueue", { count: numberToAppend });
   }
 }
 
