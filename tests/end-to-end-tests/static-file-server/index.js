@@ -1,17 +1,18 @@
 const NodeStatic = require("node-static");
 
-module.exports = function(directory) {
+module.exports = function(directory, port) {
   const file = new NodeStatic.Server(directory);
 
   return require("http")
     .createServer((request, response) => {
       request
         .addListener("end", () => {
+          console.log("got request");
           file.serve(request, response);
         })
         .resume();
     })
-    .listen(3333, () => {
-      console.log("serving toscrape.com from http://localhost:3333");
+    .listen(port, () => {
+      console.log(`serving up toscrape from ${directory} at http://localhost:${port}`);
     });
 };

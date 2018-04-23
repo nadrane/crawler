@@ -1,7 +1,6 @@
 const FrontierList = require("./frontier-list");
 const throughConcurrent = require("../through-concurrent");
 
-let count = 0;
 module.exports = function makeDomainToUrlStream(
   seedDomains,
   logger,
@@ -15,18 +14,17 @@ module.exports = function makeDomainToUrlStream(
     enc,
     done
   ) {
-    // logger.frontier.streamEntered();
+    logger.frontiers.streamEntered();
     try {
       const url = await frontierList.getNextUrlForDomain(domain);
       if (url) {
-        count++;
-        console.log("retrieved url ", count, url);
+        console.log("pushing url ", url);
         this.push(url);
       }
     } catch (err) {
       logger.unexpectedError(err, "frontier stream failure");
     }
-    // logger.frontier.streamExited();
+    logger.frontiers.streamExited();
     done();
   });
 };

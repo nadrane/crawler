@@ -5,9 +5,12 @@ const Frontier = require("./frontier");
 class FrontierList {
   constructor(seedDomains, logger, eventCoordinator, storage = fs) {
     this.frontiers = {};
+    this.eventCoordinator = eventCoordinator;
+
     this._seedFrontiers(seedDomains, logger, storage);
 
     eventCoordinator.on("new link", ({ fromUrl, newUrl }) => {
+      console.log("new link", newUrl);
       const domain = getDomain(newUrl);
       const frontier = this.frontiers[domain];
 
@@ -29,6 +32,7 @@ class FrontierList {
       this.frontiers[domainWithoutSubdomains] = new Frontier(
         domainWithoutSubdomains,
         logger,
+        this.eventCoordinator,
         storage
       );
     });

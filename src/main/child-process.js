@@ -6,83 +6,131 @@ const through2 = require("through2");
 const configureProcessErrorHandling = require("./error-handling");
 const makeDomainStream = require("../domains/");
 const makeDomainToUrlStream = require("../frontiers");
-const makeBloomFilterSetStream = require("../bloom-filter/set-stream");
-const makeBloomFilterCheckStream = require("../bloom-filter/check-stream");
 const makeRobotsStream = require("../robots-parser/");
 const makeRequestStream = require("../requester/");
-const makeBloomFilterClient = require("../bloom-filter/client");
+const makeBloomFilterClient = require("../bloom-filter");
 const makeLogger = require("../logger/");
-const { SERVER_INFO } = require("../../env/");
+const { SERVER_INFO, MAX_CONCURRENCY } = require("../../env/");
 
-const eventCoordinator = new Events();
+class CrawlerProcess extends Events {
+  constructor(seedData, dependencies, options) {
+    super();
+    process.title = "crawler - child";
 
-// Only run if forked from main process
-if (require.main === module) {
-  SERVER_INFO.then(async ({ statServerUrl, statServerPort, bloomFilterUrl }) => {
-    const seedData = process.argv.slice(2)[0].split(",");
-    const maxConcurrency = process.argv.slice(2)[1];
-    const logger = await makeLogger(eventCoordinator, axios, { statServerUrl, statServerPort });
-    const bloomFilterClient = makeBloomFilterClient(logger, bloomFilterUrl);
-    initializeChildProcess(seedData, logger, axios, fs, bloomFilterClient, maxConcurrency);
-  });
-}
+    this.eventCoordinator = new Events();
+    this.logger = dependencies.logger;
+    this.logger.eventCoordinator = this.eventCoordinator;
+    this.http = responseTimeTrackingHttp.bind(null, dependencies.logger);
+    this.storage = dependencies.storage;
+    this.bloomFilterCheckStream = dependencies.checkStream;
+    this.bloomFilterSetStream = dependencies.setStream;
+    this.maxConcurrency = options.maxConcurrency || MAX_CONCURRENCY;
+    this.running = false;
 
-function initializeChildProcess(
-  seedData,
-  logger,
-  http,
-  storage,
-  bloomFilterClient,
-  maxConcurrency
-) {
-  process.title = "crawler - child";
-  configureProcessErrorHandling(logger);
-  process.on("disconnect", () => {
-    console.log(process.pid, "disconnected");
-  });
+    configureProcessErrorHandling(this.logger);
+    process.on("disconnect", () => {
+      console.log(process.pid, "disconnected");
+    });
 
-  const domainStream = makeDomainStream(seedData, eventCoordinator, logger, maxConcurrency);
-  const domainToUrlStream = makeDomainToUrlStream(
-    seedData,
-    logger,
-    eventCoordinator,
-    storage,
-    maxConcurrency
-  );
-  const bloomFilterCheckStream = makeBloomFilterCheckStream(
-    bloomFilterClient,
-    logger,
-    maxConcurrency
-  );
-  const bloomFilterSetStream = makeBloomFilterSetStream(bloomFilterClient, logger, maxConcurrency);
-  // const robotsStream = makeRobotsStream(
-  //   logger,
-  //   responseTimeTrackingHttp(logger, "robots"),
-  //   maxConcurrency
-  // );
-  const requestStream = makeRequestStream(
-    logger,
-    responseTimeTrackingHttp(logger, "requester"),
-    eventCoordinator,
-    maxConcurrency
-  );
+    this.eventCoordinator.on("error", err => {
+      this.emit("error", err);
+    });
+    this.eventCoordinator.on("flushedLinkQueue", ({ count }) => {
+      console.log("it flushed at crawler level", count);
+      this.emit("flushedLinkQueue", { count });
+    });
 
-  domainStream
-    .pipe(domainToUrlStream)
-    // .pipe(robotsStream)
-    .pipe(requestStream)
-    .pipe(bloomFilterCheckStream)
-    .pipe(bloomFilterSetStream) // notice we mark it visited before visiting. We will only try to visit each url 1 time
-    .pipe(through2.obj(function(url, enc, cb) {
+    this.linkStream = this.composeStreams(seedData, options);
+  }
+
+  composeStreams(seedData, options) {
+    const maxConcurrency = options.maxConcurrency || 10;
+    const streams = [];
+
+    streams.push(makeDomainStream(seedData, this.eventCoordinator, this.logger, maxConcurrency));
+
+    streams.push(makeDomainToUrlStream(
+      seedData,
+      this.logger,
+      this.eventCoordinator,
+      this.storage,
+      maxConcurrency
+    ));
+
+    if (!options.exclude.robots) {
+      streams.push(makeRobotsStream(this.logger, this.http("robots"), maxConcurrency));
+    }
+
+    streams.push(makeRequestStream(this.logger, this.http("requester"), this.eventCoordinator, maxConcurrency));
+
+    if (!options.exclude.bloomFilter && this.bloomFilterCheckStream && this.bloomFilterSetStream) {
+      streams.push(this.bloomFilterCheckStream);
+      streams.push(this.bloomFilterSetStream);
+    }
+
+    const { eventCoordinator } = this;
+    streams.push(through2.obj(function(url, enc, cb) {
       eventCoordinator.emit("new link", {
         newUrl: url,
         fromUrl: ""
       });
-      this.push(`${url}\n`);
+      this.push(url);
       cb();
-    }))
-    .pipe(fs.createWriteStream("/dev/null"));
+    }));
+
+    streams.push(fs.createWriteStream("/dev/null"));
+
+    return streams.reduce((allStreams, nextStream) => allStreams.pipe(nextStream));
+  }
+
+  start() {
+    this.eventCoordinator.emit("start");
+    this.running = true;
+  }
+
+  stop() {
+    this.eventCoordinator.emit("stop");
+    this.running = false;
+  }
+
+  addUrl(newUrl) {
+    this.eventCoordinator.emit("new link", {
+      newUrl,
+      fromUrl: ""
+    });
+  }
 }
+
+// Only run if forked from main process
+if (require.main === module) {
+  SERVER_INFO.then(async ({ statServerHost, statServerPort, bloomFilterUrl }) => {
+    const seedData = process.argv.slice(2)[0].split(",");
+    const logger = makeLogger(axios, { statServerHost, statServerPort });
+    const bloomFilterClient = makeBloomFilterClient(logger, bloomFilterUrl);
+    const Crawler = new CrawlerProcess(seedData, { logger, storage: fs, bloomFilterClient });
+    Crawler.start();
+  });
+}
+
+module.exports = async function makeCrawlerProcess(seedData, dependencies = {}, options = {}) {
+  if (!options.exclude) {
+    options.exclude = {};
+  }
+
+  if (!options.exclude.bloomFilter && !(dependencies.setStream && dependencies.checkStream)) {
+    const client = await makeBloomFilterClient(dependencies.logger, {
+      host: options.bloomFilterUrl,
+      name: options.name,
+      concurrency: options.concurrency
+    });
+
+    await client.initialize();
+    dependencies.setStream = client.setStream;
+    dependencies.checkStream = client.checkStream;
+  }
+
+  return new CrawlerProcess(seedData, dependencies, options);
+};
 
 function responseTimeTrackingHttp(logger, codeModule) {
   const trackingHttp = axios.create();
@@ -96,5 +144,3 @@ function responseTimeTrackingHttp(logger, codeModule) {
   });
   return trackingHttp;
 }
-
-module.exports = initializeChildProcess;

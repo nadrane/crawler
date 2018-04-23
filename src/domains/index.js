@@ -16,11 +16,13 @@ class DomainReaderStream extends Readable {
     super({ objectMode: true });
     this.domains = new Domains(seedData, logger);
     this.timeout = null;
+    this.tillNextRead = 250;
     this.pause();
 
     eventCoordinator.on("stop", () => {
       if (!this.isPaused()) {
         logger.domains.crawlerStopped();
+        console.log("pausing");
         this.pause();
       }
     });
@@ -49,8 +51,15 @@ class DomainReaderStream extends Readable {
   }
 
   _read() {
+    setTimeout(() => {
+      this.getDomain();
+    }, this.tillNextRead);
+  }
+
+  getDomain() {
     const nextDomain = this.domains.getNextDomainToScrape();
     if (nextDomain) {
+      console.log("getting domain", nextDomain);
       this.push(nextDomain);
     } else if (!this.timeout) {
       this.timeout = setTimeout(this.reset.bind(this), 1000);
