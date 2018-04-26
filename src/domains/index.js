@@ -16,7 +16,7 @@ class DomainReaderStream extends Readable {
     super({ objectMode: true });
     this.domains = new Domains(seedData, logger);
     this.timeout = null;
-    this.tillNextRead = 250;
+    this.tillNextRead = 50;
     this.pause();
 
     eventCoordinator.on("stop", () => {
@@ -59,7 +59,6 @@ class DomainReaderStream extends Readable {
   getDomain() {
     const nextDomain = this.domains.getNextDomainToScrape();
     if (nextDomain) {
-      console.log("getting domain", nextDomain);
       this.push(nextDomain);
     } else if (!this.timeout) {
       this.timeout = setTimeout(this.reset.bind(this), 1000);

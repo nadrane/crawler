@@ -26,6 +26,7 @@ class CrawlerProcess extends Events {
     this.bloomFilterSetStream = dependencies.setStream;
     this.maxConcurrency = options.maxConcurrency || MAX_CONCURRENCY;
     this.running = false;
+    this.totalLinksFound = 0;
 
     configureProcessErrorHandling(this.logger);
     process.on("disconnect", () => {
@@ -37,6 +38,7 @@ class CrawlerProcess extends Events {
     });
     this.eventCoordinator.on("flushedLinkQueue", ({ count }) => {
       console.log("it flushed at crawler level", count);
+      this.totalLinksFound += count;
       this.emit("flushedLinkQueue", { count });
     });
 
@@ -56,7 +58,6 @@ class CrawlerProcess extends Events {
       this.storage,
       maxConcurrency
     ));
-
     if (!options.exclude.robots) {
       streams.push(makeRobotsStream(this.logger, this.http("robots"), maxConcurrency));
     }
@@ -64,6 +65,10 @@ class CrawlerProcess extends Events {
     streams.push(makeRequestStream(this.logger, this.http("requester"), this.eventCoordinator, maxConcurrency));
 
     if (!options.exclude.bloomFilter && this.bloomFilterCheckStream && this.bloomFilterSetStream) {
+      // @TODO do this if we are resetting the frontier. Need to flush the frontier immediately after
+      // seedData.forEach(seedLink => {
+      //   this.bloomFilterSetStream.write(seedLink);
+      // });
       streams.push(this.bloomFilterCheckStream);
       streams.push(this.bloomFilterSetStream);
     }
