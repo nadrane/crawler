@@ -10,7 +10,6 @@ class FrontierList {
     this._seedFrontiers(seedDomains, logger, storage);
 
     eventCoordinator.on("new link", ({ fromUrl, newUrl }) => {
-      console.log("new link", newUrl);
       const domain = getDomain(newUrl);
       const frontier = this.frontiers[domain];
 

@@ -140,7 +140,6 @@ class Frontier {
     this.currentlyReading = true;
 
     try {
-      console.log("before read url ", this.frontierIndex, this.uncrawledUrlsInFrontier);
       this.uncrawledUrlsInFrontier -= 1;
       const buffer = await this.storage.readFileAsync(this.filePaths.frontier);
       nextUrl = buffer.toString().split("\n")[this.frontierIndex];
@@ -156,9 +155,6 @@ class Frontier {
       nextUrl = "";
     }
 
-    console.log("after read url ", this.frontierIndex, this.uncrawledUrlsInFrontier);
-
-    console.log("url returned from frontier", nextUrl);
     if (nextUrl === undefined) {
       process.exit();
     }
@@ -215,11 +211,6 @@ class Frontier {
     this.currentlyReading = true;
 
     try {
-      console.log(
-        `link queue flushed with ${this.queuedNewlinks.size}`,
-        this.uncrawledUrlsInFrontier
-      );
-
       await this.storage.appendFileAsync(
         this.filePaths.frontier,
         `${copyOfAppendedLinks.join("\n")}\n`

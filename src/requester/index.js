@@ -12,6 +12,7 @@ const s3Stream = require("s3-upload-stream")(s3);
 let count = 0;
 module.exports = function createRequesterStream(logger, http, eventCoordinator, concurrency) {
   const crawlWithGetRequest = makeRequester(logger, http);
+
   return throughConcurrent(logger, "requester stream", concurrency, async function(
     requestUrl,
     enc,
@@ -38,7 +39,6 @@ module.exports = function createRequesterStream(logger, http, eventCoordinator, 
       this.push(url);
       cb();
     }));
-
     // logger.requester.s3UploadStarted(requestUrl);
     // const upload = s3Stream.upload({
     //   Bucket: "crawler-nick",
