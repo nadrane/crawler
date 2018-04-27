@@ -1,8 +1,9 @@
 const makeDomainsLogger = require("./module-loggers/domains");
-const makeBloomFilterLogger = require("./module-loggers/bloom-filter");
-const makeRobotsLogger = require("./module-loggers/robots");
-const makeRequesterLogger = require("./module-loggers/requester");
 const makeFrontierLogger = require("./module-loggers/frontier");
+const makeRobotsLogger = require("./module-loggers/robots");
+const makeBloomFilterLogger = require("./module-loggers/bloom-filter");
+const makeDnsLogger = require("./module-loggers/dns");
+const makeRequesterLogger = require("./module-loggers/requester");
 
 class Logger {
   constructor(logAdaptor) {
@@ -10,10 +11,11 @@ class Logger {
     this.lastFiveUnexpected = [];
 
     this.domains = this._addUnexpectedError(makeDomainsLogger(this.logger), "domains");
-    this.bloomFilter = this._addUnexpectedError(makeBloomFilterLogger(this.logger), "bloom filter");
-    this.robots = this._addUnexpectedError(makeRobotsLogger(this.logger), "robots");
-    this.requester = this._addUnexpectedError(makeRequesterLogger(this.logger), "requester");
     this.frontiers = this._addUnexpectedError(makeFrontierLogger(this.logger), "frontiers");
+    this.robots = this._addUnexpectedError(makeRobotsLogger(this.logger), "robots");
+    this.bloomFilter = this._addUnexpectedError(makeBloomFilterLogger(this.logger), "bloom filter");
+    this.dns = this._addUnexpectedError(makeDnsLogger(this.logger), "dns");
+    this.requester = this._addUnexpectedError(makeRequesterLogger(this.logger), "requester");
   }
 
   _addUnexpectedError(moduleLogger, codeModule) {
