@@ -14,7 +14,6 @@ class LogStream extends Writable {
   }
 
   async _write(log, encoding, callback) {
-    console.log("adding ", log);
     this.buffer.push(log);
     if (this.buffer.length >= this.bufferSize) {
       await this._makeRequest();
