@@ -21,15 +21,22 @@ module.exports = function createLogger(
     rimraf.sync(outputFile);
   }
 
-  if (statServerHost && !statServerHost.startsWith("http://")) {
-    statServerHost = `http://${statServerHost}`;
-  }
-
   const bunyanLogger = makeBunyanLogger({
     http,
     outputFile,
-    url: `${statServerHost}:${statServerPort}`
+    url: makeLogStreamUrl(statServerHost, statServerPort)
   });
 
   return new Logger(bunyanLogger);
 };
+
+function makeLogStreamUrl(host, port) {
+  if (host && !host.startsWith("http://")) {
+    host = `http://${host}`;
+  }
+
+  if (host && port) {
+    return `${host}:${port}`;
+  }
+  return "";
+}
