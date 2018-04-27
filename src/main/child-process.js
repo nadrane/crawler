@@ -7,6 +7,7 @@ const configureProcessErrorHandling = require("./error-handling");
 const makeDomainStream = require("../domains/");
 const makeDomainToUrlStream = require("../frontiers");
 const makeRobotsStream = require("../robots-parser/");
+const makeDNSStream = require("../dns");
 const makeRequestStream = require("../requester/");
 const makeBloomFilterClient = require("../bloom-filter");
 const makeLogger = require("../logger/");
@@ -60,6 +61,10 @@ class CrawlerProcess extends Events {
     ));
     if (!options.exclude.robots) {
       streams.push(makeRobotsStream(this.logger, this.http("robots"), maxConcurrency));
+    }
+
+    if (!options.exclude.dns) {
+      streams.push(makeDNSStream(this.logger, dns));
     }
 
     streams.push(makeRequestStream(this.logger, this.http("requester"), this.eventCoordinator, maxConcurrency));
