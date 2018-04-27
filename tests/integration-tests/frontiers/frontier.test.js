@@ -1,4 +1,3 @@
-const Events = require("events");
 const { readFileSync } = require("fs");
 const path = require("path");
 
@@ -11,8 +10,7 @@ const Frontier = require("APP/src/frontiers/frontier");
 const makeLogger = require("APP/src/logger/");
 
 describe("Frontier", () => {
-  const eventCoordinator = new Events();
-  const logger = makeLogger(eventCoordinator);
+  const logger = makeLogger();
 
   beforeEach(async () => {
     await rimraf(`${FRONTIER_DIRECTORY}/*`);
