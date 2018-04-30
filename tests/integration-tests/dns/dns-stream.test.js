@@ -2,6 +2,7 @@ const dns = require("dns");
 const { promisify } = require("util");
 const makeDnsStream = require("APP/src/dns/");
 const makeLogger = require("APP/src/logger/");
+const { expect } = require("chai");
 
 dns.resolve = promisify(dns.resolve);
 
@@ -15,11 +16,13 @@ describe("dns stream", () => {
 
     return new Promise((resolve, reject) => {
       dnsStream.on("data", urlWithIpAddress => {
-        const expectedUrl = "http://172.217.9.78/search";
-        if (urlWithIpAddress === expectedUrl) {
+        const ipAddressRegex = /\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/;
+        try {
+          expect(ipAddressRegex.test(urlWithIpAddress)).to.be.true;
           resolve();
+        } catch (err) {
+          reject(err);
         }
-        reject(new Error(`incorrect url returned. Expected ${urlWithIpAddress} to equal ${expectedUrl}`));
       });
     });
   });
