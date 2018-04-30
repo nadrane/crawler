@@ -14,15 +14,12 @@ function testAllUrlsReadFromStream(stream, seed, done) {
         const pos = seed.indexOf(url);
         seed.splice(pos, 1);
       }
-
       if (urlsRead === numberOfUrls && seed.length !== 0) {
-        console.log("destroying");
         stream.destroy();
         done(new Error("Not every url was streamed"));
         return;
       }
       if (urlsRead === numberOfUrls && seed.length === 0) {
-        console.log("destroying");
         stream.destroy();
         done();
         return;
@@ -52,7 +49,7 @@ describe("domain stream", () => {
   });
 
   it("handles large seeds appropriately", done => {
-    const seed = require("APP/seed").slice(0, 25000);
+    const seed = require("APP/seed").slice(0, 500);
     const domainStream = makeDomainStream(seed, eventCoordinator, logger);
 
     testAllUrlsReadFromStream(domainStream, seed, done);
