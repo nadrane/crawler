@@ -1,5 +1,6 @@
 const { Readable } = require("stream");
 const Domains = require("./domains");
+const { DOMAIN_READ_DELAY } = require("APP/env/");
 
 module.exports = function makeDomainStream(seedData, eventCoordinator, logger) {
   const domainStream = new DomainReaderStream(logger, seedData, eventCoordinator);
@@ -16,7 +17,7 @@ class DomainReaderStream extends Readable {
     super({ objectMode: true });
     this.domains = new Domains(seedData, logger);
     this.timeout = null;
-    this.tillNextRead = 50;
+    this.tillNextRead = DOMAIN_READ_DELAY;
     this.pause();
 
     eventCoordinator.on("stop", () => {
