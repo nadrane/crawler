@@ -3,6 +3,7 @@ const fs = require("fs");
 const Events = require("events");
 const through2 = require("through2");
 
+const makeSizeTimeTrackingHttp = require("../http");
 const configureProcessErrorHandling = require("./error-handling");
 const makeDomainStream = require("../domains/");
 const makeDomainToUrlStream = require("../frontiers");
@@ -21,10 +22,11 @@ class CrawlerProcess extends Events {
     this.eventCoordinator = new Events();
     this.logger = dependencies.logger;
     this.logger.eventCoordinator = this.eventCoordinator;
-    this.http = responseTimeTrackingHttp.bind(null, dependencies.logger);
+    this.http = makeSizeTimeTrackingHttp.bind(null, dependencies.logger);
     this.storage = dependencies.storage;
     this.bloomFilterCheckStream = dependencies.checkStream;
     this.bloomFilterSetStream = dependencies.setStream;
+    this.dns = dependencies.dns;
     this.maxConcurrency = options.maxConcurrency || MAX_CONCURRENCY;
     this.running = false;
     this.totalLinksFound = 0;
@@ -63,8 +65,8 @@ class CrawlerProcess extends Events {
       streams.push(makeRobotsStream(this.logger, this.http("robots"), maxConcurrency));
     }
 
-    if (!options.exclude.dns) {
-      streams.push(makeDNSStream(this.logger, dns));
+    if (options.cacheDns) {
+      streams.push(makeDNSStream(this.logger, this.dns));
     }
 
     streams.push(makeRequestStream(this.logger, this.http("requester"), this.eventCoordinator, maxConcurrency));
@@ -141,16 +143,3 @@ module.exports = async function makeCrawlerProcess(seedData, dependencies = {}, 
 
   return new CrawlerProcess(seedData, dependencies, options);
 };
-
-function responseTimeTrackingHttp(logger, codeModule) {
-  const trackingHttp = axios.create();
-  trackingHttp.interceptors.request.use(config => Object.assign({ startTime: Date.now() }, config));
-
-  trackingHttp.interceptors.response.use(response => {
-    const { startTime } = response.config;
-    const responseDuration = Date.now() - startTime;
-    logger[codeModule].trackResponseTime(response.url, responseDuration);
-    return response;
-  });
-  return trackingHttp;
-}
