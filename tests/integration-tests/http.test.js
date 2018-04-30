@@ -48,7 +48,7 @@ describe("http", () => {
     return new Promise((resolve, reject) => {
       responseStream.on("error", err => {
         try {
-          expect(err.bytesDownloads).to.not.be.undefined;
+          expect(err.bytesDownloaded).to.not.be.undefined;
           resolve();
         } catch (err) {
           reject(err);

@@ -24,7 +24,7 @@ module.exports = function(logger, { codeModule, maxContentLength = MAX_CONTENT_L
       currentBodyLength += data.length;
       if (maxContentLength && currentBodyLength > maxContentLength) {
         const error = new Error(`maximum body length of ${maxContentLength} exceeded`);
-        error.bytesDownloads = currentBodyLength;
+        error.bytesDownloaded = currentBodyLength;
         responseStream.emit("error", error);
       }
     });
