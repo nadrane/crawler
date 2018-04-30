@@ -5,10 +5,10 @@ const makeLogger = require("APP/src/logger/");
 
 dns.resolve = promisify(dns.resolve);
 
-describe.only("dns stream", () => {
+describe("dns stream", () => {
   const logger = makeLogger();
 
-  it("outputs a url with it's hostnmae as an ipaddress address", () => {
+  it("outputs a url with it's hostname as an ipaddress address", () => {
     const url = ["http://google.com/search"];
     const dnsStream = makeDnsStream(logger, dns, 1);
     dnsStream.write(url);
